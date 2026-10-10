@@ -1,11 +1,12 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -89,30 +90,32 @@ function SuggestPanel({
       {suggestions?.length === 0 ? <p>{messages["buyers.noSuggestions"]}</p> : null}
       {suggestions && suggestions.length > 0 ? (
         <>
-          <Table aria-label={messages["buyers.suggest"]}>
-            <TableHeader>
-              <TableRow>
-                <TableHead />
-                <TableHead>{messages["buyers.company"]}</TableHead>
-                <TableHead>{messages["buyers.score"]}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {suggestions.map((row) => (
-                <TableRow key={row.company_id}>
-                  <TableCell>
-                    <Checkbox
-                      aria-label={fillTemplate(messages["buyers.select"], { name: row.name })}
-                      checked={selected.includes(row.company_id)}
-                      onCheckedChange={() => setSelected(toggle(selected, row.company_id))}
-                    />
-                  </TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.matched.join(", ")}</TableCell>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table aria-label={messages["buyers.suggest"]}>
+              <TableHeader>
+                <TableRow>
+                  <TableHead />
+                  <TableHead>{messages["buyers.company"]}</TableHead>
+                  <TableHead>{messages["buyers.score"]}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {suggestions.map((row) => (
+                  <TableRow key={row.company_id}>
+                    <TableCell>
+                      <Checkbox
+                        aria-label={fillTemplate(messages["buyers.select"], { name: row.name })}
+                        checked={selected.includes(row.company_id)}
+                        onCheckedChange={() => setSelected(toggle(selected, row.company_id))}
+                      />
+                    </TableCell>
+                    <TableCell>{row.name}</TableCell>
+                    <TableCell>{row.matched.join(", ")}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollRegion>
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="buyer-owner">{messages["buyers.owner"]}</FieldLabel>
@@ -315,7 +318,7 @@ export function BuyersTab({ mandate, messages }: { mandate: Mandate; messages: M
       </div>
       {buyers.length === 0 ? <p>{messages["buyers.empty"]}</p> : null}
       {buyers.length > 0 ? (
-        <div className="overflow-x-auto" tabIndex={0}>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
           <Table aria-label={messages["buyers.title"]}>
             <TableHeader>
               <TableRow>
@@ -341,7 +344,7 @@ export function BuyersTab({ mandate, messages }: { mandate: Mandate; messages: M
                     </TableCell>
                     <TableCell>
                       <p>{buyer.name}</p>
-                      <p className="text-muted-foreground text-sm">{buyer.rationale}</p>
+                      <FieldDescription>{buyer.rationale}</FieldDescription>
                     </TableCell>
                     <TableCell>{buyer.owner_name}</TableCell>
                     <TableCell>
@@ -367,12 +370,12 @@ export function BuyersTab({ mandate, messages }: { mandate: Mandate; messages: M
                         {messages[STATUS_LABEL[buyer.status]]}
                         {buyer.decline_reason ? ` (${messages[DECLINE_LABEL[buyer.decline_reason]]})` : ""}
                       </p>
-                      <p className="text-muted-foreground text-sm">
+                      <FieldDescription>
                         {fillTemplate(messages["buyers.changed"], {
                           date: buyer.status_changed_at.slice(0, 10),
                           name: buyer.status_changed_by_name,
                         })}
-                      </p>
+                      </FieldDescription>
                     </TableCell>
                     <TableCell>
                       {link ? (
@@ -396,7 +399,7 @@ export function BuyersTab({ mandate, messages }: { mandate: Mandate; messages: M
               })}
             </TableBody>
           </Table>
-        </div>
+        </ScrollRegion>
       ) : null}
       {ndaFor !== null && buyers.find((buyer) => buyer.id === ndaFor) ? (
         <NdaForm
@@ -446,7 +449,11 @@ export function BuyersTab({ mandate, messages }: { mandate: Mandate; messages: M
               {messages["buyers.apply"]}
             </Button>
           </div>
-          {localBlock ? <p className="text-muted-foreground text-sm">{messages[localBlock]}</p> : null}
+          {localBlock ? (
+            <Alert>
+              <AlertDescription>{messages[localBlock]}</AlertDescription>
+            </Alert>
+          ) : null}
         </FieldGroup>
       ) : null}
       {error ? (

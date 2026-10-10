@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -167,37 +168,39 @@ function Invoices({ mandateId, canRecord, onChanged, messages }: { mandateId: nu
   return (
     <div className="flex flex-col gap-4">
       <h2>{messages["invoices.title"]}</h2>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{messages["invoices.type"]}</TableHead>
-            <TableHead>{messages["invoices.amount"]}</TableHead>
-            <TableHead>{messages["invoices.sent"]}</TableHead>
-            <TableHead>{messages["invoices.paid"]}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {(invoices.data ?? []).map((invoice) => (
-            <TableRow key={invoice.id} data-invoice={invoice.id}>
-              <TableCell>{invoice.type === "retainer" ? messages["invoices.retainer"] : messages["invoices.successFee"]}</TableCell>
-              <TableCell>{formatAmount(invoice.amount, languageOf(messages), 2)}</TableCell>
-              <TableCell>{formatIsoDate(invoice.sent_date, languageOf(messages))}</TableCell>
-              <TableCell>
-                {canRecord ? (
-                  <Input
-                    type="date"
-                    aria-label={messages["invoices.paid"]}
-                    defaultValue={invoice.paid_date ?? ""}
-                    onBlur={(e) => void markPaid(invoice, e.target.value)}
-                  />
-                ) : (
-                  (invoice.paid_date ?? "")
-                )}
-              </TableCell>
+      <ScrollRegion label={messages["a11y.scrollRegion"]}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{messages["invoices.type"]}</TableHead>
+              <TableHead>{messages["invoices.amount"]}</TableHead>
+              <TableHead>{messages["invoices.sent"]}</TableHead>
+              <TableHead>{messages["invoices.paid"]}</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {(invoices.data ?? []).map((invoice) => (
+              <TableRow key={invoice.id} data-invoice={invoice.id}>
+                <TableCell>{invoice.type === "retainer" ? messages["invoices.retainer"] : messages["invoices.successFee"]}</TableCell>
+                <TableCell>{formatAmount(invoice.amount, languageOf(messages), 2)}</TableCell>
+                <TableCell>{formatIsoDate(invoice.sent_date, languageOf(messages))}</TableCell>
+                <TableCell>
+                  {canRecord ? (
+                    <Input
+                      type="date"
+                      aria-label={messages["invoices.paid"]}
+                      defaultValue={invoice.paid_date ?? ""}
+                      onBlur={(e) => void markPaid(invoice, e.target.value)}
+                    />
+                  ) : (
+                    (invoice.paid_date ?? "")
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollRegion>
       {canRecord ? (
         <form onSubmit={(event) => void record(event)}>
           <FieldGroup>
@@ -246,22 +249,24 @@ export function FeesTab({ mandateId, canRecordInvoices, messages }: { mandateId:
     <div className="flex flex-col gap-6">
       {data ? (
         <>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableHead>{messages["fees.expected"]}</TableHead>
-                <TableCell>{formatAmount(data.expected_fee, languageOf(messages))}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableHead>{messages["fees.retainersPaid"]}</TableHead>
-                <TableCell>{data.retainers_paid}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableHead>{messages["fees.final"]}</TableHead>
-                <TableCell>{data.final_fee ?? messages["deals.none"]}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableHead>{messages["fees.expected"]}</TableHead>
+                  <TableCell>{formatAmount(data.expected_fee, languageOf(messages))}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableHead>{messages["fees.retainersPaid"]}</TableHead>
+                  <TableCell>{data.retainers_paid}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableHead>{messages["fees.final"]}</TableHead>
+                  <TableCell>{data.final_fee ?? messages["deals.none"]}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </ScrollRegion>
           {data.can_edit ? <TermsForm key={JSON.stringify(data)} terms={data} onSaved={terms.reload} messages={messages} /> : null}
         </>
       ) : null}

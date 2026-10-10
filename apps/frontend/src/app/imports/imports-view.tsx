@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -132,39 +133,41 @@ export function ImportsView({ messages }: { messages: Messages }) {
       {upload && !done ? (
         <Card>
           <CardContent className="flex flex-col gap-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{messages["merge.field"]}</TableHead>
-                  <TableHead>{messages["imports.column"]}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {upload.fields.map((field) => (
-                  <TableRow key={field}>
-                    <TableCell>
-                      {field}
-                      {upload.required_fields.includes(field) ? " *" : ""}
-                    </TableCell>
-                    <TableCell>
-                      <Select value={mapping[field] ?? SKIP} onValueChange={(column) => choose(field, column)}>
-                        <SelectTrigger aria-label={`${messages["imports.column"]} ${field}`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={SKIP}>{messages["imports.notMapped"]}</SelectItem>
-                          {upload.headers.map((header) => (
-                            <SelectItem key={header} value={header}>
-                              {header}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+            <ScrollRegion label={messages["a11y.scrollRegion"]}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{messages["merge.field"]}</TableHead>
+                    <TableHead>{messages["imports.column"]}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {upload.fields.map((field) => (
+                    <TableRow key={field}>
+                      <TableCell>
+                        {field}
+                        {upload.required_fields.includes(field) ? " *" : ""}
+                      </TableCell>
+                      <TableCell>
+                        <Select value={mapping[field] ?? SKIP} onValueChange={(column) => choose(field, column)}>
+                          <SelectTrigger aria-label={`${messages["imports.column"]} ${field}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={SKIP}>{messages["imports.notMapped"]}</SelectItem>
+                            {upload.headers.map((header) => (
+                              <SelectItem key={header} value={header}>
+                                {header}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollRegion>
             <Button variant="outline" onClick={() => void runPreview()}>
               {messages["imports.preview"]}
             </Button>
@@ -182,24 +185,26 @@ export function ImportsView({ messages }: { messages: Messages }) {
                 </Badge>
               ))}
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{messages["imports.row"]}</TableHead>
-                  <TableHead>{messages["imports.status"]}</TableHead>
-                  <TableHead>{messages["imports.details"]}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {preview.rows.map((row) => (
-                  <TableRow key={row.row}>
-                    <TableCell>{row.row}</TableCell>
-                    <TableCell>{messages[STATUS_LABEL[row.status]]}</TableCell>
-                    <TableCell>{row.errors.join("; ")}</TableCell>
+            <ScrollRegion label={messages["a11y.scrollRegion"]}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{messages["imports.row"]}</TableHead>
+                    <TableHead>{messages["imports.status"]}</TableHead>
+                    <TableHead>{messages["imports.details"]}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {preview.rows.map((row) => (
+                    <TableRow key={row.row}>
+                      <TableCell>{row.row}</TableCell>
+                      <TableCell>{messages[STATUS_LABEL[row.status]]}</TableCell>
+                      <TableCell>{row.errors.join("; ")}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollRegion>
             <Button onClick={() => void confirm()}>{messages["imports.confirm"]}</Button>
           </CardContent>
         </Card>

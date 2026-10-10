@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -105,7 +106,7 @@ export function PicklistsView({ messages, language }: { messages: Messages; lang
             <AlertDescription>{errors.form}</AlertDescription>
           </Alert>
         ) : null}
-        <div className="overflow-x-auto" tabIndex={0}>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -139,7 +140,7 @@ export function PicklistsView({ messages, language }: { messages: Messages; lang
               ))}
             </TableBody>
           </Table>
-        </div>
+        </ScrollRegion>
         <form onSubmit={(event) => void create(event)}>
           <FieldGroup>
             {textField("code", "picklists.code")}

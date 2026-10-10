@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,28 +27,30 @@ export function ConflictReviewsView({ messages }: { messages: Messages }) {
         {reviews.data && reviews.data.length === 0 ? (
           <p>{messages["compliance.empty"]}</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{messages["deals.codeName"]}</TableHead>
-                <TableHead>{messages["compliance.openedAt"]}</TableHead>
-                <TableHead>{messages["compliance.hits"]}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(reviews.data ?? []).map((review) => (
-                <TableRow key={review.mandate_id} data-review={review.code_name}>
-                  <TableCell>
-                    <Button asChild variant="link">
-                      <Link href={`/deals/${review.mandate_id}`}>{review.code_name}</Link>
-                    </Button>
-                  </TableCell>
-                  <TableCell>{formatIsoDate(review.opened_at, languageOf(messages))}</TableCell>
-                  <TableCell>{review.hits}</TableCell>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{messages["deals.codeName"]}</TableHead>
+                  <TableHead>{messages["compliance.openedAt"]}</TableHead>
+                  <TableHead>{messages["compliance.hits"]}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {(reviews.data ?? []).map((review) => (
+                  <TableRow key={review.mandate_id} data-review={review.code_name}>
+                    <TableCell>
+                      <Button asChild variant="link">
+                        <Link href={`/deals/${review.mandate_id}`}>{review.code_name}</Link>
+                      </Button>
+                    </TableCell>
+                    <TableCell>{formatIsoDate(review.opened_at, languageOf(messages))}</TableCell>
+                    <TableCell>{review.hits}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollRegion>
         )}
       </CardContent>
     </Card>

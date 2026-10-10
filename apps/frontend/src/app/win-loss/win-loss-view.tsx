@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,7 +63,9 @@ export function WinLossView({ messages }: { messages: Messages }) {
             <dd>{data.average_duration_days ?? "-"}</dd>
           </dl>
         ) : null}
-        <h2 className="font-medium">{messages["winLoss.lostReasons"]}</h2>
+        <CardTitle>
+          <h2>{messages["winLoss.lostReasons"]}</h2>
+        </CardTitle>
         <ul className="list-disc pl-6">
           {(data?.top_lost_reasons ?? []).map((row) => (
             <li key={row.reason}>
@@ -70,24 +73,26 @@ export function WinLossView({ messages }: { messages: Messages }) {
             </li>
           ))}
         </ul>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{messages["winLoss.sector"]}</TableHead>
-              <TableHead>{messages["dashboard.deals"]}</TableHead>
-              <TableHead>{messages["winLoss.evEbitda"]}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(data?.ev_ebitda_by_sector ?? []).map((row) => (
-              <TableRow key={row.sector_id}>
-                <TableCell>{row.sector}</TableCell>
-                <TableCell>{row.deals}</TableCell>
-                <TableCell>{row.average_ev_ebitda}</TableCell>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{messages["winLoss.sector"]}</TableHead>
+                <TableHead>{messages["dashboard.deals"]}</TableHead>
+                <TableHead>{messages["winLoss.evEbitda"]}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {(data?.ev_ebitda_by_sector ?? []).map((row) => (
+                <TableRow key={row.sector_id}>
+                  <TableCell>{row.sector}</TableCell>
+                  <TableCell>{row.deals}</TableCell>
+                  <TableCell>{row.average_ev_ebitda}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollRegion>
       </CardContent>
     </Card>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -28,26 +29,28 @@ export function DashboardView({ messages }: { messages: Messages }) {
           <p>
             {messages["dashboard.total"]}: {data?.total_mandates ?? ""}
           </p>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{messages["dashboard.stage"]}</TableHead>
-                {grid.types.map((type) => (
-                  <TableHead key={type}>{stageLabel(type)}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {grid.stages.map((stage) => (
-                <TableRow key={stage}>
-                  <TableCell>{stageLabel(stage)}</TableCell>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{messages["dashboard.stage"]}</TableHead>
                   {grid.types.map((type) => (
-                    <TableCell key={type}>{grid.cell(stage, type)}</TableCell>
+                    <TableHead key={type}>{stageLabel(type)}</TableHead>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {grid.stages.map((stage) => (
+                  <TableRow key={stage}>
+                    <TableCell>{stageLabel(stage)}</TableCell>
+                    {grid.types.map((type) => (
+                      <TableCell key={type}>{grid.cell(stage, type)}</TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollRegion>
         </CardContent>
       </Card>
       {data?.weighted_fees_by_quarter ? (
@@ -58,26 +61,28 @@ export function DashboardView({ messages }: { messages: Messages }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{messages["dashboard.quarter"]}</TableHead>
-                  <TableHead>{messages["dashboard.deals"]}</TableHead>
-                  <TableHead>{messages["dashboard.expected"]}</TableHead>
-                  <TableHead>{messages["dashboard.weighted"]}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.weighted_fees_by_quarter.map((row) => (
-                  <TableRow key={row.quarter} data-quarter={row.quarter}>
-                    <TableCell>{row.quarter}</TableCell>
-                    <TableCell>{row.deals}</TableCell>
-                    <TableCell>{row.expected_fees}</TableCell>
-                    <TableCell>{row.weighted_fees}</TableCell>
+            <ScrollRegion label={messages["a11y.scrollRegion"]}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{messages["dashboard.quarter"]}</TableHead>
+                    <TableHead>{messages["dashboard.deals"]}</TableHead>
+                    <TableHead>{messages["dashboard.expected"]}</TableHead>
+                    <TableHead>{messages["dashboard.weighted"]}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {data.weighted_fees_by_quarter.map((row) => (
+                    <TableRow key={row.quarter} data-quarter={row.quarter}>
+                      <TableCell>{row.quarter}</TableCell>
+                      <TableCell>{row.deals}</TableCell>
+                      <TableCell>{row.expected_fees}</TableCell>
+                      <TableCell>{row.weighted_fees}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollRegion>
             {data.other_teams_weighted_fees ? (
               <p>
                 {messages["dashboard.otherTeams"]}: {data.other_teams_weighted_fees}

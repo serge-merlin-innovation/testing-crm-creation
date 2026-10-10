@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -118,7 +119,7 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
               <AlertDescription>{messages["common.loadFailed"]}</AlertDescription>
             </Alert>
           ) : null}
-          <div className="overflow-x-auto" tabIndex={0}>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -153,7 +154,7 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </ScrollRegion>
           {contacts.data?.length === 0 ? <p>{messages["common.empty"]}</p> : null}
         </CardContent>
       </Card>

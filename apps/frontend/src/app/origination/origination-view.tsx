@@ -1,12 +1,13 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -110,39 +111,43 @@ export function OriginationView({ messages, canCreate }: { messages: Messages; c
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <p className="text-muted-foreground text-sm">
+          <CardDescription>
             {messages["origination.weighted"]}: {formatAmount(weightedEv(rows), languageOf(messages))}
-          </p>
+          </CardDescription>
           {rows.length === 0 ? <p>{messages["origination.empty"]}</p> : null}
           <div className="grid gap-4 md:grid-cols-4">
             {OPPORTUNITY_STAGES.map((stage) => (
               <section key={stage} aria-label={messages[stageLabelKey(stage)]} className="flex flex-col gap-2">
-                <h2 className="text-sm font-medium">
-                  {messages[stageLabelKey(stage)]} <Badge variant="secondary">{columns[stage].length}</Badge>
-                </h2>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{messages["origination.company"]}</TableHead>
-                      <TableHead>{messages["origination.probability"]}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {columns[stage].map((row) => (
-                      <TableRow key={row.id} data-opportunity={row.company_name}>
-                        <TableCell>
-                          <Link href={`/origination/${row.id}`}>{row.company_name}</Link>
-                          {row.conflict_warning ? (
-                            <Badge variant="destructive" className="ml-2">
-                              !
-                            </Badge>
-                          ) : null}
-                        </TableCell>
-                        <TableCell>{row.probability}</TableCell>
+                <CardTitle>
+                  <h2>
+                    {messages[stageLabelKey(stage)]} <Badge variant="secondary">{columns[stage].length}</Badge>
+                  </h2>
+                </CardTitle>
+                <ScrollRegion label={messages["a11y.scrollRegion"]}>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{messages["origination.company"]}</TableHead>
+                        <TableHead>{messages["origination.probability"]}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {columns[stage].map((row) => (
+                        <TableRow key={row.id} data-opportunity={row.company_name}>
+                          <TableCell>
+                            <Link href={`/origination/${row.id}`}>{row.company_name}</Link>
+                            {row.conflict_warning ? (
+                              <Badge variant="destructive" className="ml-2">
+                                !
+                              </Badge>
+                            ) : null}
+                          </TableCell>
+                          <TableCell>{row.probability}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollRegion>
               </section>
             ))}
           </div>

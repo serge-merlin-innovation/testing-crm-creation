@@ -126,7 +126,7 @@ export function LoginForm({
           </CardHeader>
           <CardContent>
             <FieldGroup>
-              <ul aria-label={messages["login.recoveryTitle"]} className="grid grid-cols-2 gap-2 font-mono">
+              <ul aria-label={messages["login.recoveryTitle"]} className="grid grid-cols-2 gap-2">
                 {recoveryCodes.map((recoveryCode) => (
                   <li key={recoveryCode}>{recoveryCode}</li>
                 ))}
@@ -171,7 +171,7 @@ export function LoginForm({
                     />
                     <Field>
                       <FieldLabel htmlFor="totp-secret">{messages["login.enrolKey"]}</FieldLabel>
-                      <Input id="totp-secret" readOnly value={secretOf(step.otpauthUri)} className="font-mono" />
+                      <Input id="totp-secret" readOnly value={secretOf(step.otpauthUri)} />
                     </Field>
                   </>
                 ) : null}

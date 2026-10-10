@@ -2,7 +2,6 @@
 
 export const DASHBOARD_AGGREGATED = "dashboard.aggregated";
 export const DASHBOARD_FIRM = "dashboard.firm";
-export const FEES_READ = "fees.read";
 
 export type HomeDeal = { id: number; code_name: string; stage: string };
 export type HomeTask = { id: number; title: string; due_date: string; overdue: boolean; mandate_id: number | null };

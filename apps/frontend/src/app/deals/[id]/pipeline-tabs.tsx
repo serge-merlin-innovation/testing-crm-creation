@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -45,45 +46,47 @@ export function MilestonesTab({ mandate, messages }: { mandate: Mandate; message
 
   return (
     <div className="flex flex-col gap-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{messages["milestones.name"]}</TableHead>
-            <TableHead>{messages["milestones.planned"]}</TableHead>
-            <TableHead>{messages["milestones.actual"]}</TableHead>
-            <TableHead>{messages["milestones.status"]}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {(milestones.data ?? []).map((milestone) => (
-            <TableRow key={milestone.id} data-late={milestone.late}>
-              <TableCell>{milestone.name}</TableCell>
-              <TableCell>{formatIsoDate(milestone.planned_date, languageOf(messages))}</TableCell>
-              <TableCell>
-                {mandate.can_edit ? (
-                  <Input
-                    type="date"
-                    aria-label={`${messages["milestones.actual"]} ${milestone.name}`}
-                    defaultValue={milestone.actual_date ?? ""}
-                    onBlur={(event) => void setActual(milestone, event.target.value)}
-                  />
-                ) : (
-                  (milestone.actual_date ?? "")
-                )}
-              </TableCell>
-              <TableCell>
-                {milestone.late ? (
-                  <Badge variant="destructive">
-                    {milestone.days_late} {messages["milestones.daysLate"]}
-                  </Badge>
-                ) : (
-                  <Badge variant="secondary">{messages["milestones.onTime"]}</Badge>
-                )}
-              </TableCell>
+      <ScrollRegion label={messages["a11y.scrollRegion"]}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{messages["milestones.name"]}</TableHead>
+              <TableHead>{messages["milestones.planned"]}</TableHead>
+              <TableHead>{messages["milestones.actual"]}</TableHead>
+              <TableHead>{messages["milestones.status"]}</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {(milestones.data ?? []).map((milestone) => (
+              <TableRow key={milestone.id} data-late={milestone.late}>
+                <TableCell>{milestone.name}</TableCell>
+                <TableCell>{formatIsoDate(milestone.planned_date, languageOf(messages))}</TableCell>
+                <TableCell>
+                  {mandate.can_edit ? (
+                    <Input
+                      type="date"
+                      aria-label={`${messages["milestones.actual"]} ${milestone.name}`}
+                      defaultValue={milestone.actual_date ?? ""}
+                      onBlur={(event) => void setActual(milestone, event.target.value)}
+                    />
+                  ) : (
+                    (milestone.actual_date ?? "")
+                  )}
+                </TableCell>
+                <TableCell>
+                  {milestone.late ? (
+                    <Badge variant="destructive">
+                      {milestone.days_late} {messages["milestones.daysLate"]}
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">{messages["milestones.onTime"]}</Badge>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollRegion>
       {mandate.can_edit ? (
         <form onSubmit={(event) => void add(event)}>
           <FieldGroup>
@@ -174,39 +177,41 @@ export function ClosingTab({
         <Alert>
           <AlertDescription>{messages["closing.readOnly"]}</AlertDescription>
         </Alert>
-        <Table>
-          <TableBody>
-            {mandate.stage === "aborted" ? (
-              <TableRow>
-                <TableHead>{messages["closing.abortReason"]}</TableHead>
-                <TableCell>{o.abort_reason}</TableCell>
-              </TableRow>
-            ) : (
-              <>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
+          <Table>
+            <TableBody>
+              {mandate.stage === "aborted" ? (
                 <TableRow>
-                  <TableHead>{messages["closing.finalEv"]}</TableHead>
-                  <TableCell>{formatAmount(o.final_ev, languageOf(messages))}</TableCell>
+                  <TableHead>{messages["closing.abortReason"]}</TableHead>
+                  <TableCell>{o.abort_reason}</TableCell>
                 </TableRow>
-                <TableRow>
-                  <TableHead>{messages["closing.buyer"]}</TableHead>
-                  <TableCell>{o.buyer}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableHead>{messages["closing.multiple"]}</TableHead>
-                  <TableCell>{formatAmount(o.ev_ebitda, languageOf(messages), 1)}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableHead>{messages["closing.date"]}</TableHead>
-                  <TableCell>{formatIsoDate(o.closing_date, languageOf(messages))}</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableHead>{messages["closing.tombstone"]}</TableHead>
-                  <TableCell>{o.tombstone_allowed ? messages["closing.yes"] : messages["closing.no"]}</TableCell>
-                </TableRow>
-              </>
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                <>
+                  <TableRow>
+                    <TableHead>{messages["closing.finalEv"]}</TableHead>
+                    <TableCell>{formatAmount(o.final_ev, languageOf(messages))}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableHead>{messages["closing.buyer"]}</TableHead>
+                    <TableCell>{o.buyer}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableHead>{messages["closing.multiple"]}</TableHead>
+                    <TableCell>{formatAmount(o.ev_ebitda, languageOf(messages), 1)}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableHead>{messages["closing.date"]}</TableHead>
+                    <TableCell>{formatIsoDate(o.closing_date, languageOf(messages))}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableHead>{messages["closing.tombstone"]}</TableHead>
+                    <TableCell>{o.tombstone_allowed ? messages["closing.yes"] : messages["closing.no"]}</TableCell>
+                  </TableRow>
+                </>
+              )}
+            </TableBody>
+          </Table>
+        </ScrollRegion>
         {mandate.can_reopen ? (
           <form
             onSubmit={(event) => {

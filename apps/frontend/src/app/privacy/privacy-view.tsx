@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -83,48 +84,50 @@ export function PrivacyView({ messages, isCompliance }: { messages: Messages; is
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{messages["privacy.contact"]}</TableHead>
-                <TableHead>{messages["privacy.lastInteraction"]}</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(reviews.data ?? []).map((review) => (
-                <TableRow key={review.id}>
-                  <TableCell>{review.contact_name}</TableCell>
-                  <TableCell>{review.last_interaction_at.slice(0, 10)}</TableCell>
-                  <TableCell className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        void act(`/api/v1/privacy/retention-reviews/${review.id}`, "POST", { decision: "keep" }, messages["common.save"])
-                      }
-                    >
-                      {messages["privacy.keep"]}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() =>
-                        void act(
-                          `/api/v1/privacy/retention-reviews/${review.id}`,
-                          "POST",
-                          { decision: "anonymise" },
-                          messages["privacy.erased"],
-                        )
-                      }
-                    >
-                      {messages["privacy.anonymise"]}
-                    </Button>
-                  </TableCell>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{messages["privacy.contact"]}</TableHead>
+                  <TableHead>{messages["privacy.lastInteraction"]}</TableHead>
+                  <TableHead />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {(reviews.data ?? []).map((review) => (
+                  <TableRow key={review.id}>
+                    <TableCell>{review.contact_name}</TableCell>
+                    <TableCell>{review.last_interaction_at.slice(0, 10)}</TableCell>
+                    <TableCell className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          void act(`/api/v1/privacy/retention-reviews/${review.id}`, "POST", { decision: "keep" }, messages["common.save"])
+                        }
+                      >
+                        {messages["privacy.keep"]}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() =>
+                          void act(
+                            `/api/v1/privacy/retention-reviews/${review.id}`,
+                            "POST",
+                            { decision: "anonymise" },
+                            messages["privacy.erased"],
+                          )
+                        }
+                      >
+                        {messages["privacy.anonymise"]}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollRegion>
           {reviews.data?.length === 0 ? <p>{messages["common.empty"]}</p> : null}
           {isCompliance ? null : alerts}
         </CardContent>
@@ -151,7 +154,7 @@ export function PrivacyView({ messages, isCompliance }: { messages: Messages; is
               </Button>
             </form>
             {alerts}
-            <div className="overflow-x-auto" tabIndex={0}>
+            <ScrollRegion label={messages["a11y.scrollRegion"]}>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -242,7 +245,7 @@ export function PrivacyView({ messages, isCompliance }: { messages: Messages; is
                   })}
                 </TableBody>
               </Table>
-            </div>
+            </ScrollRegion>
           </CardContent>
         </Card>
       ) : null}

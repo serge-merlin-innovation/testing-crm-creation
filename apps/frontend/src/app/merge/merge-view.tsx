@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -127,7 +128,7 @@ export function MergeView({ messages }: { messages: Messages }) {
 
           {records ? (
             <>
-              <div className="overflow-x-auto" tabIndex={0}>
+              <ScrollRegion label={messages["a11y.scrollRegion"]}>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -161,7 +162,7 @@ export function MergeView({ messages }: { messages: Messages }) {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
+              </ScrollRegion>
               <Button onClick={() => void submit()}>{messages["merge.submit"]}</Button>
             </>
           ) : null}
@@ -183,23 +184,25 @@ export function MergeView({ messages }: { messages: Messages }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableBody>
-                {recent.data.map((merge) => (
-                  <TableRow key={merge.id}>
-                    <TableCell>
-                      {merge.record_type} {merge.duplicate_id} → {merge.survivor_id}
-                    </TableCell>
-                    <TableCell>{formatDateTime(merge.merged_at, languageOf(messages))}</TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => void undo(merge)}>
-                        {messages["merge.undo"]}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <ScrollRegion label={messages["a11y.scrollRegion"]}>
+              <Table>
+                <TableBody>
+                  {recent.data.map((merge) => (
+                    <TableRow key={merge.id}>
+                      <TableCell>
+                        {merge.record_type} {merge.duplicate_id} → {merge.survivor_id}
+                      </TableCell>
+                      <TableCell>{formatDateTime(merge.merged_at, languageOf(messages))}</TableCell>
+                      <TableCell>
+                        <Button size="sm" variant="outline" onClick={() => void undo(merge)}>
+                          {messages["merge.undo"]}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollRegion>
           </CardContent>
         </Card>
       ) : null}
