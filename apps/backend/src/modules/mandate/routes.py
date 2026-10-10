@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Response
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
+from ..common.downloads import attachment_header
 from ..common.exceptions import LastLeadPartnerError, MandateExistsError, TeamMemberExistsError
 from ..role.authorization import has_permission, require_permission
 from ..role.permissions import Permission
@@ -157,7 +158,7 @@ async def export_mandate(
     return Response(
         content=body,
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f'attachment; filename="{grant.mandate.code_name}.csv"'},
+        headers={"Content-Disposition": attachment_header(f"{grant.mandate.code_name}.csv")},
     )
 
 

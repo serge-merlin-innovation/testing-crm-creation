@@ -330,3 +330,15 @@ async def test_document_links_are_labelled_https_and_team_only(world):
 
     compliance = await world.actor("cora", RoleName.COMPLIANCE)
     assert (await compliance.client.get(url, headers=compliance.headers)).status_code == 404
+
+
+# Review N4: a quote in the code name cannot break the CSV download header.
+async def test_export_filename_survives_a_quote_in_the_code_name(world):
+    mandate = await create_mandate(world, world.partner, world.client_id, code_name='Pro"ject Zeta')
+
+    response = await world.partner.client.get(f"/api/v1/mandates/{mandate['id']}/export", headers=world.partner.headers)
+
+    assert response.status_code == 200
+    disposition = response.headers["content-disposition"]
+    assert disposition.count('"') == 2
+    assert "filename*=UTF-8''Pro%22ject%20Zeta.csv" in disposition
