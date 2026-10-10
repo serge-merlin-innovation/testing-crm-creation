@@ -24,6 +24,8 @@ import {
 import type { MessageKey } from "@/lib/i18n/messages";
 import { stageLabel } from "@/lib/pipeline";
 import { sendJson, useApiData } from "@/lib/use-api";
+import { apiFetch } from "@/services/api";
+import { ComplianceTab } from "./compliance-tab";
 import { ClosingTab, MilestonesTab } from "./pipeline-tabs";
 
 type Messages = Record<MessageKey, string>;
@@ -421,6 +423,11 @@ function LinksTab({ mandateId, canEdit, messages }: { mandateId: number; canEdit
 export function DealView({ initial, messages }: { initial: Mandate; messages: Messages }) {
   const [mandate, setMandate] = useState(initial);
 
+  async function refresh() {
+    const response = await apiFetch(`/api/v1/mandates/${mandate.id}`).catch(() => null);
+    if (response?.ok) setMandate((await response.json()) as Mandate);
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -436,6 +443,7 @@ export function DealView({ initial, messages }: { initial: Mandate; messages: Me
             <TabsTrigger value="links">{messages["deals.links"]}</TabsTrigger>
             <TabsTrigger value="milestones">{messages["milestones.title"]}</TabsTrigger>
             <TabsTrigger value="closing">{messages["closing.title"]}</TabsTrigger>
+            <TabsTrigger value="compliance">{messages["compliance.title"]}</TabsTrigger>
             <TabsTrigger value="history">{messages["deals.history"]}</TabsTrigger>
           </TabsList>
           <TabsContent value="summary">
@@ -452,6 +460,9 @@ export function DealView({ initial, messages }: { initial: Mandate; messages: Me
           </TabsContent>
           <TabsContent value="closing">
             <ClosingTab key={mandate.version} mandate={mandate} onSaved={setMandate} messages={messages} />
+          </TabsContent>
+          <TabsContent value="compliance">
+            <ComplianceTab mandate={mandate} onChanged={refresh} messages={messages} />
           </TabsContent>
           <TabsContent value="history">
             <HistoryTab mandateId={mandate.id} version={mandate.version} messages={messages} />
