@@ -29,7 +29,7 @@ async def test_startup_seeds_the_six_roles_with_default_access(fresh_db: AsyncSe
     roles = {role.name: set(role.permissions) for role in (await fresh_db.execute(select(Role))).scalars()}
 
     # Written from the spec's role table, not from DEFAULT_ROLES, so a seeder change cannot prove itself.
-    # Partner's "approve conflicts" is no permission: compliance decides (AUTHZ-05 c3, decision 94).
+    # Partner's "approve conflicts" is no permission: compliance decides (AUTHZ-05 c3).
     assert roles == {
         "Admin": {"users.manage", "roles.manage", "settings.manage", "audit.read"},
         "Partner": {

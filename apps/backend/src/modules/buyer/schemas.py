@@ -5,6 +5,8 @@ from typing import Annotated
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ..common.validators import https_url
+
 
 class Stake(StrEnum):
     MAJORITY = "majority"
@@ -173,8 +175,8 @@ class NdaUpdate(BaseModel):
     @field_validator("document_url")
     @classmethod
     def _https(cls, value: AnyHttpUrl | None) -> AnyHttpUrl | None:
-        if value is not None and value.scheme != "https":
-            raise ValueError("Use an https link")
+        if value is not None:
+            https_url(str(value))
         return value
 
 

@@ -1091,10 +1091,6 @@
   "fr": "E-mail non rattaché {0} introuvable",
   "nl": "Niet-gekoppelde e-mail {0} niet gevonden"
  },
- "Use an https link": {
-  "fr": "Utilisez un lien https",
-  "nl": "Gebruik een https-link"
- },
  "Use at least {0} characters.": {
   "fr": "Utilisez au moins {0} caractères.",
   "nl": "Gebruik minstens {0} tekens."

@@ -369,7 +369,7 @@ async def test_recording_all_three_checks_approves_kyc_with_date_and_reviewer(wo
     assert (await get(world.partner, path)).json()["status"] == "approved"
 
 
-# GDPR-02 c2 / decision 23: approving KYC places an AML 10-year legal hold on the client's people, so they cannot be erased.
+# GDPR-02 c2: approving KYC places an AML 10-year legal hold on the client's people, so they cannot be erased.
 async def test_approved_kyc_places_an_aml_hold_on_the_clients_contacts(world):
     mandate = await create_mandate(world, world.partner, world.client_id, code_name="Falcon")
     created = await post(

@@ -210,7 +210,7 @@ class TestProductionSecurityValidator:
         assert "TOTP_ENCRYPTION_KEY" in str(exc_info.value)
 
 
-# AUTH-06 c1 (decision 7): new-country alerts need a geo-IP adapter.
+# AUTH-06 c1: new-country alerts need a geo-IP adapter.
 class TestGeoIpReadiness:
     def settings(self, provider: str, environment=EnvironmentOption.PRODUCTION):
         return Mock(spec=Settings, GEOIP_PROVIDER=provider, ENVIRONMENT=environment)

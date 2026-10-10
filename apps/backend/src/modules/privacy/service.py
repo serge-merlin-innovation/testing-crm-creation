@@ -407,7 +407,7 @@ AML_RETENTION_YEARS = 10
 
 
 async def hold_client_people(db: AsyncSession, mandate: Mandate, context: AuditContext) -> None:
-    """Decision 23 / GDPR-02 c2: a KYC'd client's current people fall under AML retention, so erasure is blocked."""
+    """GDPR-02 c2: a KYC'd client's current people fall under AML retention, so erasure is blocked."""
     now = context.clock.now()
     reason = f"AML {AML_RETENTION_YEARS}-year retention: KYC of {mandate.code_name}"
     people = select(Employment.contact_id).where(Employment.company_id == mandate.client_id, Employment.end_date.is_(None))
