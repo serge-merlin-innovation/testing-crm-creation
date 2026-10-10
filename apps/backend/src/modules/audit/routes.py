@@ -8,8 +8,8 @@ from ...infrastructure.dependencies import AsyncSessionDep
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
 from .dependencies import AuditServiceDep
-from .scope import readable_rows
 from .schemas import AuditEntryRead
+from .scope import readable_rows
 
 router = APIRouter(tags=["Audit log"])
 

@@ -19,12 +19,13 @@ from ..buyer.models import ClientExclusion, DealBuyer, InvestorCriterion, Invest
 from ..common.exceptions import MergeBlockedError, MergeNotFoundError, UndoWindowClosedError, ValidationError
 from ..company.models import Company, FinancialFigure
 from ..company.service import normalize_name
-from ..compliance.models import ConflictHit, DealCounterparty
+from ..compliance.models import ConflictHit, ConflictReview, DealCounterparty
 from ..contact.models import Contact, Employment, RelationshipHolder
 from ..contact.service import CONTACT_FIELDS
 from ..mandate.models import Mandate
 from ..mandate.policy import DealPolicy
 from ..origination.models import Opportunity
+from ..origination.service import visible as visible_opportunities
 from ..privacy.models import LegalHold, RetentionReview
 from ..process.models import GeneratedDocument
 from ..role.authorization import has_permission
@@ -162,8 +163,8 @@ class MergeService:
         return record
 
     async def deals_of(self, db: AsyncSession, record_type: MergeableType, record_id: int) -> set[int]:
-        """Every deal the record sits on: as client or target, through the contact's company, or
-        on an activity, note or task linked to both."""
+        """Every deal the record sits on: as client or target, through the contact's company, on an
+        activity linked to both, or on any row merge would move that names a deal (REFERENCES)."""
         if record_type == MergeableType.COMPANY:
             companies = select(Company.id).where(Company.id == record_id)
         else:
@@ -187,12 +188,32 @@ class MergeService:
                 )
             ).scalars()
         )
-        for model in (Note, Task):
-            linked = select(model.mandate_id).where(
-                model.record_type == record_type.value, model.record_id == record_id, model.mandate_id.is_not(None)
-            )
+        for reference in REFERENCES[record_type]:
+            if "mandate_id" not in reference.table.c:
+                continue
+            linked = select(reference.table.c.mandate_id).where(*_where(reference, record_id))
             deals |= {mandate_id for mandate_id in (await db.execute(linked)).scalars() if mandate_id is not None}
+        if record_type == MergeableType.COMPANY:
+            hits = select(ConflictReview.mandate_id, ConflictHit.other_mandate_id).join(
+                ConflictReview, ConflictReview.id == ConflictHit.review_id
+            )
+            for hit in await db.execute(
+                hits.where(or_(ConflictHit.company_id == record_id, ConflictHit.matched_company_id == record_id))
+            ):
+                deals |= {hit[0], hit[1]}
+            clients = select(ClientExclusion.client_id).where(
+                or_(ClientExclusion.company_id == record_id, ClientExclusion.client_id == record_id)
+            )
+            deals |= set((await db.execute(select(Mandate.id).where(Mandate.client_id.in_(clients)))).scalars())
         return deals
+
+    async def hidden_opportunities(
+        self, db: AsyncSession, user: dict[str, Any], record_type: MergeableType, record_id: int
+    ) -> bool:
+        if record_type != MergeableType.COMPANY:
+            return False
+        hidden = select(Opportunity.id).where(Opportunity.company_id == record_id, ~visible_opportunities(user))
+        return (await db.execute(hidden.limit(1))).first() is not None
 
     async def _check_wall(self, db: AsyncSession, user: dict[str, Any], values: MergeRequest, now: datetime) -> None:
         if has_permission(user, WALL_MERGE_PERMISSION):
@@ -201,6 +222,8 @@ class MergeService:
         for record_id in (values.survivor_id, values.duplicate_id):
             if await self.deals_of(db, values.record_type, record_id) - visible:
                 raise MergeBlockedError("Record on a deal the caller cannot access")
+            if await self.hidden_opportunities(db, user, values.record_type, record_id):
+                raise MergeBlockedError("Record on an opportunity the caller cannot access")
 
     async def merge(
         self, db: AsyncSession, user: dict[str, Any], values: MergeRequest, context: AuditContext
