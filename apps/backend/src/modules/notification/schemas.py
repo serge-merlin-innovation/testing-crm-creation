@@ -17,6 +17,7 @@ class EventKind(StrEnum):
     DEAL_TEAM_ADDED = "deal_team.added"
     TASK_ASSIGNED = "task.assigned"
     TASK_OVERDUE_DIGEST = "task.overdue_digest"
+    IMPORT_COMPLETED = "data_import.completed"
     MILESTONE_DUE = "milestone.due"
     CONFLICT_REVIEW_OVERDUE = "conflict.review_overdue"
 

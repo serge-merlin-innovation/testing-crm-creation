@@ -21,6 +21,7 @@ type Contact = {
   email: string | null;
   phone: string | null;
   current_role: Role | null;
+  relationship_holders: { user_id: number; name: string; strength: number }[];
 };
 type Company = { id: number; name: string };
 
@@ -118,6 +119,7 @@ export function ContactsView({ messages }: { messages: Messages }) {
                   <TableHead>{messages["contacts.email"]}</TableHead>
                   <TableHead>{messages["contacts.company"]}</TableHead>
                   <TableHead>{messages["contacts.function"]}</TableHead>
+                  <TableHead>{messages["search.knownBy"]}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -129,6 +131,11 @@ export function ContactsView({ messages }: { messages: Messages }) {
                     <TableCell>{contact.email ?? ""}</TableCell>
                     <TableCell>{companyName(contact.current_role?.company_id)}</TableCell>
                     <TableCell>{contact.current_role?.function ?? ""}</TableCell>
+                    <TableCell>
+                      {contact.relationship_holders
+                        .map((holder) => `${holder.name} (${holder.strength}/3)`)
+                        .join(", ")}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

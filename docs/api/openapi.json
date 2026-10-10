@@ -588,6 +588,25 @@
         "title": "Body_oauth_token_api_v1_oauth_token_post",
         "type": "object"
       },
+      "Body_upload_import_api_v1_imports__post": {
+        "properties": {
+          "entity": {
+            "$ref": "#/components/schemas/ImportEntity"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "description": "An .xlsx workbook; the first sheet's first row is the header",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entity",
+          "file"
+        ],
+        "title": "Body_upload_import_api_v1_imports__post",
+        "type": "object"
+      },
       "ChangePassword": {
         "additionalProperties": false,
         "properties": {
@@ -880,6 +899,33 @@
           "group"
         ],
         "title": "CompanyDetail",
+        "type": "object"
+      },
+      "CompanyHit": {
+        "properties": {
+          "country_id": {
+            "title": "Country Id",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CompanyType"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "country_id"
+        ],
+        "title": "CompanyHit",
         "type": "object"
       },
       "CompanyRead": {
@@ -1386,6 +1432,61 @@
         "title": "ContactCreate",
         "type": "object"
       },
+      "ContactHit": {
+        "properties": {
+          "company_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "relationship_holders": {
+            "items": {
+              "$ref": "#/components/schemas/HolderRead"
+            },
+            "title": "Relationship Holders",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "company_id",
+          "relationship_holders"
+        ],
+        "title": "ContactHit",
+        "type": "object"
+      },
       "ContactLanguage": {
         "enum": [
           "en",
@@ -1464,6 +1565,13 @@
               }
             ],
             "title": "Phone"
+          },
+          "relationship_holders": {
+            "items": {
+              "$ref": "#/components/schemas/HolderRead"
+            },
+            "title": "Relationship Holders",
+            "type": "array"
           },
           "salutation": {
             "anyOf": [
@@ -1690,6 +1798,29 @@
         "title": "CriterionKind",
         "type": "string"
       },
+      "DealHit": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code_name",
+          "stage"
+        ],
+        "title": "DealHit",
+        "type": "object"
+      },
       "DealLinkCreate": {
         "properties": {
           "label": {
@@ -1857,6 +1988,7 @@
           "deal_team.added",
           "task.assigned",
           "task.overdue_digest",
+          "data_import.completed",
           "milestone.due",
           "conflict.review_overdue"
         ],
@@ -2195,6 +2327,139 @@
         "title": "HistoryEntry",
         "type": "object"
       },
+      "HolderRead": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "strength": {
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Strength",
+            "type": "integer"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "strength"
+        ],
+        "title": "HolderRead",
+        "type": "object"
+      },
+      "HolderSet": {
+        "properties": {
+          "strength": {
+            "description": "1 acquainted, 2 good, 3 close",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Strength",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "strength"
+        ],
+        "title": "HolderSet",
+        "type": "object"
+      },
+      "ImportEntity": {
+        "enum": [
+          "contact",
+          "company"
+        ],
+        "title": "ImportEntity",
+        "type": "string"
+      },
+      "ImportRead": {
+        "properties": {
+          "background": {
+            "title": "Background",
+            "type": "boolean"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "counts": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "propertyNames": {
+                  "$ref": "#/components/schemas/RowStatus"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counts"
+          },
+          "created": {
+            "title": "Created",
+            "type": "integer"
+          },
+          "entity": {
+            "$ref": "#/components/schemas/ImportEntity"
+          },
+          "error_file_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error File Url"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ImportStatus"
+          }
+        },
+        "required": [
+          "id",
+          "entity",
+          "filename",
+          "status",
+          "row_count",
+          "background",
+          "counts",
+          "created",
+          "error_file_url",
+          "completed_at"
+        ],
+        "title": "ImportRead",
+        "type": "object"
+      },
       "ImportResult": {
         "properties": {
           "rows": {
@@ -2270,6 +2535,15 @@
         ],
         "title": "ImportRow",
         "type": "object"
+      },
+      "ImportStatus": {
+        "enum": [
+          "uploaded",
+          "queued",
+          "completed"
+        ],
+        "title": "ImportStatus",
+        "type": "string"
       },
       "InvitationRead": {
         "properties": {
@@ -3030,6 +3304,29 @@
         "title": "MandateUpdate",
         "type": "object"
       },
+      "MappingRequest": {
+        "properties": {
+          "mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "examples": [
+              {
+                "email": "E-mail",
+                "first_name": "First name",
+                "last_name": "Surname"
+              }
+            ],
+            "title": "Mapping",
+            "type": "object"
+          }
+        },
+        "required": [
+          "mapping"
+        ],
+        "title": "MappingRequest",
+        "type": "object"
+      },
       "MatrixColumn": {
         "properties": {
           "id": {
@@ -3068,6 +3365,107 @@
         ],
         "title": "MatrixRow",
         "type": "object"
+      },
+      "MergeRead": {
+        "properties": {
+          "duplicate_id": {
+            "title": "Duplicate Id",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "merged_at": {
+            "format": "date-time",
+            "title": "Merged At",
+            "type": "string"
+          },
+          "merged_by": {
+            "title": "Merged By",
+            "type": "integer"
+          },
+          "moved": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Moved",
+            "type": "object"
+          },
+          "record_type": {
+            "$ref": "#/components/schemas/MergeableType"
+          },
+          "survivor_id": {
+            "title": "Survivor Id",
+            "type": "integer"
+          },
+          "undone_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Undone At"
+          }
+        },
+        "required": [
+          "id",
+          "record_type",
+          "survivor_id",
+          "duplicate_id",
+          "merged_by",
+          "merged_at",
+          "moved",
+          "undone_at"
+        ],
+        "title": "MergeRead",
+        "type": "object"
+      },
+      "MergeRequest": {
+        "properties": {
+          "duplicate_id": {
+            "title": "Duplicate Id",
+            "type": "integer"
+          },
+          "fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Pick"
+            },
+            "examples": [
+              {
+                "email": "duplicate"
+              }
+            ],
+            "title": "Fields",
+            "type": "object"
+          },
+          "record_type": {
+            "$ref": "#/components/schemas/MergeableType"
+          },
+          "survivor_id": {
+            "title": "Survivor Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "record_type",
+          "survivor_id",
+          "duplicate_id"
+        ],
+        "title": "MergeRequest",
+        "type": "object"
+      },
+      "MergeableType": {
+        "enum": [
+          "contact",
+          "company"
+        ],
+        "title": "MergeableType",
+        "type": "string"
       },
       "Metric": {
         "enum": [
@@ -3664,6 +4062,14 @@
         "title": "PermissionMatrix",
         "type": "object"
       },
+      "Pick": {
+        "enum": [
+          "survivor",
+          "duplicate"
+        ],
+        "title": "Pick",
+        "type": "string"
+      },
       "PicklistKind": {
         "enum": [
           "sector",
@@ -3885,6 +4291,42 @@
         "title": "PreferencesUpdate",
         "type": "object"
       },
+      "PreviewRead": {
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/RowStatus"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/RowResult"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ImportStatus"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "counts",
+          "rows"
+        ],
+        "title": "PreviewRead",
+        "type": "object"
+      },
       "RecordRef": {
         "properties": {
           "record_id": {
@@ -4050,6 +4492,297 @@
           "created_at"
         ],
         "title": "RoleRead",
+        "type": "object"
+      },
+      "RowResult": {
+        "properties": {
+          "duplicate_of": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Of"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "row": {
+            "title": "Row",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RowStatus"
+          },
+          "values": {
+            "additionalProperties": true,
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "row",
+          "status",
+          "values"
+        ],
+        "title": "RowResult",
+        "type": "object"
+      },
+      "RowStatus": {
+        "enum": [
+          "new",
+          "duplicate",
+          "error"
+        ],
+        "title": "RowStatus",
+        "type": "string"
+      },
+      "SavedFilterCreate": {
+        "properties": {
+          "criteria": {
+            "$ref": "#/components/schemas/SearchCriteria-Input"
+          },
+          "name": {
+            "examples": [
+              "PE funds Benelux, EV 10-50m"
+            ],
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "shared": {
+            "default": false,
+            "title": "Shared",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "criteria"
+        ],
+        "title": "SavedFilterCreate",
+        "type": "object"
+      },
+      "SavedFilterRead": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "criteria": {
+            "$ref": "#/components/schemas/SearchCriteria-Output"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "integer"
+          },
+          "owner_name": {
+            "title": "Owner Name",
+            "type": "string"
+          },
+          "shared": {
+            "title": "Shared",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "owner_id",
+          "owner_name",
+          "name",
+          "criteria",
+          "shared",
+          "created_at"
+        ],
+        "title": "SavedFilterRead",
+        "type": "object"
+      },
+      "SearchCriteria-Input": {
+        "description": "What a saved filter stores. Company criteria narrow companies (and contacts through their\ncurrent company); EV bounds narrow deals, in EUR thousands.",
+        "properties": {
+          "company_types": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyType"
+            },
+            "title": "Company Types",
+            "type": "array"
+          },
+          "country_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Country Ids",
+            "type": "array"
+          },
+          "ev_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Max"
+          },
+          "ev_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Min"
+          },
+          "q": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          },
+          "sector_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Sector Ids",
+            "type": "array"
+          }
+        },
+        "title": "SearchCriteria",
+        "type": "object"
+      },
+      "SearchCriteria-Output": {
+        "description": "What a saved filter stores. Company criteria narrow companies (and contacts through their\ncurrent company); EV bounds narrow deals, in EUR thousands.",
+        "properties": {
+          "company_types": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyType"
+            },
+            "title": "Company Types",
+            "type": "array"
+          },
+          "country_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Country Ids",
+            "type": "array"
+          },
+          "ev_max": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Max"
+          },
+          "ev_min": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Min"
+          },
+          "q": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          },
+          "sector_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Sector Ids",
+            "type": "array"
+          }
+        },
+        "title": "SearchCriteria",
+        "type": "object"
+      },
+      "SearchResults": {
+        "properties": {
+          "companies": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyHit"
+            },
+            "title": "Companies",
+            "type": "array"
+          },
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/ContactHit"
+            },
+            "title": "Contacts",
+            "type": "array"
+          },
+          "deals": {
+            "items": {
+              "$ref": "#/components/schemas/DealHit"
+            },
+            "title": "Deals",
+            "type": "array"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "companies",
+          "contacts",
+          "deals"
+        ],
+        "title": "SearchResults",
         "type": "object"
       },
       "SecondFactorRequired": {
@@ -4381,6 +5114,19 @@
           "password"
         ],
         "title": "SetPassword",
+        "type": "object"
+      },
+      "ShareUpdate": {
+        "properties": {
+          "shared": {
+            "title": "Shared",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "shared"
+        ],
+        "title": "ShareUpdate",
         "type": "object"
       },
       "StageCriterionCreate": {
@@ -4824,6 +5570,75 @@
           }
         },
         "title": "Unfreeze",
+        "type": "object"
+      },
+      "UploadRead": {
+        "properties": {
+          "entity": {
+            "$ref": "#/components/schemas/ImportEntity"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "headers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Headers",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "required_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Fields",
+            "type": "array"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ImportStatus"
+          },
+          "suggested_mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Suggested Mapping",
+            "type": "object"
+          },
+          "uploaded_at": {
+            "format": "date-time",
+            "title": "Uploaded At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "entity",
+          "filename",
+          "status",
+          "headers",
+          "row_count",
+          "fields",
+          "required_fields",
+          "suggested_mapping",
+          "uploaded_at"
+        ],
+        "title": "UploadRead",
         "type": "object"
       },
       "UserCreate": {
@@ -7207,6 +8022,13 @@
                     "last_name": "last_name",
                     "legal_basis": "legitimate_interest",
                     "phone": "text",
+                    "relationship_holders": [
+                      {
+                        "name": "name",
+                        "strength": 1,
+                        "user_id": 1
+                      }
+                    ],
                     "salutation": "text",
                     "source": "source",
                     "warnings": [
@@ -7297,6 +8119,13 @@
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
                   "phone": "text",
+                  "relationship_holders": [
+                    {
+                      "name": "name",
+                      "strength": 1,
+                      "user_id": 1
+                    }
+                  ],
                   "salutation": "text",
                   "source": "source",
                   "warnings": [
@@ -7371,6 +8200,13 @@
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
                   "phone": "text",
+                  "relationship_holders": [
+                    {
+                      "name": "name",
+                      "strength": 1,
+                      "user_id": 1
+                    }
+                  ],
                   "salutation": "text",
                   "source": "source",
                   "warnings": [
@@ -7466,6 +8302,13 @@
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
                   "phone": "text",
+                  "relationship_holders": [
+                    {
+                      "name": "name",
+                      "strength": 1,
+                      "user_id": 1
+                    }
+                  ],
                   "salutation": "text",
                   "source": "source",
                   "warnings": [
@@ -7493,6 +8336,475 @@
         "summary": "Update a contact; a new company keeps the old role as history",
         "tags": [
           "Contacts"
+        ]
+      }
+    },
+    "/api/v1/contacts/{contact_id}/relationship-holders/me": {
+      "delete": {
+        "operationId": "remove_my_relationship_api_v1_contacts__contact_id__relationship_holders_me_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_role": {
+                    "company_id": 1,
+                    "end_date": "2026-10-10",
+                    "function": "text",
+                    "start_date": "2026-10-10"
+                  },
+                  "do_not_contact": true,
+                  "duplicate_contact_ids": [
+                    1
+                  ],
+                  "email": "text",
+                  "first_name": "first_name",
+                  "history": [
+                    {
+                      "company_id": 1,
+                      "end_date": "2026-10-10",
+                      "function": "text",
+                      "start_date": "2026-10-10"
+                    }
+                  ],
+                  "id": 1,
+                  "language": "en",
+                  "last_name": "last_name",
+                  "legal_basis": "legitimate_interest",
+                  "phone": "text",
+                  "relationship_holders": [
+                    {
+                      "name": "name",
+                      "strength": 1,
+                      "user_id": 1
+                    }
+                  ],
+                  "salutation": "text",
+                  "source": "source",
+                  "warnings": [
+                    "text"
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ContactRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove myself as a relationship holder",
+        "tags": [
+          "Contacts"
+        ]
+      },
+      "put": {
+        "description": "Strength 1 acquainted, 2 good, 3 close. Shown on the contact and in search results.",
+        "operationId": "set_my_relationship_api_v1_contacts__contact_id__relationship_holders_me_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "strength": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/HolderSet"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_role": {
+                    "company_id": 1,
+                    "end_date": "2026-10-10",
+                    "function": "text",
+                    "start_date": "2026-10-10"
+                  },
+                  "do_not_contact": true,
+                  "duplicate_contact_ids": [
+                    1
+                  ],
+                  "email": "text",
+                  "first_name": "first_name",
+                  "history": [
+                    {
+                      "company_id": 1,
+                      "end_date": "2026-10-10",
+                      "function": "text",
+                      "start_date": "2026-10-10"
+                    }
+                  ],
+                  "id": 1,
+                  "language": "en",
+                  "last_name": "last_name",
+                  "legal_basis": "legitimate_interest",
+                  "phone": "text",
+                  "relationship_holders": [
+                    {
+                      "name": "name",
+                      "strength": 1,
+                      "user_id": 1
+                    }
+                  ],
+                  "salutation": "text",
+                  "source": "source",
+                  "warnings": [
+                    "text"
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ContactRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add or update myself as a relationship holder",
+        "tags": [
+          "Contacts"
+        ]
+      }
+    },
+    "/api/v1/imports/": {
+      "post": {
+        "description": "Returns the file's columns, the fields to map them to, and a suggested mapping.",
+        "operationId": "upload_import_api_v1_imports__post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "example": {
+                "entity": "contact",
+                "file": "file"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_import_api_v1_imports__post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "entity": "contact",
+                  "fields": [
+                    "text"
+                  ],
+                  "filename": "filename",
+                  "headers": [
+                    "text"
+                  ],
+                  "id": 1,
+                  "required_fields": [
+                    "text"
+                  ],
+                  "row_count": 1,
+                  "status": "uploaded",
+                  "suggested_mapping": {
+                    "key": "text"
+                  },
+                  "uploaded_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/UploadRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: upload an Excel file of contacts or companies",
+        "tags": [
+          "Import"
+        ]
+      }
+    },
+    "/api/v1/imports/{import_id}": {
+      "get": {
+        "operationId": "get_import_api_v1_imports__import_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "background": true,
+                  "completed_at": "2026-10-10T09:00:00Z",
+                  "counts": {
+                    "key": 1
+                  },
+                  "created": 1,
+                  "entity": "contact",
+                  "error_file_url": "text",
+                  "filename": "filename",
+                  "id": 1,
+                  "row_count": 1,
+                  "status": "uploaded"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: an import's status and counts",
+        "tags": [
+          "Import"
+        ]
+      }
+    },
+    "/api/v1/imports/{import_id}/confirm": {
+      "post": {
+        "description": "Up to 50,000 rows run now. Larger files are queued, run in the background, and notify the uploader.",
+        "operationId": "confirm_import_api_v1_imports__import_id__confirm_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "background": true,
+                  "completed_at": "2026-10-10T09:00:00Z",
+                  "counts": {
+                    "key": 1
+                  },
+                  "created": 1,
+                  "entity": "contact",
+                  "error_file_url": "text",
+                  "filename": "filename",
+                  "id": 1,
+                  "row_count": 1,
+                  "status": "uploaded"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: run the previewed import",
+        "tags": [
+          "Import"
+        ]
+      }
+    },
+    "/api/v1/imports/{import_id}/errors.xlsx": {
+      "get": {
+        "operationId": "download_import_errors_api_v1_imports__import_id__errors_xlsx_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: download the rows that failed, with the reason per row",
+        "tags": [
+          "Import"
+        ]
+      }
+    },
+    "/api/v1/imports/{import_id}/preview": {
+      "post": {
+        "description": "Nothing is written until the import is confirmed. Shows up to 200 rows, errors and duplicates first.",
+        "operationId": "preview_import_api_v1_imports__import_id__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "mapping": {
+                  "email": "E-mail",
+                  "first_name": "First name",
+                  "last_name": "Surname"
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "counts": {
+                    "key": 1
+                  },
+                  "id": 1,
+                  "rows": [
+                    {
+                      "duplicate_of": 1,
+                      "errors": [
+                        "text"
+                      ],
+                      "row": 1,
+                      "status": "new",
+                      "values": {}
+                    }
+                  ],
+                  "status": "uploaded"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: map columns and preview new, duplicate and error rows",
+        "tags": [
+          "Import"
         ]
       }
     },
@@ -9443,6 +10755,165 @@
         ]
       }
     },
+    "/api/v1/merges/": {
+      "get": {
+        "operationId": "list_merges_api_v1_merges__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "duplicate_id": 1,
+                    "id": 1,
+                    "merged_at": "2026-10-10T09:00:00Z",
+                    "merged_by": 1,
+                    "moved": {
+                      "key": 1
+                    },
+                    "record_type": "contact",
+                    "survivor_id": 1,
+                    "undone_at": "2026-10-10T09:00:00Z"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MergeRead"
+                  },
+                  "title": "Response List Merges Api V1 Merges  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Admin: merges of the last 30 days, undoable",
+        "tags": [
+          "Merge"
+        ]
+      },
+      "post": {
+        "description": "`fields` picks, per field, whose value the survivor keeps. Activities, notes, tasks, deals, roles, relationship holders and links move to the survivor; the duplicate is deleted. Audited. 403 when either record is on a deal the caller cannot access: Compliance must merge those.",
+        "operationId": "merge_records_api_v1_merges__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "duplicate_id": 1,
+                "fields": {
+                  "email": "duplicate"
+                },
+                "record_type": "contact",
+                "survivor_id": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MergeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "duplicate_id": 1,
+                  "id": 1,
+                  "merged_at": "2026-10-10T09:00:00Z",
+                  "merged_by": 1,
+                  "moved": {
+                    "key": 1
+                  },
+                  "record_type": "contact",
+                  "survivor_id": 1,
+                  "undone_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MergeRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "A record is on a deal the caller cannot access"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Merge a duplicate contact or company into the survivor",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
+    "/api/v1/merges/{merge_id}/undo": {
+      "post": {
+        "operationId": "undo_merge_api_v1_merges__merge_id__undo_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "merge_id",
+            "required": true,
+            "schema": {
+              "title": "Merge Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "duplicate_id": 1,
+                  "id": 1,
+                  "merged_at": "2026-10-10T09:00:00Z",
+                  "merged_by": 1,
+                  "moved": {
+                    "key": 1
+                  },
+                  "record_type": "contact",
+                  "survivor_id": 1,
+                  "undone_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MergeRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Older than 30 days, or already undone"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: undo a merge done in the last 30 days",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
     "/api/v1/notes/": {
       "post": {
         "description": "Private: only the author, admins included. Deal-confidential: only the deal team of `mandate_id`.",
@@ -10102,6 +11573,452 @@
         "summary": "Replace a role's permissions (Admin)",
         "tags": [
           "Roles"
+        ]
+      }
+    },
+    "/api/v1/saved-filters/": {
+      "get": {
+        "operationId": "list_saved_filters_api_v1_saved_filters__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "created_at": "2026-10-10T09:00:00Z",
+                    "criteria": {
+                      "company_types": [
+                        null
+                      ],
+                      "country_ids": [
+                        1
+                      ],
+                      "ev_max": "text",
+                      "ev_min": "text",
+                      "q": "text",
+                      "sector_ids": [
+                        1
+                      ]
+                    },
+                    "id": 1,
+                    "name": "name",
+                    "owner_id": 1,
+                    "owner_name": "owner_name",
+                    "shared": true
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SavedFilterRead"
+                  },
+                  "title": "Response List Saved Filters Api V1 Saved Filters  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My saved filters and those shared with everyone",
+        "tags": [
+          "Search"
+        ]
+      },
+      "post": {
+        "operationId": "create_saved_filter_api_v1_saved_filters__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "criteria": {
+                  "company_types": [
+                    "target"
+                  ],
+                  "country_ids": [
+                    1
+                  ],
+                  "ev_max": 25000.0,
+                  "ev_min": 25000.0,
+                  "q": "text",
+                  "sector_ids": [
+                    1
+                  ]
+                },
+                "name": "PE funds Benelux, EV 10-50m",
+                "shared": false
+              },
+              "schema": {
+                "$ref": "#/components/schemas/SavedFilterCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "criteria": {
+                    "company_types": [
+                      "target"
+                    ],
+                    "country_ids": [
+                      1
+                    ],
+                    "ev_max": "text",
+                    "ev_min": "text",
+                    "q": "text",
+                    "sector_ids": [
+                      1
+                    ]
+                  },
+                  "id": 1,
+                  "name": "name",
+                  "owner_id": 1,
+                  "owner_name": "owner_name",
+                  "shared": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SavedFilterRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save a search filter",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/v1/saved-filters/{filter_id}": {
+      "delete": {
+        "operationId": "delete_saved_filter_api_v1_saved_filters__filter_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "filter_id",
+            "required": true,
+            "schema": {
+              "title": "Filter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete my saved filter",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/v1/saved-filters/{filter_id}/shared": {
+      "put": {
+        "operationId": "share_saved_filter_api_v1_saved_filters__filter_id__shared_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "filter_id",
+            "required": true,
+            "schema": {
+              "title": "Filter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "shared": true
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ShareUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "criteria": {
+                    "company_types": [
+                      "target"
+                    ],
+                    "country_ids": [
+                      1
+                    ],
+                    "ev_max": "text",
+                    "ev_min": "text",
+                    "q": "text",
+                    "sector_ids": [
+                      1
+                    ]
+                  },
+                  "id": 1,
+                  "name": "name",
+                  "owner_id": 1,
+                  "owner_name": "owner_name",
+                  "shared": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SavedFilterRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Share or unshare my saved filter",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/v1/search/": {
+      "get": {
+        "description": "At least 3 characters (or a criterion). Accent-, case- and typo-tolerant. Deals match on code name only and only deals the caller is staffed on appear. `filter_id` applies a saved filter; query parameters add to it.",
+        "operationId": "global_search_api_v1_search__get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filter Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "company_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/CompanyType"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Company Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "country_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sector_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sector Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ev_min",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ev Min"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ev_max",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ev Max"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "companies": [
+                    {
+                      "country_id": 1,
+                      "id": 1,
+                      "name": "name",
+                      "type": "target"
+                    }
+                  ],
+                  "contacts": [
+                    {
+                      "company_id": 1,
+                      "email": "text",
+                      "first_name": "first_name",
+                      "id": 1,
+                      "last_name": "last_name",
+                      "relationship_holders": [
+                        null
+                      ]
+                    }
+                  ],
+                  "deals": [
+                    {
+                      "code_name": "code_name",
+                      "id": 1,
+                      "stage": "stage"
+                    }
+                  ],
+                  "query": "query"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Global search across companies, contacts and deals, grouped by type",
+        "tags": [
+          "Search"
         ]
       }
     },

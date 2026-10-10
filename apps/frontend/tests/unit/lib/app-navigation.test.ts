@@ -27,17 +27,27 @@ describe("getPrimaryNavigation", () => {
   it("offers an admin user and permission administration", () => {
     expect(hrefs(getPrimaryNavigation(admin))).toEqual([
       "/overview",
+      "/search",
       "/companies",
       "/contacts",
       "/users",
       "/permissions",
       "/picklists",
+      "/merge",
+      "/imports",
       "/stage-criteria",
     ]);
   });
 
   it("gives an analyst deals, companies and contacts but no administration", () => {
-    expect(hrefs(getPrimaryNavigation(analyst))).toEqual(["/overview", "/deals", "/companies", "/contacts"]);
+    expect(hrefs(getPrimaryNavigation(analyst))).toEqual([
+      "/overview",
+      "/search",
+      "/deals",
+      "/companies",
+      "/contacts",
+      "/merge",
+    ]);
   });
 
   // ROLE-01 c2: an Admin has no deal permission, so no Deals link.
@@ -46,7 +56,14 @@ describe("getPrimaryNavigation", () => {
   });
 
   it("offers read-only only the dashboards", () => {
-    expect(hrefs(getPrimaryNavigation(readOnly))).toEqual(["/overview", "/companies", "/contacts", "/analytics"]);
+    expect(hrefs(getPrimaryNavigation(readOnly))).toEqual([
+      "/overview",
+      "/search",
+      "/companies",
+      "/contacts",
+      "/analytics",
+      "/merge",
+    ]);
   });
 });
 

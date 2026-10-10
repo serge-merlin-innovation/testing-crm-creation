@@ -16,11 +16,15 @@ from ....modules.company.routes import router as companies_router
 from ....modules.compliance.routes import reviews_router as conflict_reviews_router
 from ....modules.compliance.routes import router as compliance_router
 from ....modules.contact.routes import router as contacts_router
+from ....modules.data_import.routes import router as imports_router
 from ....modules.mandate.routes import criteria_router
 from ....modules.mandate.routes import router as mandates_router
+from ....modules.merge.routes import router as merges_router
 from ....modules.notification.routes import router as notifications_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.role.routes import router as roles_router
+from ....modules.search.routes import filters_router as saved_filters_router
+from ....modules.search.routes import router as search_router
 from ....modules.security.routes import router as security_router
 from ....modules.session.routes import router as session_router
 from ....modules.task.routes import router as tasks_router
@@ -43,6 +47,10 @@ router.include_router(activities_router, prefix="/activities")
 router.include_router(notes_router, prefix="/notes")
 router.include_router(timeline_router, prefix="/timeline")
 router.include_router(tasks_router, prefix="/tasks")
+router.include_router(search_router, prefix="/search")
+router.include_router(saved_filters_router, prefix="/saved-filters")
+router.include_router(merges_router, prefix="/merges")
+router.include_router(imports_router, prefix="/imports")
 router.include_router(auth_router, prefix="/auth")
 router.include_router(account_auth_router, prefix="/auth")
 router.include_router(security_router)

@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import Boolean, Date, ForeignKey, String
+from sqlalchemy import Boolean, Date, ForeignKey, Index, Integer, SmallInteger, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ...infrastructure.database.models import TimestampMixin
@@ -34,3 +34,15 @@ class Employment(Base):
     function: Mapped[str | None] = mapped_column(String(200), default=None)
     start_date: Mapped[date | None] = mapped_column(Date, default=None)
     end_date: Mapped[date | None] = mapped_column(Date, default=None)
+
+
+class RelationshipHolder(Base):
+    """A colleague who knows the contact, and how well: 1 acquainted, 2 good, 3 close."""
+
+    __tablename__ = "relationship_holders"
+    __table_args__ = (Index("ix_relationship_holders_unique", "contact_id", "user_id", unique=True),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    contact_id: Mapped[int] = mapped_column(ForeignKey("contacts.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True)
+    strength: Mapped[int] = mapped_column(SmallInteger, nullable=False)

@@ -34,6 +34,9 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/companies": { kind: "authenticated" },
   "/contacts": { kind: "authenticated" },
   "/picklists": { kind: "permission", permission: "settings.manage" },
+  "/search": { kind: "authenticated" },
+  "/merge": { kind: "authenticated" },
+  "/imports": { kind: "permission", permission: "settings.manage" },
   "/stage-criteria": { kind: "permission", permission: "settings.manage" },
   "/conflict-reviews": { kind: "permission", permission: "conflicts.register" },
 };

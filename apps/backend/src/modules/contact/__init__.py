@@ -1,3 +1,3 @@
-from .models import Contact, Employment
+from .models import Contact, Employment, RelationshipHolder
 
-__all__ = ["Contact", "Employment"]
+__all__ = ["Contact", "Employment", "RelationshipHolder"]
