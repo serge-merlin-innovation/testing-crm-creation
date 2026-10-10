@@ -2,10 +2,10 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Any
-from urllib.parse import urlparse
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
+from ..common.validators import https_url
 from ..fee.schemas import FeeTermsValues
 from ..mandate.schemas import CodeName, EnterpriseValue, MandateType
 
@@ -39,13 +39,6 @@ class LostReason(StrEnum):
     CLIENT_DECIDED_NOT_TO_SELL = "client_decided_not_to_sell"
 
 
-def _https(value: str) -> str:
-    parsed = urlparse(value)
-    if parsed.scheme != "https" or not parsed.netloc:
-        raise ValueError("Only https links are accepted")
-    return value
-
-
 class OpportunityCreate(BaseModel):
     company_id: int
     type: MandateType
@@ -68,7 +61,7 @@ class MemberCreate(BaseModel):
 
 class LinkCreate(BaseModel):
     label: Annotated[str, Field(min_length=1, max_length=50, examples=["Pitch deck"])]
-    url: Annotated[str, Field(max_length=2000, examples=["https://files.example.com/pitch.pptx"]), AfterValidator(_https)]
+    url: Annotated[str, Field(max_length=2000, examples=["https://files.example.com/pitch.pptx"]), AfterValidator(https_url)]
 
 
 class CredentialCreate(BaseModel):

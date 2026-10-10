@@ -15,6 +15,7 @@ from sqlalchemy.orm import aliased
 from ...infrastructure.email import get_email_sender
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import ValidationError
+from ..common.text import blank
 from ..company.models import Company
 from ..company.service import normalize_name
 from ..mandate import pipeline as mandate_pipeline
@@ -47,10 +48,6 @@ def add_working_days(start: datetime, days: int) -> datetime:
         if current.weekday() < 5:
             days -= 1
     return current
-
-
-def _blank(text: str | None) -> bool:
-    return text is None or not text.strip()
 
 
 def is_conflict(role: str, other_role: str) -> bool:
@@ -258,7 +255,7 @@ class ConflictService:
     ) -> dict[str, Any]:
         assert context.user_id is not None
         mandate = grant.mandate
-        if _blank(values.reason):
+        if blank(values.reason):
             raise ValidationError("Give the reason for the decision", field="reason")
         assert values.reason is not None
         reviews = (
@@ -428,7 +425,7 @@ class KycService:
 
     async def unfreeze(self, db: AsyncSession, grant: DealGrant, values: Unfreeze, context: AuditContext) -> dict[str, Any]:
         mandate = grant.mandate
-        if _blank(values.reason):
+        if blank(values.reason):
             raise ValidationError("Say why the deal is unfrozen", field="reason")
         if mandate.frozen_at is None:
             raise ValidationError("This deal is not frozen", field="reason")

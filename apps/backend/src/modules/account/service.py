@@ -1,5 +1,4 @@
 import csv
-import hashlib
 import io
 import secrets
 from datetime import datetime, timedelta
@@ -16,6 +15,7 @@ from ...infrastructure.email import EmailMessage, get_email_sender
 from ...infrastructure.i18n.localize import localize
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import DomainError, RoleNotFoundError, UserExistsError, UserNotFoundError, ValidationError
+from ..common.hashing import sha256_hex
 from ..role.models import Role
 from ..security.models import TrustedDevice
 from ..user.models import User
@@ -39,10 +39,6 @@ class TooManyResetRequestsError(DomainError):
     pass
 
 
-def _digest(token: str) -> str:
-    return hashlib.sha256(token.encode()).hexdigest()
-
-
 async def _send(to: str, subject: str, body: str, language: str | None = None) -> None:
     await get_email_sender().send(EmailMessage(to=to, subject=localize(subject, language), body=localize(body, language)))
 
@@ -58,12 +54,14 @@ class AccountService:
             .values(used_at=now)
         )
         token = secrets.token_urlsafe(32)
-        db.add(AccountToken(user_id=user_id, kind=kind, token_hash=_digest(token), created_at=now, expires_at=now + ttl))
+        db.add(AccountToken(user_id=user_id, kind=kind, token_hash=sha256_hex(token), created_at=now, expires_at=now + ttl))
         return token
 
     async def _redeem(self, db: AsyncSession, token: str, kind: str, now: datetime) -> tuple[AccountToken, User]:
         found = (
-            await db.execute(select(AccountToken).where(AccountToken.token_hash == _digest(token), AccountToken.kind == kind))
+            await db.execute(
+                select(AccountToken).where(AccountToken.token_hash == sha256_hex(token), AccountToken.kind == kind)
+            )
         ).scalar_one_or_none()
         user = await db.get(User, found.user_id) if found else None
         if found is None or user is None or user.is_deleted or found.used_at is not None or found.expires_at <= now:

@@ -14,6 +14,7 @@ from ...infrastructure.email import get_email_sender
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import CompanyNotFoundError, DealForbiddenError, ValidationError
 from ..common.spreadsheet import safe_row
+from ..common.text import blank
 from ..company.models import Company
 from ..compliance.service import ConflictService
 from ..contact.models import Contact
@@ -77,10 +78,6 @@ async def _is_ancestor(db: AsyncSession, ancestor_id: int, company_id: int) -> b
         seen.add(current)
         current = (await db.execute(select(Company.parent_id).where(Company.id == current))).scalar_one_or_none()
     return False
-
-
-def _blank(text: str | None) -> bool:
-    return text is None or not text.strip()
 
 
 class InvestorProfileService:
@@ -404,7 +401,7 @@ class BuyerService:
         mandate = grant.mandate
         now = context.clock.now()
         for index, item in enumerate(values.items):
-            if _blank(item.rationale):
+            if blank(item.rationale):
                 raise ValidationError("Give a rationale for every buyer", field=f"items.{index}.rationale")
             if not await self._active_member(db, mandate.id, item.owner_id, now):
                 raise ValidationError("The owner must be on the deal team", field=f"items.{index}.owner_id")
@@ -518,7 +515,7 @@ class BuyerService:
             values.owner_id is None or not await self._active_member(db, grant.mandate.id, values.owner_id, now)
         ):
             raise ValidationError("The owner must be on the deal team", field="owner_id")
-        if "rationale" in changes and _blank(values.rationale):
+        if "rationale" in changes and blank(values.rationale):
             raise ValidationError("Give a rationale for the buyer", field="rationale")
         if "contact_id" in changes:
             await self._check_contact(db, values.contact_id)

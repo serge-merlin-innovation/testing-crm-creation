@@ -2,21 +2,13 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
-from urllib.parse import urlparse
 
 from pydantic import AfterValidator, BaseModel, Field, model_validator
 
+from ..common.validators import optional_https_url
+
 Money = Annotated[Decimal, Field(ge=0, max_digits=14, decimal_places=2, description="EUR")]
 Percent = Annotated[Decimal, Field(ge=0, le=100, max_digits=6, decimal_places=3)]
-
-
-def _https(value: str | None) -> str | None:
-    if value is None or value == "":
-        return None
-    parsed = urlparse(value)
-    if parsed.scheme != "https" or not parsed.netloc:
-        raise ValueError("Only https links are accepted")
-    return value
 
 
 class SuccessFeeKind(StrEnum):
@@ -42,7 +34,7 @@ class FeeTermsValues(BaseModel):
     amended_letter_url: Annotated[
         str | None,
         Field(max_length=2000, description="Amended engagement letter, required with the reason"),
-        AfterValidator(_https),
+        AfterValidator(optional_https_url),
     ] = None
 
     @model_validator(mode="after")

@@ -17,6 +17,7 @@ from ..common.exceptions import (
     StageCriterionNotFoundError,
     ValidationError,
 )
+from ..common.text import blank
 from ..notification.service import Message, NotificationService
 from ..user.models import User
 from .models import DealLink, DealTeamMember, Mandate, Milestone, StageCriterion
@@ -106,10 +107,6 @@ def milestone_read(milestone: Milestone, today: date) -> dict[str, Any]:
         "late": late > 0,
         "days_late": late,
     }
-
-
-def _blank(value: str | None) -> bool:
-    return value is None or not value.strip()
 
 
 class PipelineService:
@@ -300,7 +297,7 @@ class PipelineService:
         if values.outcome == Outcome.CLOSED_WON:
             required = {
                 "final_ev": values.final_ev,
-                "buyer": None if _blank(values.buyer) else values.buyer,
+                "buyer": None if blank(values.buyer) else values.buyer,
                 "ev_ebitda": values.ev_ebitda,
                 "closing_date": values.closing_date,
                 "tombstone_allowed": values.tombstone_allowed,
@@ -318,7 +315,7 @@ class PipelineService:
             mandate.tombstone_allowed = values.tombstone_allowed
             mandate.abort_reason = None
         else:
-            if _blank(values.abort_reason):
+            if blank(values.abort_reason):
                 raise ValidationError("Say why the deal was aborted", field="abort_reason")
             assert values.abort_reason is not None
             mandate.abort_reason = values.abort_reason.strip()
@@ -361,7 +358,7 @@ class PipelineService:
             raise StaleVersion()
         if mandate.closed_at is None:
             raise ValidationError("This deal is not closed", field="reason")
-        if _blank(values.reason):
+        if blank(values.reason):
             raise ValidationError("Say why the deal is reopened", field="reason")
         assert values.reason is not None
         now = context.clock.now()
@@ -425,7 +422,7 @@ class PipelineService:
         if milestone is None or milestone.mandate_id != grant.mandate.id:
             raise MilestoneNotFoundError("Milestone not found")
         changes = values.model_dump(exclude_unset=True)
-        if "name" in changes and _blank(changes["name"]):
+        if "name" in changes and blank(changes["name"]):
             raise ValidationError("Name the milestone", field="name")
         if "planned_date" in changes and changes["planned_date"] is None:
             raise ValidationError("A milestone needs a planned date", field="planned_date")

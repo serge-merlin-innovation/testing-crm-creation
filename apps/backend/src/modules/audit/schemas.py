@@ -16,4 +16,3 @@ class AuditEntryRead(BaseModel):
     user_agent: str | None = None
     old_values: dict[str, Any] | None = None
     new_values: dict[str, Any] | None = None
-
