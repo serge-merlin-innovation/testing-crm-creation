@@ -1,3 +1,3 @@
-from .models import Notification
+from .models import Notification, NotificationPreference
 
-__all__ = ["Notification"]
+__all__ = ["Notification", "NotificationPreference"]

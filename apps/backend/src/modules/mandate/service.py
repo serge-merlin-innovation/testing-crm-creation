@@ -185,10 +185,10 @@ class MandateService:
             await db.rollback()
             raise MandateExistsError("Code name in use") from error
 
-        self._staff(db, mandate, lead, TeamRole.LEAD_PARTNER, context.user_id, now, None, context)
+        await self._staff(db, mandate, lead, TeamRole.LEAD_PARTNER, context.user_id, now, None, context)
         if context.user_id != lead.id:
             creator = await self._user(db, context.user_id)
-            self._staff(db, mandate, creator, TeamRole.PARTNER, context.user_id, now, None, context)
+            await self._staff(db, mandate, creator, TeamRole.PARTNER, context.user_id, now, None, context)
         self.audit.record(
             db, context, "mandate.created", record_type="mandate", record_id=mandate.id, new_values=_snapshot(mandate)
         )
@@ -196,7 +196,7 @@ class MandateService:
         await self.notifications.flush_emails()
         return await self.read(db, mandate, None)
 
-    def _staff(
+    async def _staff(
         self,
         db: AsyncSession,
         mandate: Mandate,
@@ -237,7 +237,7 @@ class MandateService:
             new_values={"user_id": user.id, "role": role.value, "expires_at": expires_at.isoformat() if expires_at else None},
         )
         if user.id != by_user_id:
-            self.notifications.add(
+            await self.notifications.add(
                 db,
                 self._deal_message(
                     mandate,
@@ -409,7 +409,7 @@ class MandateService:
                 raise TeamMemberExistsError("Already on the team")
             await db.delete(existing)
             await db.flush()
-        self._staff(db, mandate, user, values.role, context.user_id, now, values.expires_at, context)
+        await self._staff(db, mandate, user, values.role, context.user_id, now, values.expires_at, context)
         await db.commit()
         await self.notifications.flush_emails()
         team = await self.team(db, grant, now)

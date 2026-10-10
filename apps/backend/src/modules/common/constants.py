@@ -8,6 +8,7 @@ from ...infrastructure.auth.http_exceptions import (
     UnprocessableEntityException,
 )
 from .exceptions import (
+    ActivityNotFoundError,
     CompanyNotFoundError,
     ContactNotFoundError,
     DealForbiddenError,
@@ -26,7 +27,9 @@ from .exceptions import (
     PicklistValueNotFoundError,
     ResourceExistsError,
     ResourceNotFoundError,
+    RestoreWindowClosedError,
     RoleNotFoundError,
+    TaskNotFoundError,
     TeamMemberExistsError,
     TeamMemberNotFoundError,
     UserExistsError,
@@ -63,6 +66,11 @@ EXCEPTION_MAPPING: dict[type[DomainError], Callable[[str], HTTPException]] = {
     TeamMemberExistsError: lambda message: HTTPException(status_code=409, detail="This user is already on the deal team."),
     TeamMemberNotFoundError: lambda message: NotFoundException(detail="This user is not on the deal team."),
     DealLinkNotFoundError: lambda message: NotFoundException(detail="Link not found."),
+    ActivityNotFoundError: lambda message: NotFoundException(detail="Activity not found."),
+    TaskNotFoundError: lambda message: NotFoundException(detail="Task not found."),
+    RestoreWindowClosedError: lambda message: HTTPException(
+        status_code=409, detail="This activity was deleted more than 30 days ago and can no longer be restored."
+    ),
     GroupLoopError: lambda message: UnprocessableEntityException(detail=message),
     InsufficientCreditsError: lambda message: HTTPException(status_code=402, detail=message or "Insufficient credits."),
     ResourceNotFoundError: lambda message: NotFoundException(detail="The requested resource was not found."),

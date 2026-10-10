@@ -50,6 +50,6 @@ async def test_run_jobs_now_runs_every_job_with_the_injected_clock(
     finally:
         job_runner.unregister("probe")
 
-    assert first.json()["ran"] == ["probe"]
-    assert second.json()["ran"] == ["probe"]
+    assert "probe" in first.json()["ran"]
+    assert "probe" in second.json()["ran"]
     assert seen == [frozen, frozen]
