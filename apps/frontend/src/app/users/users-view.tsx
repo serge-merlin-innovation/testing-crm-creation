@@ -20,8 +20,10 @@ export function UsersView({ messages }: { messages: Messages }) {
   const listPath = tab === "inactive" ? "/api/v1/users/?status=inactive&items_per_page=100" : "/api/v1/users/?items_per_page=100";
   const users = useApiData<Page>(listPath);
   const everyone = useApiData<Page>("/api/v1/users/?status=active&items_per_page=100");
-  const [selected, setSelected] = useState<number | null>(null);
-  const current = users.data?.data.find((user) => user.id === selected) ?? null;
+  // The user object, not just its id: after a deactivation the list no longer holds them, and the
+  // confirmation must stay on screen.
+  const [current, setCurrent] = useState<DirectoryUser | null>(null);
+  const selected = current?.id ?? null;
 
   async function refresh() {
     await Promise.all([users.reload(), everyone.reload()]);
@@ -40,7 +42,7 @@ export function UsersView({ messages }: { messages: Messages }) {
             value={tab}
             onValueChange={(value) => {
               setTab(value === "inactive" ? "inactive" : "current");
-              setSelected(null);
+              setCurrent(null);
             }}
           >
             <TabsList>
@@ -80,7 +82,7 @@ export function UsersView({ messages }: { messages: Messages }) {
                         size="sm"
                         variant={selected === user.id ? "default" : "outline"}
                         aria-label={`${messages["users.manage"]} ${user.email}`}
-                        onClick={() => setSelected(selected === user.id ? null : user.id)}
+                        onClick={() => setCurrent(selected === user.id ? null : user)}
                       >
                         {messages["users.manage"]}
                       </Button>
