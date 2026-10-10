@@ -415,3 +415,49 @@ async def test_every_export_logs_user_time_filter_and_row_count(world):
     assert entry.created_at == NOW
     assert entry.new_values["filter"] == {"q": "Bulk"}
     assert entry.new_values["rows"] == 3
+
+
+# Review S2 (decision 70): the person file leaves out other users' private notes (ACT-02 c1) and names a
+# deal by its code name only (AUTHZ-06 c2), so it carries no deal id, client or target.
+async def test_export_person_excludes_others_private_notes_and_names_deals_by_code_name(world):
+    contact_id = await contact(world.partner, email="jan@acme.be")
+    mandate = await create_mandate(world, world.partner, world.client_id)
+    await world.partner.client.post(
+        "/api/v1/activities/",
+        json={
+            "type": "meeting",
+            "occurred_at": NOW.isoformat(),
+            "note": "Teaser walk-through",
+            "links": [{"record_type": "contact", "record_id": contact_id}, {"record_type": "mandate", "record_id": mandate["id"]}],
+        },
+        headers=world.partner.headers,
+    )
+    for body, visibility, extra in (
+        ("Only mine", "private", {}),
+        ("Deal remark", "deal_confidential", {"mandate_id": mandate["id"]}),
+    ):
+        created = await world.partner.client.post(
+            "/api/v1/notes/",
+            json={"record_type": "contact", "record_id": contact_id, "body": body, "visibility": visibility, **extra},
+            headers=world.partner.headers,
+        )
+        assert created.status_code == 201, created.text
+    own = await world.compliance.client.post(
+        "/api/v1/notes/",
+        json={"record_type": "contact", "record_id": contact_id, "body": "My own aside", "visibility": "private"},
+        headers=world.compliance.headers,
+    )
+    assert own.status_code == 201, own.text
+
+    response = await world.compliance.client.get(f"/api/v1/contacts/{contact_id}/export")
+
+    assert response.status_code == 200, response.text
+    document = json.loads(response.text)
+    bodies = {note["body"] for note in document["notes"]}
+    assert bodies == {"Deal remark", "My own aside"}
+    deal_note = next(note for note in document["notes"] if note["body"] == "Deal remark")
+    assert deal_note["mandate"] == "Falcon"
+    assert "mandate_id" not in deal_note
+    mandate_links = [link for link in document["activities"][0]["links"] if link["record_type"] == "mandate"]
+    assert mandate_links == [{"record_type": "mandate", "code_name": "Falcon"}]
+    assert "Acme" not in response.text
