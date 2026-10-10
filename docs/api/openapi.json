@@ -3505,6 +3505,11 @@
             "title": "Company Id",
             "type": "integer"
           },
+          "company_name": {
+            "default": "",
+            "title": "Company Name",
+            "type": "string"
+          },
           "end_date": {
             "anyOf": [
               {
@@ -3669,6 +3674,155 @@
           "limit"
         ],
         "title": "ExportPreview",
+        "type": "object"
+      },
+      "FakeAccounts": {
+        "properties": {
+          "ebitda": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ebitda"
+          },
+          "filed_on": {
+            "format": "date",
+            "title": "Filed On",
+            "type": "string"
+          },
+          "fte": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fte"
+          },
+          "net_debt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Debt"
+          },
+          "revenue": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revenue"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "year",
+          "filed_on"
+        ],
+        "title": "FakeAccounts",
+        "type": "object"
+      },
+      "FakeEntry": {
+        "properties": {
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Address"
+          },
+          "legal_form": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legal Form"
+          },
+          "legal_name": {
+            "title": "Legal Name",
+            "type": "string"
+          },
+          "nace_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nace Code"
+          }
+        },
+        "required": [
+          "legal_name"
+        ],
+        "title": "FakeEntry",
+        "type": "object"
+      },
+      "FakeRegisters": {
+        "description": "Keyed by the 10-digit enterprise number. Both empty restores the unconfigured adapters.",
+        "properties": {
+          "accounts": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/FakeAccounts"
+              },
+              "type": "array"
+            },
+            "title": "Accounts",
+            "type": "object"
+          },
+          "entries": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FakeEntry"
+            },
+            "title": "Entries",
+            "type": "object"
+          }
+        },
+        "title": "FakeRegisters",
         "type": "object"
       },
       "FeeForecastRead": {
@@ -14594,6 +14748,7 @@
                   {
                     "current_role": {
                       "company_id": 1,
+                      "company_name": "",
                       "end_date": null,
                       "function": null,
                       "start_date": null
@@ -14607,6 +14762,7 @@
                     "history": [
                       {
                         "company_id": 1,
+                        "company_name": "",
                         "end_date": null,
                         "function": null,
                         "start_date": null
@@ -14693,6 +14849,7 @@
                 "example": {
                   "current_role": {
                     "company_id": 1,
+                    "company_name": "",
                     "end_date": "2026-10-10",
                     "function": "text",
                     "start_date": "2026-10-10"
@@ -14706,6 +14863,7 @@
                   "history": [
                     {
                       "company_id": 1,
+                      "company_name": "",
                       "end_date": "2026-10-10",
                       "function": "text",
                       "start_date": "2026-10-10"
@@ -14775,6 +14933,7 @@
                 "example": {
                   "current_role": {
                     "company_id": 1,
+                    "company_name": "",
                     "end_date": "2026-10-10",
                     "function": "text",
                     "start_date": "2026-10-10"
@@ -14788,6 +14947,7 @@
                   "history": [
                     {
                       "company_id": 1,
+                      "company_name": "",
                       "end_date": "2026-10-10",
                       "function": "text",
                       "start_date": "2026-10-10"
@@ -14879,6 +15039,7 @@
                 "example": {
                   "current_role": {
                     "company_id": 1,
+                    "company_name": "",
                     "end_date": "2026-10-10",
                     "function": "text",
                     "start_date": "2026-10-10"
@@ -14892,6 +15053,7 @@
                   "history": [
                     {
                       "company_id": 1,
+                      "company_name": "",
                       "end_date": "2026-10-10",
                       "function": "text",
                       "start_date": "2026-10-10"
@@ -15277,6 +15439,7 @@
                 "example": {
                   "current_role": {
                     "company_id": 1,
+                    "company_name": "",
                     "end_date": "2026-10-10",
                     "function": "text",
                     "start_date": "2026-10-10"
@@ -15290,6 +15453,7 @@
                   "history": [
                     {
                       "company_id": 1,
+                      "company_name": "",
                       "end_date": "2026-10-10",
                       "function": "text",
                       "start_date": "2026-10-10"
@@ -15371,6 +15535,7 @@
                 "example": {
                   "current_role": {
                     "company_id": 1,
+                    "company_name": "",
                     "end_date": "2026-10-10",
                     "function": "text",
                     "start_date": "2026-10-10"
@@ -15384,6 +15549,7 @@
                   "history": [
                     {
                       "company_id": 1,
+                      "company_name": "",
                       "end_date": "2026-10-10",
                       "function": "text",
                       "start_date": "2026-10-10"
@@ -24515,6 +24681,76 @@
           }
         },
         "summary": "Run every scheduled job now",
+        "tags": [
+          "Test hooks"
+        ]
+      }
+    },
+    "/api/v1/test-hooks/registers": {
+      "put": {
+        "operationId": "set_fake_registers_api_v1_test_hooks_registers_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "accounts": {
+                  "key": [
+                    {
+                      "ebitda": null,
+                      "filed_on": "2026-10-10",
+                      "fte": null,
+                      "net_debt": null,
+                      "revenue": null,
+                      "year": 1
+                    }
+                  ]
+                },
+                "entries": {
+                  "key": {
+                    "address": "text",
+                    "legal_form": "text",
+                    "legal_name": "legal_name",
+                    "nace_code": "text"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/FakeRegisters"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "key": 1
+                },
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Set Fake Registers Api V1 Test Hooks Registers Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Answer KBO/BCE lookups and NBB imports from fixed data",
         "tags": [
           "Test hooks"
         ]

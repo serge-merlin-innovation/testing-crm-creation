@@ -34,6 +34,7 @@ NOT_RECORD_CHANGES = {
     ("PUT", "/api/v1/test-hooks/clock"),
     ("POST", "/api/v1/test-hooks/emails/capture"),
     ("POST", "/api/v1/test-hooks/jobs/run"),
+    ("PUT", "/api/v1/test-hooks/registers"),
 }
 
 NOW = datetime(2026, 10, 12, 9, 0, tzinfo=UTC)

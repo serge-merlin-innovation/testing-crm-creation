@@ -46,3 +46,21 @@ class UnconfiguredRegister:
 class UnconfiguredAnnualAccounts:
     async def latest(self, enterprise_number: str, years: int) -> list[FiledAccounts]:
         raise RegisterUnavailableError("No NBB adapter is configured")
+
+
+class StaticRegister:
+    def __init__(self, entries: dict[str, RegisterEntry]) -> None:
+        self.entries = entries
+
+    async def lookup(self, enterprise_number: str) -> RegisterEntry | None:
+        return self.entries.get(enterprise_number)
+
+
+class StaticAnnualAccounts:
+    def __init__(self, accounts: dict[str, list[FiledAccounts]]) -> None:
+        self.accounts = accounts
+
+    async def latest(self, enterprise_number: str, years: int) -> list[FiledAccounts]:
+        if enterprise_number not in self.accounts:
+            raise RegisterUnavailableError("No filed accounts for this number")
+        return sorted(self.accounts[enterprise_number], key=lambda row: row.year, reverse=True)[:years]

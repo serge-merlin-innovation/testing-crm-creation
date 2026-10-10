@@ -326,9 +326,21 @@ async def test_employer_change_keeps_history(client, seeded_db, analyst):
     )
 
     body = updated.json()
-    assert body["current_role"] == {"company_id": new["id"], "function": "Chair", "start_date": "2027-03-01", "end_date": None}
+    assert body["current_role"] == {
+        "company_id": new["id"],
+        "company_name": "Newco",
+        "function": "Chair",
+        "start_date": "2027-03-01",
+        "end_date": None,
+    }
     assert body["history"] == [
-        {"company_id": old["id"], "function": "CEO", "start_date": "2026-10-10", "end_date": "2027-03-01"}
+        {
+            "company_id": old["id"],
+            "company_name": "Oldco",
+            "function": "CEO",
+            "start_date": "2026-10-10",
+            "end_date": "2027-03-01",
+        }
     ]
 
 

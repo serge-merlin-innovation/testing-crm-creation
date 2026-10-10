@@ -51,6 +51,7 @@ from ....modules.security.routes import router as security_router
 from ....modules.session.routes import router as session_router
 from ....modules.task.routes import router as tasks_router
 from ....modules.user.routes import router as users_router
+from .register_hooks import router as register_hooks_router
 
 router = APIRouter(prefix="/v1")
 # Read-only (dashboard permissions only) is refused on every record route (ROLE-01 c3).
@@ -109,3 +110,4 @@ router.include_router(operations_router, prefix="/operations")
 if settings.TEST_HOOKS_ENABLED:
     ProductionSecurityValidator(settings).validate_test_hooks()
     router.include_router(testing_router, prefix="/test-hooks")
+    router.include_router(register_hooks_router, prefix="/test-hooks")
