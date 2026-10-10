@@ -6,16 +6,11 @@ name: CI
 # Delivery is intentionally split: the manual Infra workflow provisions selected Azure services,
 # while CD deploys the immutable release produced by a successful main run.
 #
-# The gates run here, on the push to `main` that a merge creates — deliberately not on the pull
-# request. Branch verification is local: `.husky/pre-commit` and `.husky/pre-push` run the same
-# tiers before anything leaves the machine. The consequence is accepted and stated in
-# `CONSTITUTION.md` § 4 — `main` can go red, and `version` needs every gate, so nothing that failed
-# is ever published or tagged. Markdown carries no check at all, so a prose-only commit is skipped
-# rather than verified.
+# Runs only when started by hand (Actions tab or `gh workflow run ci.yml --ref main`); a push
+# never triggers it. Branch verification is local: `.husky/pre-commit` and `.husky/pre-push` run
+# the same tiers before anything leaves the machine. `version` needs every gate, so nothing that
+# failed is ever published or tagged.
 on:
-  push:
-    branches: [main]
-    paths-ignore: ['**.md']
   workflow_dispatch:
 
 # A release version is selected before the images are built and committed as a Git tag only
