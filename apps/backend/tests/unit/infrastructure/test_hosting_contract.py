@@ -10,6 +10,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 INFRA = Path(__file__).parents[5] / "infra"
 PARAMETERS = INFRA / "parameters"
@@ -142,3 +143,28 @@ def test_templates_compile(template: str):
         timeout=120,
     )
     assert result.returncode == 0, result.stderr
+
+
+class TestReleaseGates:
+    """NFR-01 c3 and NFR-02 c1 run in CI and block a release."""
+
+    def workflow(self) -> dict:
+        return yaml.safe_load(text(WORKFLOWS / "ci.yml"))
+
+    def test_an_owasp_zap_baseline_blocks_high_or_critical_findings(self):
+        jobs = self.workflow()["jobs"]
+        steps = jobs["owasp-zap"]["steps"]
+        assert any(str(step.get("uses", "")).startswith("zaproxy/action-baseline") for step in steps)
+        assert any("riskcode | tonumber) >= 3" in step.get("run", "") for step in steps)
+        assert "owasp-zap" in jobs["version"]["needs"]
+
+    def test_the_k6_load_test_runs_50_users_on_200k_contacts_and_gates_the_release(self):
+        jobs = self.workflow()["jobs"]
+        assert "load-test" in jobs["version"]["needs"]
+        script = text(INFRA.parent / "apps" / "backend" / "perf" / "k6" / "load.js")
+        assert "vus: 50" in script
+        assert '"http_req_duration{kind:page}": ["p(95)<2000"]' in script
+        assert '"http_req_duration{kind:search}": ["p(95)<1000"]' in script
+        seed = text(INFRA.parent / "apps" / "backend" / "scripts" / "load_dataset.py")
+        assert "contacts: int = 200_000" in seed
+        assert "users: int = 50" in seed

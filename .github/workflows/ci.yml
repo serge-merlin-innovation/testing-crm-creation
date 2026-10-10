@@ -121,6 +121,98 @@ jobs:
             apps/frontend/test-results/
           retention-days: 7
 
+  # NFR-02 c1: 50 concurrent users on 200,000 contacts; k6 fails the job when page p95 >= 2 s or
+  # search p95 >= 1 s. Runs on the CI runner's own throwaway Postgres; never against production.
+  load-test:
+    name: load test (k6, 50 users, 200k contacts)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crm
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/crm
+      SECRET_KEY: ci-load-test-secret
+      SCHEDULED_JOBS_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python: "true"
+      - working-directory: apps/backend
+        run: |
+          uv run alembic upgrade head
+          uv run python -m scripts.setup_initial_data
+          uv run python -m scripts.seed_load_test
+          uv run fastapi run src/interfaces/main.py --port 8000 > api.log 2>&1 &
+          for attempt in $(seq 1 60); do curl -sf http://localhost:8000/health/ready && break; sleep 1; done
+      - uses: grafana/setup-k6-action@v1
+      - working-directory: apps/backend/perf/k6
+        run: k6 run --quiet load.js
+        env:
+          BASE_URL: http://localhost:8000
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test
+          path: |
+            apps/backend/perf/k6/summary.json
+            apps/backend/api.log
+          retention-days: 14
+
+  # NFR-01 c3: OWASP Top 10 baseline. ZAP scans the production build of both apps; any High
+  # (or Critical) alert fails the job, and so a release, because `version` needs it.
+  owasp-zap:
+    name: OWASP ZAP baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crm
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/crm
+      SECRET_KEY: ci-zap-secret
+      ENVIRONMENT: staging
+      SESSION_SECURE_COOKIES: "false"
+      SCHEDULED_JOBS_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python: "true"
+      - working-directory: apps/backend
+        run: |
+          uv run alembic upgrade head
+          uv run python -m scripts.setup_initial_data
+          uv run fastapi run src/interfaces/main.py --port 8000 > api.log 2>&1 &
+      - run: |
+          pnpm --filter @merlin/frontend run build
+          PORT=3000 BACKEND_URL=http://localhost:8000 pnpm --filter @merlin/frontend start > web.log 2>&1 &
+          for attempt in $(seq 1 90); do curl -sf http://localhost:3000/login >/dev/null && break; sleep 1; done
+      - uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: http://localhost:3000
+          rules_file_name: .zap/rules.tsv
+          cmd_options: -a -I
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: zap-baseline
+      - name: Fail on High or Critical findings
+        run: |
+          high=$(jq '[.site[].alerts[] | select((.riskcode | tonumber) >= 3)] | length' report_json.json)
+          echo "High or Critical ZAP alerts: $high"
+          test "$high" -eq 0
+
   secret-scan:
     name: secret scan
     runs-on: ubuntu-latest
@@ -138,7 +230,7 @@ jobs:
   # The repository tag is created only after every image publishes successfully below.
   version:
     name: select release version
-    needs: [frontend, backend, backend-integration, frontend-e2e, secret-scan]
+    needs: [frontend, backend, backend-integration, frontend-e2e, secret-scan, owasp-zap, load-test]
     # A dispatch can be started on any ref: without this guard one off main would burn the next
     # version, publish it and the `main` alias from unmerged code, and tag a release there.
     if: github.ref == 'refs/heads/main'
