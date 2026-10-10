@@ -1,39 +1,32 @@
+import type { MessageKey } from "./i18n/messages";
 import { audienceFor, satisfiesAudience, type Viewer } from "./page-audience";
 
 export type NavigationItem = {
-  label: string;
+  label: MessageKey;
   href: string;
 };
 
 const PRIMARY_NAVIGATION: NavigationItem[] = [
-  { label: "Overview", href: "/overview" },
-  { label: "Analytics", href: "/analytics" },
-  { label: "Users", href: "/users" },
+  { label: "nav.overview", href: "/overview" },
+  { label: "nav.analytics", href: "/analytics" },
+  { label: "nav.users", href: "/users" },
+  { label: "nav.permissions", href: "/permissions" },
 ];
 
 const ACCOUNT_NAVIGATION: NavigationItem[] = [
-  { label: "Profile", href: "/profile" },
-  { label: "Workspace settings", href: "/settings" },
+  { label: "nav.profile", href: "/profile" },
+  { label: "nav.settings", href: "/settings" },
 ];
 
-// Filtering through the proxy's audience manifest prevents links to pages the viewer cannot enter.
+// Filtering through the audience manifest hides every link the viewer's permissions do not open.
 export function getPrimaryNavigation(viewer: Viewer): NavigationItem[] {
-  return PRIMARY_NAVIGATION.filter((item) =>
-    satisfiesAudience(audienceFor(item.href), viewer),
-  );
+  return PRIMARY_NAVIGATION.filter((item) => satisfiesAudience(audienceFor(item.href), viewer));
 }
 
 export function getAccountNavigation(viewer: Viewer): NavigationItem[] {
-  return ACCOUNT_NAVIGATION.filter((item) =>
-    satisfiesAudience(audienceFor(item.href), viewer),
-  );
+  return ACCOUNT_NAVIGATION.filter((item) => satisfiesAudience(audienceFor(item.href), viewer));
 }
 
-export function getActiveNavigationLabel(
-  pathname: string,
-  items: NavigationItem[],
-): string | undefined {
-  return items.find(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
-  )?.label;
+export function getActiveNavigationLabel(pathname: string, items: NavigationItem[]): MessageKey | undefined {
+  return items.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))?.label;
 }

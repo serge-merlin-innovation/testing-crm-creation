@@ -5,7 +5,7 @@ import {
   readForwardedIdentity,
   resolveSessionIdentity,
   SESSION_ROLE_HEADER,
-  SESSION_SUPERUSER_HEADER,
+  SESSION_PERMISSIONS_HEADER,
 } from "@/lib/session-identity";
 
 const backendOrigin = "http://backend.test";
@@ -18,15 +18,18 @@ function jsonResponse(payload: unknown, status = 200): Response {
 }
 
 function userResponse(
-  { roleName, isSuperuser }: { roleName: string | null; isSuperuser: boolean },
+  { roleName, permissions }: { roleName: string | null; permissions: string[] | null },
 ): Response {
   return jsonResponse({
     id: 1,
-    username: "userson",
+    email: "ann@firm.be",
     role_name: roleName,
-    is_superuser: isSuperuser,
+    permissions,
   });
 }
+
+const ANALYST = { roleName: "Analyst / Associate", permissions: ["deals.read_staffed"] };
+const ADMIN = { roleName: "Admin", permissions: ["roles.manage", "users.manage"] };
 
 type Fetcher = (
   input: URL | RequestInfo,
@@ -35,7 +38,7 @@ type Fetcher = (
 
 function backend(
   user: () => Response = () =>
-    userResponse({ roleName: "user", isSuperuser: false }),
+    userResponse(ANALYST),
 ) {
   return vi.fn<Fetcher>(() => Promise.resolve(user()));
 }
@@ -52,24 +55,12 @@ afterEach(() => {
 });
 
 describe("resolveSessionIdentity", () => {
-  it("names the role the backend reported", async () => {
+  it("names the role and permissions the backend reported", async () => {
     vi.stubGlobal("fetch", backend());
 
     await expect(resolveSessionIdentity("session-1")).resolves.toEqual({
       status: "identified",
-      identity: { roleName: "user", isSuperuser: false },
-    });
-  });
-
-  it("reports a superuser with no role row", async () => {
-    vi.stubGlobal(
-      "fetch",
-      backend(() => userResponse({ roleName: null, isSuperuser: true })),
-    );
-
-    await expect(resolveSessionIdentity("session-1")).resolves.toEqual({
-      status: "identified",
-      identity: { roleName: null, isSuperuser: true },
+      identity: ANALYST,
     });
   });
 
@@ -128,9 +119,8 @@ describe("resolveSessionIdentity", () => {
     });
   });
 
-  // The pair below is the distinction the whole gate rests on: a body missing `is_superuser` means
-  // the backend is misbehaving and nothing can be judged, while a missing role name is a real
-  // answer about a real user.
+  // The pair below is the distinction the whole gate rests on: a body that is not a user means
+  // the backend is misbehaving and nothing can be judged, while a missing role is a real answer.
   it("reports the backend unavailable on a body it cannot read", async () => {
     vi.stubGlobal(
       "fetch",
@@ -142,15 +132,15 @@ describe("resolveSessionIdentity", () => {
     });
   });
 
-  it("identifies a user the backend gave no role name, superuser flag intact", async () => {
+  it("identifies a user the backend gave no role, with no permissions", async () => {
     vi.stubGlobal(
       "fetch",
-      backend(() => jsonResponse({ id: 1, is_superuser: false })),
+      backend(() => userResponse({ roleName: null, permissions: null })),
     );
 
     await expect(resolveSessionIdentity("session-1")).resolves.toEqual({
       status: "identified",
-      identity: { roleName: null, isSuperuser: false },
+      identity: { roleName: null, permissions: [] },
     });
   });
 });
@@ -167,11 +157,7 @@ describe("the identity cache", () => {
   });
 
   it("caches a user with no role, since the backend said there is none", async () => {
-    // Every OAuth signup starts roleless. Re-resolving them on every page load would undo the
-    // point of the cache.
-    const fetcher = backend(() =>
-      jsonResponse({ id: 1, role_name: null, is_superuser: false }),
-    );
+    const fetcher = backend(() => userResponse({ roleName: null, permissions: null }));
     vi.stubGlobal("fetch", fetcher);
 
     await resolveSessionIdentity("session-1");
@@ -188,19 +174,17 @@ describe("the identity cache", () => {
           "admin",
         );
 
-        return Promise.resolve(
-          userResponse({ roleName: "user", isSuperuser: Boolean(isAdmin) }),
-        );
+        return Promise.resolve(userResponse(isAdmin ? ADMIN : ANALYST));
       }),
     );
 
     await expect(resolveSessionIdentity("session-admin")).resolves.toEqual({
       status: "identified",
-      identity: { roleName: "user", isSuperuser: true },
+      identity: ADMIN,
     });
     await expect(resolveSessionIdentity("session-plain")).resolves.toEqual({
       status: "identified",
-      identity: { roleName: "user", isSuperuser: false },
+      identity: ANALYST,
     });
   });
 
@@ -224,47 +208,35 @@ describe("the identity cache", () => {
 describe("the forwarded identity headers", () => {
   it("overwrites whatever the client sent", () => {
     const headers = new Headers({
-      [SESSION_ROLE_HEADER]: "admin",
-      [SESSION_SUPERUSER_HEADER]: "true",
+      [SESSION_ROLE_HEADER]: "Admin",
+      [SESSION_PERMISSIONS_HEADER]: "roles.manage",
     });
 
-    applyForwardedIdentity(headers, { roleName: "user", isSuperuser: false });
+    applyForwardedIdentity(headers, ANALYST);
 
-    expect(readForwardedIdentity(headers)).toEqual({
-      roleName: "user",
-      isSuperuser: false,
-    });
+    expect(readForwardedIdentity(headers)).toEqual(ANALYST);
   });
 
   it("blanks a forged claim for a visitor with no identity", () => {
     const headers = new Headers({
-      [SESSION_ROLE_HEADER]: "reviewer",
-      [SESSION_SUPERUSER_HEADER]: "true",
+      [SESSION_ROLE_HEADER]: "Admin",
+      [SESSION_PERMISSIONS_HEADER]: "users.manage",
     });
 
     applyForwardedIdentity(headers, null);
 
-    expect(readForwardedIdentity(headers)).toEqual({
-      roleName: null,
-      isSuperuser: false,
-    });
+    expect(readForwardedIdentity(headers)).toEqual({ roleName: null, permissions: [] });
   });
 
-  it("round-trips a superuser with no role", () => {
+  it("round-trips several permissions", () => {
     const headers = new Headers();
 
-    applyForwardedIdentity(headers, { roleName: null, isSuperuser: true });
+    applyForwardedIdentity(headers, ADMIN);
 
-    expect(readForwardedIdentity(headers)).toEqual({
-      roleName: null,
-      isSuperuser: true,
-    });
+    expect(readForwardedIdentity(headers)).toEqual(ADMIN);
   });
 
   it("reads nothing out of headers that were never set", () => {
-    expect(readForwardedIdentity(new Headers())).toEqual({
-      roleName: null,
-      isSuperuser: false,
-    });
+    expect(readForwardedIdentity(new Headers())).toEqual({ roleName: null, permissions: [] });
   });
 });

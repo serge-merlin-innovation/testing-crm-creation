@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { DEFAULT_AUTHENTICATED_PATH, LOGIN_PATH } from "@/lib/auth-routing";
-import { MEMBER, SUPERUSER, pathsFor } from "./identities";
+import { ADMIN, MEMBER } from "./identities";
 
-const adminPaths = pathsFor("admin");
+const adminPaths = ["/users", "/permissions"];
 const [adminPath] = adminPaths;
-const [authenticatedPath] = pathsFor("authenticated");
+const authenticatedPath = "/profile";
 
 test.describe("a signed-out visitor", () => {
   test("is sent to the login page carrying where they were headed", async ({ page }) => {
@@ -26,23 +26,29 @@ test.describe("a signed-out visitor", () => {
   });
 });
 
-test.describe("a superuser satisfies every audience", () => {
-  test.use({ storageState: SUPERUSER.storageState });
+test.describe("an admin", () => {
+  test.use({ storageState: ADMIN.storageState });
 
-  for (const kind of ["authenticated", "admin", "role"] as const) {
-    const [path] = pathsFor(kind);
-
-    test(`reaches the ${kind} page`, async ({ page }) => {
-      test.skip(!path, `this app defines no ${kind} page`);
-
+  for (const path of adminPaths) {
+    test(`reaches ${path}`, async ({ page }) => {
       await page.goto(path);
 
       await expect(page).toHaveURL(path);
     });
   }
+
+  test("sees the permission matrix with roles as columns", async ({ page }) => {
+    await page.goto("/permissions");
+
+    for (const role of ["Admin", "Partner", "Director / Manager", "Analyst / Associate", "Compliance / Back-office", "Read-only"]) {
+      await expect(page.getByRole("columnheader", { name: role, exact: true })).toBeVisible();
+    }
+    await expect(page.getByRole("cell", { name: "audit.read", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Export CSV" })).toBeVisible();
+  });
 });
 
-test.describe("a member holding the default role", () => {
+test.describe("an analyst", () => {
   test.use({ storageState: MEMBER.storageState });
 
   test("is refused an admin page and lands on the landing page, not on login", async ({

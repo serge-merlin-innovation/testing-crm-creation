@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readBoolean, readString } from "@/lib/json-field";
+import { readString, readStringArray } from "@/lib/json-field";
 
 describe("readString", () => {
   it("returns the field when it is a string", () => {
@@ -43,34 +43,20 @@ describe("readString", () => {
   );
 });
 
-describe("readBoolean", () => {
-  it("returns true", () => {
-    expect(readBoolean({ is_superuser: true }, "is_superuser")).toBe(true);
-  });
-
-  it("returns false rather than collapsing it to null", () => {
-    // The distinction the page gate rests on: `false` is an answer, null means the backend
-    // did not give one and the session cannot be judged.
-    expect(readBoolean({ is_superuser: false }, "is_superuser")).toBe(false);
+describe("readStringArray", () => {
+  it("returns a list of strings", () => {
+    expect(readStringArray({ permissions: ["audit.read"] }, "permissions")).toEqual(["audit.read"]);
   });
 
   it.each([
-    ["the string 'true'", { is_superuser: "true" }],
-    ["zero", { is_superuser: 0 }],
-    ["null", { is_superuser: null }],
+    ["a string", { permissions: "audit.read" }],
+    ["a list holding a non-string", { permissions: ["audit.read", 1] }],
+    ["null", { permissions: null }],
   ])("returns null when the field is %s", (_label, payload) => {
-    expect(readBoolean(payload, "is_superuser")).toBeNull();
-  });
-
-  it("returns null when the key is absent", () => {
-    expect(readBoolean({ id: 1 }, "is_superuser")).toBeNull();
-  });
-
-  it("returns null when the payload is not an object", () => {
-    expect(readBoolean(null, "is_superuser")).toBeNull();
+    expect(readStringArray(payload, "permissions")).toBeNull();
   });
 
   it("does not read a prototype member", () => {
-    expect(readBoolean({}, "constructor")).toBeNull();
+    expect(readStringArray({}, "constructor")).toBeNull();
   });
 });

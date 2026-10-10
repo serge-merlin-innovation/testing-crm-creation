@@ -1,25 +1,18 @@
 /**
  * Who may reach each page `src/app/` serves. A page and its entry are one change: an unlisted path
- * falls through to gated below, so a forgotten entry silently demands a login. Nothing checks it.
+ * falls through to gated below, so a forgotten entry silently demands a login.
  *
  * Pure — no cookies, no fetch — so both the proxy and the navbar can read it.
  */
 export type PageAudience =
   | { kind: "public" }
   | { kind: "authenticated" }
-  | { kind: "admin" }
-  | { kind: "role"; role: string };
+  | { kind: "permission"; permission: string };
 
-/**
- * What the proxy resolved about the reader. `roleName` is null for a user with no role row, which
- * is a user an administrator created without assigning one.
- *
- * It lives here rather than beside the resolve because this module is pure: a client component can
- * take an identity as props without reaching into the server-only module that produces one.
- */
+/** What the proxy resolved about the reader: their single role and that role's permissions. */
 export type SessionIdentity = {
   roleName: string | null;
-  isSuperuser: boolean;
+  permissions: string[];
 };
 
 export type Viewer = SessionIdentity & {
@@ -31,9 +24,10 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/login": { kind: "public" },
   "/overview": { kind: "authenticated" },
   "/profile": { kind: "authenticated" },
-  "/settings": { kind: "authenticated" },
-  "/users": { kind: "admin" },
-  "/analytics": { kind: "role", role: "user" },
+  "/settings": { kind: "permission", permission: "settings.manage" },
+  "/users": { kind: "permission", permission: "users.manage" },
+  "/permissions": { kind: "permission", permission: "roles.manage" },
+  "/analytics": { kind: "permission", permission: "dashboard.aggregated" },
 };
 
 const GATED_BY_DEFAULT: PageAudience = { kind: "authenticated" };
@@ -44,12 +38,8 @@ export function normalizePagePath(pathname: string): string {
 }
 
 /**
- * Longest listed prefix wins, so a nested page inherits its parent's audience — `/users/42` is as
- * admin-only as `/users`. An unlisted path with no listed ancestor is gated, never public: a
- * forgotten entry then costs a redirect instead of leaking a page.
- *
- * `/` is deliberately not an ancestor of anything. As a prefix it would cover the whole site and
- * make every page public.
+ * Longest listed prefix wins, so a nested page inherits its parent's audience. An unlisted path
+ * with no listed ancestor is gated, never public. `/` is deliberately not an ancestor of anything.
  */
 export function audienceFor(pathname: string): PageAudience {
   const path = normalizePagePath(pathname);
@@ -74,15 +64,8 @@ export function audienceFor(pathname: string): PageAudience {
   return matched?.audience ?? GATED_BY_DEFAULT;
 }
 
-/**
- * A superuser satisfies every audience, matching the backend, where `is_superuser` bypasses role
- * checks. Anyone else must hold exactly the role the page names — roles are mutually exclusive
- * (`user.role_id` is a single nullable column), so there is no hierarchy to walk.
- */
-export function satisfiesAudience(
-  audience: PageAudience,
-  viewer: Viewer,
-): boolean {
+/** No role bypasses this, Admin included: the backend checks the same permission on every call. */
+export function satisfiesAudience(audience: PageAudience, viewer: Viewer): boolean {
   if (audience.kind === "public") {
     return true;
   }
@@ -91,9 +74,9 @@ export function satisfiesAudience(
     return false;
   }
 
-  if (viewer.isSuperuser || audience.kind === "authenticated") {
+  if (audience.kind === "authenticated") {
     return true;
   }
 
-  return audience.kind === "role" && viewer.roleName === audience.role;
+  return viewer.permissions.includes(audience.permission);
 }

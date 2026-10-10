@@ -6,65 +6,49 @@ import {
 } from "@/lib/app-navigation";
 import type { Viewer } from "@/lib/page-audience";
 
-const noRole: Viewer = {
+const analyst: Viewer = {
   isAuthenticated: true,
-  roleName: null,
-  isSuperuser: false,
+  roleName: "Analyst / Associate",
+  permissions: ["deals.read_staffed", "deals.edit_staffed"],
 };
-const user: Viewer = {
+const readOnly: Viewer = { isAuthenticated: true, roleName: "Read-only", permissions: ["dashboard.aggregated"] };
+const admin: Viewer = {
   isAuthenticated: true,
-  roleName: "user",
-  isSuperuser: false,
-};
-const superuser: Viewer = {
-  isAuthenticated: true,
-  roleName: "user",
-  isSuperuser: true,
+  roleName: "Admin",
+  permissions: ["users.manage", "roles.manage", "settings.manage", "audit.read"],
 };
 
 function hrefs(items: { href: string }[]) {
   return items.map((item) => item.href);
 }
 
+// AUTHZ-01: the UI hides a control the role's permissions do not grant.
 describe("getPrimaryNavigation", () => {
-  it("offers a superuser every page", () => {
-    expect(hrefs(getPrimaryNavigation(superuser))).toEqual([
-      "/overview",
-      "/analytics",
-      "/users",
-    ]);
+  it("offers an admin user and permission administration", () => {
+    expect(hrefs(getPrimaryNavigation(admin))).toEqual(["/overview", "/users", "/permissions"]);
   });
 
-  it("hides the admin page from a plain user", () => {
-    expect(hrefs(getPrimaryNavigation(user))).toEqual([
-      "/overview",
-      "/analytics",
-    ]);
+  it("hides administration from an analyst", () => {
+    expect(hrefs(getPrimaryNavigation(analyst))).toEqual(["/overview"]);
   });
 
-  it("hides the role page from a signed-in user with no role", () => {
-    expect(hrefs(getPrimaryNavigation(noRole))).toEqual(["/overview"]);
+  it("offers read-only only the dashboards", () => {
+    expect(hrefs(getPrimaryNavigation(readOnly))).toEqual(["/overview", "/analytics"]);
   });
 });
 
 describe("getAccountNavigation", () => {
-  it("gives every signed-in visitor their own account pages", () => {
-    expect(hrefs(getAccountNavigation(noRole))).toEqual([
-      "/profile",
-      "/settings",
-    ]);
+  it("gives every signed-in visitor their own profile, settings only to whoever manages them", () => {
+    expect(hrefs(getAccountNavigation(analyst))).toEqual(["/profile"]);
+    expect(hrefs(getAccountNavigation(admin))).toEqual(["/profile", "/settings"]);
   });
 });
 
 describe("getActiveNavigationLabel", () => {
-  const items = getPrimaryNavigation(superuser);
-
-  it("marks the open page", () => {
-    expect(getActiveNavigationLabel("/analytics", items)).toBe("Analytics");
-  });
+  const items = getPrimaryNavigation(admin);
 
   it("keeps a nested page marked against its section", () => {
-    expect(getActiveNavigationLabel("/users/42", items)).toBe("Users");
+    expect(getActiveNavigationLabel("/users/42", items)).toBe("nav.users");
   });
 
   it("marks nothing on a page outside the catalog", () => {

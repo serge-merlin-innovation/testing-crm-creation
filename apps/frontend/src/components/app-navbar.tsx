@@ -12,17 +12,22 @@ import {
   getActiveNavigationLabel,
   getPrimaryNavigation,
 } from "@/lib/app-navigation";
+import type { MessageKey } from "@/lib/i18n/messages";
 import type { SessionIdentity } from "@/lib/page-audience";
 import { logout } from "@/services/auth";
 
 /** Only ever rendered for a signed-in reader, hence the hardcoded `isAuthenticated`. Role and
- *  superuser arrive as props from the proxy's headers — nothing about the session is readable here. */
-export function AppNavbar({ roleName, isSuperuser }: SessionIdentity) {
+ *  permissions arrive as props from the proxy's headers — nothing about the session is readable here. */
+export function AppNavbar({
+  roleName,
+  permissions,
+  messages,
+}: SessionIdentity & { messages: Record<MessageKey, string> }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
-  const viewer = { isAuthenticated: true, roleName, isSuperuser };
+  const viewer = { isAuthenticated: true, roleName, permissions };
   const navigationItems = getPrimaryNavigation(viewer);
   const accountItems = getAccountNavigation(viewer);
   const activeItem = getActiveNavigationLabel(pathname, navigationItems);
@@ -48,7 +53,7 @@ export function AppNavbar({ roleName, isSuperuser }: SessionIdentity) {
       <div className="flex items-center gap-4">
         <Button asChild variant="link">
           <Link href={DEFAULT_AUTHENTICATED_PATH} prefetch={false}>
-            Merlin
+            M&amp;A CRM
           </Link>
         </Button>
 
@@ -65,7 +70,7 @@ export function AppNavbar({ roleName, isSuperuser }: SessionIdentity) {
                   href={item.href}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  {item.label}
+                  {messages[item.label]}
                 </Link>
               </Button>
             );
@@ -77,7 +82,7 @@ export function AppNavbar({ roleName, isSuperuser }: SessionIdentity) {
         <nav aria-label="Account" className="flex items-center gap-1">
           {accountItems.map((item) => (
             <Button key={item.href} asChild variant="ghost">
-              <Link href={item.href}>{item.label}</Link>
+              <Link href={item.href}>{messages[item.label]}</Link>
             </Button>
           ))}
         </nav>
@@ -88,7 +93,7 @@ export function AppNavbar({ roleName, isSuperuser }: SessionIdentity) {
           disabled={isLoggingOut}
           onClick={() => void handleLogout()}
         >
-          {isLoggingOut ? "Logging out…" : "Log out"}
+          {isLoggingOut ? messages["nav.loggingOut"] : messages["nav.logout"]}
         </Button>
       </div>
 

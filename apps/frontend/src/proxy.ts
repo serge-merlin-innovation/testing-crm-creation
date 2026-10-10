@@ -79,8 +79,8 @@ export async function proxy(request: NextRequest) {
     return sendToLogin(request);
   }
 
-  // The backend could not answer, so the session stands and only the pages that needed a role or
-  // superuser flag are refused. Treating this as a rejection would sign everyone out on a hiccup.
+  // The backend could not answer, so the session stands and only the pages that needed a
+  // permission are refused. Treating this as a rejection would sign everyone out on a hiccup.
   if (resolved.status === "unavailable") {
     return audience.kind === "authenticated" ? allow(request, null) : refuse(request);
   }

@@ -1,0 +1,99 @@
+export const LANGUAGES = ["en", "fr", "nl"] as const;
+export type Language = (typeof LANGUAGES)[number];
+export const DEFAULT_LANGUAGE: Language = "en";
+export const LANGUAGE_COOKIE = "lang";
+
+const en = {
+  "login.title": "Sign in",
+  "login.description": "Sign in to the CRM with your work email.",
+  "login.email": "Email",
+  "login.password": "Password",
+  "login.submit": "Sign in securely",
+  "login.submitting": "Signing in…",
+  "login.failed": "Sign-in failed",
+  "login.unreachable": "We could not reach the server. Please try again.",
+  "login.invalid": "Invalid email or password",
+  "nav.overview": "Overview",
+  "nav.analytics": "Dashboards",
+  "nav.users": "Users",
+  "nav.permissions": "Permissions",
+  "nav.profile": "Profile",
+  "nav.settings": "Settings",
+  "nav.logout": "Log out",
+  "nav.loggingOut": "Logging out…",
+  "permissions.title": "Permission matrix",
+  "permissions.description": "Roles are columns, permissions are rows. Changes apply at each user's next request.",
+  "permissions.permission": "Permission",
+  "permissions.export": "Export CSV",
+  "permissions.saved": "Permissions saved.",
+  "permissions.loadFailed": "We could not load the permission matrix.",
+  "permissions.saveFailed": "We could not save this change.",
+} as const;
+
+export type MessageKey = keyof typeof en;
+
+const fr: Record<MessageKey, string> = {
+  "login.title": "Connexion",
+  "login.description": "Connectez-vous au CRM avec votre adresse e-mail professionnelle.",
+  "login.email": "Adresse e-mail",
+  "login.password": "Mot de passe",
+  "login.submit": "Se connecter",
+  "login.submitting": "Connexion…",
+  "login.failed": "Échec de la connexion",
+  "login.unreachable": "Le serveur est injoignable. Veuillez réessayer.",
+  "login.invalid": "Adresse e-mail ou mot de passe invalide",
+  "nav.overview": "Aperçu",
+  "nav.analytics": "Tableaux de bord",
+  "nav.users": "Utilisateurs",
+  "nav.permissions": "Autorisations",
+  "nav.profile": "Profil",
+  "nav.settings": "Paramètres",
+  "nav.logout": "Se déconnecter",
+  "nav.loggingOut": "Déconnexion…",
+  "permissions.title": "Matrice des autorisations",
+  "permissions.description":
+    "Les rôles sont en colonnes, les autorisations en lignes. Les changements s'appliquent à la prochaine requête.",
+  "permissions.permission": "Autorisation",
+  "permissions.export": "Exporter en CSV",
+  "permissions.saved": "Autorisations enregistrées.",
+  "permissions.loadFailed": "Impossible de charger la matrice des autorisations.",
+  "permissions.saveFailed": "Impossible d'enregistrer cette modification.",
+};
+
+const nl: Record<MessageKey, string> = {
+  "login.title": "Aanmelden",
+  "login.description": "Meld u aan bij het CRM met uw werk-e-mailadres.",
+  "login.email": "E-mailadres",
+  "login.password": "Wachtwoord",
+  "login.submit": "Veilig aanmelden",
+  "login.submitting": "Aanmelden…",
+  "login.failed": "Aanmelden mislukt",
+  "login.unreachable": "De server is niet bereikbaar. Probeer het opnieuw.",
+  "login.invalid": "Ongeldig e-mailadres of wachtwoord",
+  "nav.overview": "Overzicht",
+  "nav.analytics": "Dashboards",
+  "nav.users": "Gebruikers",
+  "nav.permissions": "Rechten",
+  "nav.profile": "Profiel",
+  "nav.settings": "Instellingen",
+  "nav.logout": "Afmelden",
+  "nav.loggingOut": "Afmelden…",
+  "permissions.title": "Rechtenmatrix",
+  "permissions.description":
+    "Rollen staan in kolommen, rechten in rijen. Wijzigingen gelden vanaf het volgende verzoek.",
+  "permissions.permission": "Recht",
+  "permissions.export": "Exporteren als CSV",
+  "permissions.saved": "Rechten opgeslagen.",
+  "permissions.loadFailed": "De rechtenmatrix kon niet worden geladen.",
+  "permissions.saveFailed": "Deze wijziging kon niet worden opgeslagen.",
+};
+
+export const MESSAGES: Record<Language, Record<MessageKey, string>> = { en, fr, nl };
+
+export function resolveLanguage(value: string | null | undefined): Language {
+  return LANGUAGES.find((language) => language === value) ?? DEFAULT_LANGUAGE;
+}
+
+export function translate(language: Language, key: MessageKey): string {
+  return MESSAGES[language][key] ?? MESSAGES[DEFAULT_LANGUAGE][key];
+}
