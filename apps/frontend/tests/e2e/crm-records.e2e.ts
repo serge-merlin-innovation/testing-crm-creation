@@ -43,11 +43,18 @@ test.describe("an analyst", () => {
     await page.getByLabel("Source").fill("E2E");
     await page.getByLabel("Language").click();
     await page.getByRole("option", { name: "French" }).click();
+    await page.getByLabel("Salutation").fill("Chère Madame");
     await page.getByLabel("No marketing mailings (opt-out)").check();
+    await page.getByLabel("Do not contact").check();
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("status")).toHaveText("Contact created.");
     const contacts = await (await page.request.get(`/api/v1/contacts/?q=Optout${RUN}`)).json();
-    expect(contacts[0]).toMatchObject({ language: "fr", marketing_opt_out: true });
+    expect(contacts[0]).toMatchObject({
+      language: "fr",
+      salutation: "Chère Madame",
+      marketing_opt_out: true,
+      do_not_contact: true,
+    });
 
     await page.goto("/companies");
     await page.getByLabel("Name").fill(`Lingua Partners ${RUN}`);

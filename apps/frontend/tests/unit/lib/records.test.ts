@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { companyPayload, contactPayload, RECORD_LANGUAGES } from "@/lib/records";
 
 describe("contactPayload", () => {
-  it("sends language and marketing opt-out with the contact", () => {
+  it("sends language, salutation, opt-out and Do not contact with the contact", () => {
     expect(
       contactPayload(
-        { first_name: "Ines", last_name: "Maes", email: "", phone: "", source: "Forum", function: "" },
-        { companyId: null, language: "fr", marketingOptOut: true },
+        { first_name: "Ines", last_name: "Maes", email: "", phone: "", source: "Forum", function: "", salutation: " Madame " },
+        { companyId: null, language: "fr", marketingOptOut: true, doNotContact: true },
       ),
     ).toEqual({
       first_name: "Ines",
@@ -18,6 +18,8 @@ describe("contactPayload", () => {
       company_id: null,
       language: "fr",
       marketing_opt_out: true,
+      do_not_contact: true,
+      salutation: "Madame",
     });
   });
 });

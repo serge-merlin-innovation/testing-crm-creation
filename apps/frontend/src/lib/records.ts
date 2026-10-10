@@ -9,11 +9,12 @@ export type ContactForm = {
   phone: string;
   source: string;
   function: string;
+  salutation: string;
 };
 
 export function contactPayload(
   form: ContactForm,
-  extra: { companyId: number | null; language: Language; marketingOptOut: boolean },
+  extra: { companyId: number | null; language: Language; marketingOptOut: boolean; doNotContact: boolean },
 ): Record<string, unknown> {
   return {
     first_name: form.first_name,
@@ -25,6 +26,8 @@ export function contactPayload(
     company_id: extra.companyId,
     language: extra.language,
     marketing_opt_out: extra.marketingOptOut,
+    do_not_contact: extra.doNotContact,
+    salutation: form.salutation.trim() || null,
   };
 }
 

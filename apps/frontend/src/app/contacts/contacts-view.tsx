@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fieldErrors, readDetail } from "@/lib/deals";
 import type { Language, MessageKey } from "@/lib/i18n/messages";
-import { contactPayload, RECORD_LANGUAGES } from "@/lib/records";
+import { contactPayload, RECORD_LANGUAGES, type ContactForm } from "@/lib/records";
 import { sendJson, useApiData } from "@/lib/use-api";
 import { WhoKnows } from "./who-knows";
 
@@ -35,10 +35,11 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
   const [search, setSearch] = useState("");
   const contacts = useApiData<Contact[]>(`/api/v1/contacts/?q=${encodeURIComponent(search)}`);
   const companies = useApiData<Company[]>("/api/v1/companies/?limit=200");
-  const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", source: "", function: "" });
+  const [form, setForm] = useState<ContactForm>({ first_name: "", last_name: "", email: "", phone: "", source: "", function: "", salutation: "" });
   const [companyId, setCompanyId] = useState(NO_COMPANY);
   const [recordLanguage, setRecordLanguage] = useState<Language>("en");
   const [optOut, setOptOut] = useState(false);
+  const [doNotContact, setDoNotContact] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
   const [selected, setSelected] = useState<Contact | null>(null);
@@ -60,6 +61,7 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
         companyId: companyId === NO_COMPANY ? null : Number(companyId),
         language: recordLanguage,
         marketingOptOut: optOut,
+        doNotContact,
       }),
     );
     if (result.status === 201) {
@@ -69,8 +71,9 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
           ? `${messages["contacts.created"]} ${messages["contacts.duplicateEmail"]}`
           : messages["contacts.created"],
       );
-      setForm({ first_name: "", last_name: "", email: "", phone: "", source: "", function: "" });
+      setForm({ first_name: "", last_name: "", email: "", phone: "", source: "", function: "", salutation: "" });
       setOptOut(false);
+      setDoNotContact(false);
       await contacts.reload();
       return;
     }
@@ -199,6 +202,7 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
                 </Select>
               </Field>
               {textField("function", "contacts.function")}
+              {textField("salutation", "contacts.salutation")}
               <Field>
                 <FieldLabel htmlFor="contact-language">{messages["records.language"]}</FieldLabel>
                 <Select value={recordLanguage} onValueChange={(value) => setRecordLanguage(value as Language)}>
@@ -221,6 +225,14 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
                   onCheckedChange={(checked) => setOptOut(checked === true)}
                 />
                 <FieldLabel htmlFor="contact-opt-out">{messages["contacts.marketingOptOut"]}</FieldLabel>
+              </Field>
+              <Field orientation="horizontal">
+                <Checkbox
+                  id="contact-do-not-contact"
+                  checked={doNotContact}
+                  onCheckedChange={(checked) => setDoNotContact(checked === true)}
+                />
+                <FieldLabel htmlFor="contact-do-not-contact">{messages["contacts.doNotContact"]}</FieldLabel>
               </Field>
               {errors.form ? (
                 <Alert variant="destructive">
