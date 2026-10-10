@@ -125,6 +125,10 @@ class AuthSettings(BaseSettings):
 
     # Scheduled-job runner (reminders, expiries, digests, retention). Off in tests, which use the
     # test-only "run jobs now" hook instead.
+    # Mounts /api/v1/test-hooks (clock, job runner, captured emails) without authentication.
+    # Only for local runs, pytest and Playwright; refused on staging and production.
+    TEST_HOOKS_ENABLED: bool = config("TEST_HOOKS_ENABLED", default=False, cast=bool)
+
     SCHEDULED_JOBS_ENABLED: bool = config("SCHEDULED_JOBS_ENABLED", default=True, cast=bool)
     SCHEDULED_JOBS_TICK_SECONDS: int = config("SCHEDULED_JOBS_TICK_SECONDS", default=60, cast=int)
 

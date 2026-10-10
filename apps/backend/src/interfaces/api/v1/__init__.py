@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 
 from ....infrastructure.auth.routes import router as auth_router
-from ....infrastructure.config.settings import EnvironmentOption, settings
+from ....infrastructure.config.settings import settings
+from ....infrastructure.security import ProductionSecurityValidator
 from ....infrastructure.testing import router as testing_router
 from ....modules.access.routes import break_glass_router, delegations_router
 from ....modules.access.routes import requests_router as access_requests_router
@@ -103,5 +104,6 @@ router.include_router(api_tokens_router, prefix="/api-tokens")
 router.include_router(api_clients_router, prefix="/api-clients")
 router.include_router(oauth_router, prefix="/oauth")
 
-if settings.ENVIRONMENT not in (EnvironmentOption.PRODUCTION, EnvironmentOption.STAGING):
+if settings.TEST_HOOKS_ENABLED:
+    ProductionSecurityValidator(settings).validate_test_hooks()
     router.include_router(testing_router, prefix="/test-hooks")

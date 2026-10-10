@@ -11,6 +11,7 @@ os.environ.setdefault("SQLITE_ASYNC_PREFIX", "sqlite+aiosqlite:///")
 os.environ["CSRF_ENABLED"] = "true"
 os.environ["CREATE_TABLES_ON_STARTUP"] = "false"
 os.environ["SCHEDULED_JOBS_ENABLED"] = "false"
+os.environ.setdefault("TEST_HOOKS_ENABLED", "true")
 
 # Disable the testcontainers Ryuk reaper. Under `pytest -n auto`, each xdist worker
 # is a separate process that spins up its own Ryuk container, and Docker Desktop

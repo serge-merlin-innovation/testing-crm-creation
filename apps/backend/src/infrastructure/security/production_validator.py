@@ -15,7 +15,16 @@ class ProductionSecurityValidator:
         self.settings = settings
         self.logger = get_logger()
 
+    def validate_test_hooks(self) -> None:
+        deployed = self.settings.ENVIRONMENT in (EnvironmentOption.PRODUCTION, EnvironmentOption.STAGING)
+        if deployed and self.settings.TEST_HOOKS_ENABLED:
+            raise ProductionSecurityError(
+                "TEST_HOOKS_ENABLED is true on a deployed environment. The hooks freeze the clock and read "
+                "captured emails without authentication; they are for local runs and tests only."
+            )
+
     def validate_production_security(self) -> None:
+        self.validate_test_hooks()
         if not self._is_production():
             self.logger.debug("Not in production environment, skipping security validation")
             return
