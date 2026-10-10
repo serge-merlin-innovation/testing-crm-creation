@@ -3,24 +3,27 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.role.permissions import RoleName
-from tests.integration.foundation.helpers import login, make_user
+from tests.integration.foundation.helpers import login, make_user, role_id
 
 pytestmark = pytest.mark.asyncio
 
 
 async def test_anonymous_cannot_list_or_create_users(client: AsyncClient, seeded_db: AsyncSession):
     assert (await client.get("/api/v1/users/")).status_code == 401
-    created = await client.post("/api/v1/users/", json={"name": "Eve", "email": "eve@x.be", "password": "Password123!"})
+    created = await client.post(
+        "/api/v1/users/", json={"first_name": "Eve", "last_name": "X", "email": "eve@x.be", "role_id": 1}
+    )
     assert created.status_code in (401, 403)
 
 
 async def test_admin_creates_lists_and_paginates_users(client: AsyncClient, seeded_db: AsyncSession):
     await make_user(seeded_db, "admin@firm.be", RoleName.ADMIN)
     csrf = await login(client, "admin@firm.be")
+    analyst = await role_id(seeded_db, RoleName.ANALYST)
     for index in range(3):
         response = await client.post(
             "/api/v1/users/",
-            json={"name": f"Hire {index}", "email": f"hire{index}@firm.be", "password": "Password123!"},
+            json={"first_name": "Hire", "last_name": str(index), "email": f"hire{index}@firm.be", "role_id": analyst},
             headers=csrf,
         )
         assert response.status_code == 201
@@ -37,7 +40,14 @@ async def test_duplicate_email_is_409(client: AsyncClient, seeded_db: AsyncSessi
     csrf = await login(client, "admin@firm.be")
 
     response = await client.post(
-        "/api/v1/users/", json={"name": "Again", "email": "admin@firm.be", "password": "Password123!"}, headers=csrf
+        "/api/v1/users/",
+        json={
+            "first_name": "Again",
+            "last_name": "X",
+            "email": "admin@firm.be",
+            "role_id": await role_id(seeded_db, RoleName.ANALYST),
+        },
+        headers=csrf,
     )
 
     assert response.status_code == 409
@@ -49,7 +59,7 @@ async def test_create_rejects_username_field(client: AsyncClient, seeded_db: Asy
 
     response = await client.post(
         "/api/v1/users/",
-        json={"name": "Hire", "username": "hire", "email": "hire@firm.be", "password": "Password123!"},
+        json={"first_name": "Hire", "last_name": "X", "username": "hire", "email": "hire@firm.be", "role_id": 1},
         headers=csrf,
     )
 

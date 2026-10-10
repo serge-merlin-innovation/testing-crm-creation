@@ -14,6 +14,7 @@ from ..constants import EXCEPTION_MAPPING, GENERIC_ERROR_MESSAGE, SUPPORT_ID_LEN
 from ..exceptions import (
     DomainError,
     InsufficientCreditsError,
+    UserExistsError,
     ValidationError,
 )
 
@@ -78,6 +79,11 @@ def register_exception_handlers(app: FastAPI) -> None:
             if exc.field:
                 content["errors"] = [{"field": exc.field, "message": str(exc)}]
             return JSONResponse(status_code=http_exception.status_code, content=content)
+
+        if isinstance(exc, UserExistsError):
+            return JSONResponse(
+                status_code=http_exception.status_code, content={"detail": http_exception.detail, "support_id": support_id}
+            )
 
         if isinstance(exc, InsufficientCreditsError):
             logger.info(f"Insufficient credits [{support_id}] on {request.method} {request.url.path}: {exc}")

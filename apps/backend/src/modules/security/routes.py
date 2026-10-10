@@ -1,7 +1,5 @@
-import io
 from typing import Annotated, Any
 
-import segno
 from crudauth import verify_password
 from crudauth.exceptions import ForbiddenException, UnauthorizedException
 from crudauth.transports.session.useragent import parse_user_agent
@@ -29,6 +27,7 @@ from .schemas import (
     TravelUpdate,
 )
 from .service import TRUST_DURATION, SecurityService, issue_challenge, read_challenge
+from .totp import qr_svg
 
 router = APIRouter(tags=["Authentication"])
 
@@ -59,12 +58,6 @@ async def _open_session(
     await db.commit()
     crud_auth.sessions.set_session_cookies(response, session_id, csrf_token)
     return str(csrf_token)
-
-
-def _qr_svg(uri: str) -> str:
-    buffer = io.BytesIO()
-    segno.make(uri, error="m").save(buffer, kind="svg", scale=4, xmldecl=False)
-    return buffer.getvalue().decode()
 
 
 @router.post(
@@ -126,7 +119,7 @@ async def login(
 
     uri = await service.start_enrolment(db, user)
     await db.commit()
-    return SecondFactorRequired(step="enrol", challenge=challenge, otpauth_uri=uri, qr_svg=_qr_svg(uri))
+    return SecondFactorRequired(step="enrol", challenge=challenge, otpauth_uri=uri, qr_svg=qr_svg(uri))
 
 
 @router.post(

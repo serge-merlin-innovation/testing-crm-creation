@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import Any
 
-from sqlalchemy import ForeignKey, Integer, String, select
+from sqlalchemy import DateTime, ForeignKey, Integer, String, select
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from ...infrastructure.database.models import SoftDeleteMixin, TimestampMixin
@@ -35,6 +36,13 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     )
 
     email_verified: Mapped[bool] = mapped_column(default=False)
+
+    first_name: Mapped[str | None] = mapped_column(String(50), default=None)
+    last_name: Mapped[str | None] = mapped_column(String(50), default=None)
+    title: Mapped[str | None] = mapped_column(String(100), default=None)
+    # "invited" until the invitation link is used, then "active". Deactivation is `is_deleted`.
+    status: Mapped[str] = mapped_column(String(16), default="active", server_default="active")
+    invited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
     role: Mapped["Role | None"] = relationship("Role", back_populates="users", lazy="selectin", init=False)
 
