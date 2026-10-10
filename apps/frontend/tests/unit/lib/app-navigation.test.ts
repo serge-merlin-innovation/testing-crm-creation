@@ -28,6 +28,7 @@ describe("getPrimaryNavigation", () => {
     expect(hrefs(getPrimaryNavigation(admin))).toEqual([
       "/overview",
       "/search",
+      "/tasks",
       "/companies",
       "/contacts",
       "/users",
@@ -39,6 +40,7 @@ describe("getPrimaryNavigation", () => {
       "/exports",
       "/stage-criteria",
       "/access",
+      "/audit",
     ]);
   });
 
@@ -46,6 +48,7 @@ describe("getPrimaryNavigation", () => {
     expect(hrefs(getPrimaryNavigation(analyst))).toEqual([
       "/overview",
       "/search",
+      "/tasks",
       "/deals",
       "/origination",
       "/companies",

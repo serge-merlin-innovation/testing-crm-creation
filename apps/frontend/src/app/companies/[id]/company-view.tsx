@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { RecordTimeline } from "@/components/record-timeline";
 import { ScrollRegion } from "@/components/scroll-region";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -342,6 +343,9 @@ export function CompanyView({ initial, messages, language }: { initial: CompanyD
           </CardContent>
         </Card>
       ) : null}
+      <section aria-label={`${messages["timeline.title"]} ${company.name}`}>
+        <RecordTimeline recordType="company" recordId={company.id} messages={messages} />
+      </section>
     </div>
   );
 }

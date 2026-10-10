@@ -3,6 +3,7 @@
 import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RecordTimeline } from "@/components/record-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -644,13 +645,6 @@ export function LettersTab({
   );
 }
 
-type Activity = {
-  id: number;
-  type: string;
-  occurred_at: string;
-  note: string;
-  author_name: string | null;
-};
 type DealTask = {
   id: number;
   title: string;
@@ -667,28 +661,11 @@ export function ActivitiesTasksTab({
   mandate: Mandate;
   messages: Messages;
 }) {
-  const timeline = useApiData<{ activities: Activity[] }>(
-    `/api/v1/timeline/mandate/${mandate.id}`,
-  );
   const tasks = useApiData<DealTask[]>(`/api/v1/mandates/${mandate.id}/tasks`);
 
   return (
     <div className="flex flex-col gap-4">
-      <section aria-label={messages["deal.activities"]}>
-        <h2>{messages["deal.activities"]}</h2>
-        {(timeline.data?.activities ?? []).length === 0 ? (
-          <p>{messages["deal.noActivities"]}</p>
-        ) : null}
-        <ul className="flex flex-col gap-2">
-          {(timeline.data?.activities ?? []).map((activity) => (
-            <li key={activity.id}>
-              <Badge variant="secondary">{activity.type}</Badge>{" "}
-              {activity.occurred_at.slice(0, 10)} {activity.author_name ?? ""}:{" "}
-              {activity.note.split("\n")[0]}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <RecordTimeline recordType="mandate" recordId={mandate.id} messages={messages} />
       <Separator />
       <section aria-label={messages["deal.tasks"]}>
         <h2>{messages["deal.tasks"]}</h2>

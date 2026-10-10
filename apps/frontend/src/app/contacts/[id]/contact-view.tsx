@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { RecordTimeline } from "@/components/record-timeline";
 import { ScrollRegion } from "@/components/scroll-region";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -227,6 +228,10 @@ export function ContactView({ initial, messages, language }: { initial: ContactD
         messages={messages}
         language={language}
       />
+
+      <section aria-label={`${messages["timeline.title"]} ${contact.first_name} ${contact.last_name}`}>
+        <RecordTimeline recordType="contact" recordId={contact.id} messages={messages} />
+      </section>
     </div>
   );
 }
