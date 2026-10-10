@@ -3,7 +3,10 @@ import { expect, test } from "@playwright/test";
 import { ADMIN, MEMBER, signInApi, runId } from "./identities";
 
 const RUN = runId();
-const SURNAME = `Lefèvre${RUN}`;
+// Search is trigram-fuzzy (threshold 0.5): the token must outweigh "Hélène Lefèvre", which every
+// run's contact shares, or "No results." never shows on a reused database.
+const NAME_TOKEN = runId(24);
+const SURNAME = `Lefèvre${NAME_TOKEN}`;
 
 /** An .xlsx built by the backend's own openpyxl, so the e2e needs no spreadsheet dependency. */
 function workbook(rows: (string | null)[][]): Buffer {
@@ -27,7 +30,7 @@ test.describe("an analyst", () => {
     await page.getByRole("button", { name: "Create contact" }).click();
     await expect(page.getByRole("status")).toHaveText("Contact created.");
 
-    await page.getByLabel("Search", { exact: true }).fill(`lefebvre${RUN}`);
+    await page.getByLabel("Search", { exact: true }).fill(`lefebvre${NAME_TOKEN}`);
     await page.getByRole("button", { name: "Search", exact: true }).click();
     const contacts = page.getByRole("list", { name: "Contacts" });
     await expect(contacts).toContainText(`Hélène ${SURNAME}`);
