@@ -52,7 +52,7 @@ export function InboxView({ messages, language }: { messages: Messages; language
             <AlertDescription>{messages["common.loadFailed"]}</AlertDescription>
           </Alert>
         ) : null}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0}>
           <Table>
             <TableHeader>
               <TableRow>

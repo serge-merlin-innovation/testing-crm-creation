@@ -126,7 +126,7 @@ export function MergeView({ messages }: { messages: Messages }) {
 
           {records ? (
             <>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0}>
                 <Table>
                   <TableHeader>
                     <TableRow>

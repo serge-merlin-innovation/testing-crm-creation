@@ -105,7 +105,7 @@ export function PicklistsView({ messages, language }: { messages: Messages; lang
             <AlertDescription>{errors.form}</AlertDescription>
           </Alert>
         ) : null}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0}>
           <Table>
             <TableHeader>
               <TableRow>

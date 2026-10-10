@@ -118,7 +118,7 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
               <AlertDescription>{messages["common.loadFailed"]}</AlertDescription>
             </Alert>
           ) : null}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0}>
             <Table>
               <TableHeader>
                 <TableRow>

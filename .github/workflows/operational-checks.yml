@@ -1,0 +1,117 @@
+name: Operational checks
+
+# Spec Testing Decisions, Seam 3 (NFR-01, NFR-02, NFR-03). Every job runs against a throwaway
+# stack inside the runner: Postgres is a service container, the backend and frontend are started
+# here, and no step reads a cloud credential or reaches a deployed environment. Manual only.
+on:
+  workflow_dispatch:
+    inputs:
+      contacts:
+        description: Contacts to seed for the load test (NFR-02 asks for 200000)
+        default: "200000"
+
+permissions:
+  contents: read
+
+env:
+  POSTGRES_PASSWORD: postgres
+  DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/crm
+  SECRET_KEY: operational-checks-throwaway-secret-0f3a9c
+  TOTP_ENCRYPTION_KEY: operational-checks-throwaway-totp-7b21e
+  SESSION_SECURE_COOKIES: "false"
+  SCHEDULED_JOBS_ENABLED: "false"
+
+jobs:
+  # NFR-01 c1/c2 and backup retention: static assertions on infra/ (deploys nothing).
+  bicep-assertions:
+    name: NFR-01 Bicep assertions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: az bicep install
+      - run: ./ops/check-bicep-nfr01.sh
+        env:
+          AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+
+  # NFR-01 c3: OWASP ZAP baseline against the app running in this job; high findings fail it.
+  zap-baseline:
+    name: NFR-01 OWASP ZAP baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crm
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python: "true"
+      - working-directory: apps/backend
+        run: |
+          uv run alembic upgrade head
+          uv run python -m scripts.setup_initial_data
+          uv run fastapi run src/interfaces/main.py --port 8000 &
+          timeout 60 bash -c 'until curl -sf http://localhost:8000/health; do sleep 2; done'
+      - run: pnpm --filter @merlin/frontend run build
+      - working-directory: apps/frontend
+        env:
+          BACKEND_URL: http://localhost:8000
+          PORT: "3000"
+        run: |
+          pnpm start &
+          timeout 60 bash -c 'until curl -sf http://localhost:3000; do sleep 2; done'
+      - uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: http://localhost:3000
+          rules_file_name: ops/zap/rules.tsv
+          fail_action: true
+          allow_issue_writing: false
+
+  # NFR-02: k6 against a 200k-contact seed in this job's own Postgres.
+  load-test:
+    name: NFR-02 k6 load test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crm
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python: "true"
+      - uses: grafana/setup-k6-action@v1
+      - working-directory: apps/backend
+        run: |
+          uv run alembic upgrade head
+          uv run python -m scripts.setup_initial_data
+          echo "API_TOKENS=$(uv run python -m scripts.seed_load_data --contacts '${{ inputs.contacts }}' | tail -1)" >> "$GITHUB_ENV"
+      - working-directory: apps/backend
+        run: |
+          uv run fastapi run src/interfaces/main.py --port 8000 --workers 2 &
+          timeout 60 bash -c 'until curl -sf http://localhost:8000/health; do sleep 2; done'
+      - run: k6 run ops/load/nfr02.k6.js
+        env:
+          BASE_URL: http://localhost:8000
+
+  # The committed OpenAPI document matches what the app serves.
+  openapi-sync:
+    name: OpenAPI in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python: "true"
+      - working-directory: apps/backend
+        run: uv run pytest tests/unit/interfaces/api/test_public_api_contract.py -q

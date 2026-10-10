@@ -368,7 +368,7 @@ export function OffersTab({
         <p>{messages["offers.empty"]}</p>
       ) : null}
       {data && data.bids.length > 0 ? (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0}>
           <Table aria-label={messages["offers.comparison"]}>
             <TableHeader>
               <TableRow>

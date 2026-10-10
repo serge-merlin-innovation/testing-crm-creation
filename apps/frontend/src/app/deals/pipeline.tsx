@@ -191,7 +191,7 @@ export function Pipeline({ messages, search }: { messages: Messages; search: str
           <TabsTrigger value="list">{messages["pipeline.list"]}</TabsTrigger>
         </TabsList>
         <TabsContent value="board">
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2" tabIndex={0}>
             {BOARD_STAGES.map((stage) => (
               <section
                 key={stage}
@@ -232,7 +232,7 @@ export function Pipeline({ messages, search }: { messages: Messages; search: str
           </div>
         </TabsContent>
         <TabsContent value="list">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0}>
             <Table>
               <TableHeader>
                 <TableRow>

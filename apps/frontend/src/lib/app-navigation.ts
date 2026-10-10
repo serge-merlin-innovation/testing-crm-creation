@@ -40,6 +40,11 @@ const ACCOUNT_NAVIGATION: NavigationItem[] = [
   { label: "nav.settings", href: "/settings" },
 ];
 
+/** Every page reachable from the navigation, for checks that must cover all of them (NFR-04). */
+export function allNavigationHrefs(): string[] {
+  return [...PRIMARY_NAVIGATION, ...ACCOUNT_NAVIGATION].map((item) => item.href);
+}
+
 // Filtering through the audience manifest hides every link the viewer's permissions do not open.
 export function getPrimaryNavigation(viewer: Viewer): NavigationItem[] {
   return PRIMARY_NAVIGATION.filter(
