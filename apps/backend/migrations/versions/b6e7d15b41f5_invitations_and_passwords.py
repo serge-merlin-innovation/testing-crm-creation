@@ -1,7 +1,7 @@
 """Invitations, password policy, password history and reset links
 
-Revision ID: e5f6a7b8c9d0
-Revises: d4e5f6a7b8c9
+Revision ID: b6e7d15b41f5
+Revises: 9ff54084a457
 Create Date: 2026-10-10 04:40:00
 
 """
@@ -11,8 +11,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "e5f6a7b8c9d0"
-down_revision: str | Sequence[str] | None = "d4e5f6a7b8c9"
+revision: str = "b6e7d15b41f5"
+down_revision: str | Sequence[str] | None = "9ff54084a457"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
