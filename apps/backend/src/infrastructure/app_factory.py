@@ -10,7 +10,6 @@ from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
-from fastapi.openapi.utils import get_openapi
 
 from ..modules.common.utils.error_handler import register_exception_handlers
 from .auth.dependencies import get_current_user
@@ -298,12 +297,7 @@ def create_application(
 
         @docs_router.get("/openapi.json", include_in_schema=False)
         async def openapi() -> dict[str, Any]:
-            return get_openapi(
-                title=metadata.get("title", "API"),
-                version=metadata.get("version", "0.1.0"),
-                description=metadata.get("description", ""),
-                routes=application.routes,
-            )
+            return application.openapi()
 
         application.include_router(docs_router)
 
