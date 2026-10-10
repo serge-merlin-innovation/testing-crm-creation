@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...infrastructure.email import get_email_sender
 from ...infrastructure.jobs import job_runner
-from ..notification.dependencies import get_email_sender
 from ..notification.service import NotificationService
 from .service import TaskService
 

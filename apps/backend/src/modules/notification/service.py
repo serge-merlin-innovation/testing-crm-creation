@@ -5,10 +5,10 @@ from datetime import datetime
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...infrastructure.email import EmailMessage, EmailSender
 from ...infrastructure.i18n.localize import localize
 from ..user.models import User
 from .models import Notification, NotificationPreference
-from .ports import EmailSender, SentEmail
 from .schemas import DEFAULT_CHANNEL, Channel, EventKind
 
 
@@ -31,7 +31,7 @@ class NotificationService:
 
     def __init__(self, sender: EmailSender) -> None:
         self.sender = sender
-        self._outbox: list[SentEmail] = []
+        self._outbox: list[EmailMessage] = []
 
     async def channel(self, db: AsyncSession, user_id: int, kind: str) -> Channel:
         stored = (
@@ -61,7 +61,7 @@ class NotificationService:
                 )
             )
         if channel in (Channel.EMAIL, Channel.BOTH):
-            self._outbox.append(SentEmail(to=message.email, subject=message.title, body=message.body))
+            self._outbox.append(EmailMessage(to=message.email, subject=message.title, body=message.body))
 
     async def flush_emails(self) -> None:
         """Call after the commit, so a rolled-back change never emails anyone."""

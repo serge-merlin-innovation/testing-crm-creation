@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...infrastructure.email import EmailMessage, EmailSender
 from ..activity.models import Activity, ActivityLink
 from ..activity.schemas import ActivityType, RecordType
 from ..audit.service import AuditContext, AuditService
@@ -19,7 +20,6 @@ from ..company.schemas import FigureSource, Metric
 from ..contact.models import Contact
 from ..mandate.models import Milestone
 from ..mandate.policy import DealGrant
-from ..notification.ports import EmailSender, SentEmail
 from ..task.models import Task
 from ..task.service import read as task_read
 from ..user.models import User
@@ -508,7 +508,7 @@ class ProcessService:
                 ],
             )
             buyer.last_activity_at = now
-            await self.sender.send(SentEmail(to=contact.email, subject=subject, body=body))
+            await self.sender.send(EmailMessage(to=contact.email, subject=subject, body=body))
             sent.append(
                 {
                     "buyer_id": buyer.id,
