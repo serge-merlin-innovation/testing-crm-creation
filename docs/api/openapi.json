@@ -3459,6 +3459,29 @@
         "title": "SecurityProfile",
         "type": "object"
       },
+      "SentEmail": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "to": {
+            "title": "To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to",
+          "subject",
+          "body"
+        ],
+        "title": "SentEmail",
+        "type": "object"
+      },
       "SessionPolicyValues": {
         "additionalProperties": false,
         "properties": {
@@ -8482,6 +8505,87 @@
           }
         },
         "summary": "Freeze the clock at a time, or unfreeze it with null",
+        "tags": [
+          "Test hooks"
+        ]
+      }
+    },
+    "/api/v1/test-hooks/emails": {
+      "get": {
+        "operationId": "read_emails_api_v1_test_hooks_emails_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "title": "To",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "body": "body",
+                    "subject": "subject",
+                    "to": "to"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SentEmail"
+                  },
+                  "title": "Response Read Emails Api V1 Test Hooks Emails Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Captured email sent to an address, oldest first",
+        "tags": [
+          "Test hooks"
+        ]
+      }
+    },
+    "/api/v1/test-hooks/emails/capture": {
+      "post": {
+        "operationId": "capture_emails_api_v1_test_hooks_emails_capture_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "key": true
+                },
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Capture Emails Api V1 Test Hooks Emails Capture Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Keep outgoing email in memory so a test can read it",
         "tags": [
           "Test hooks"
         ]

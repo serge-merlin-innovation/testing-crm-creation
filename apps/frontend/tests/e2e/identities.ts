@@ -1,4 +1,4 @@
-import { expect, type APIRequestContext, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Browser, type Page } from "@playwright/test";
 import { currentCode, saveSecret } from "./totp";
 
 // Playwright resolves a relative storageState against the working directory, which both runners
@@ -25,9 +25,11 @@ export const ADMIN: Identity = {
 };
 
 /** Created by accounts.setup.ts through the admin API and given the Analyst / Associate role. */
-export const MEMBER: Identity = {
+export const MEMBER: Identity & Invitee = {
+  firstName: "Eva",
+  lastName: "Analyst",
   email: "e2e.member@example.com",
-  password: "E2eMember!1",
+  password: "Quiet-Harbour-7-Lantern",
   storageState: `${bankedSessions}/member.json`,
 };
 
@@ -81,4 +83,52 @@ export async function signInApi(request: APIRequestContext, identity: { email: s
   });
   expect(verified.status(), await verified.text()).toBe(200);
   return { "X-CSRF-Token": (await verified.json()).csrf_token as string };
+}
+
+export type Invitee = { firstName: string; lastName: string; email: string; password: string };
+
+/**
+ * Creates the account the way production does: the admin invites, the invitee follows the emailed
+ * link, sets a password and enrols 2FA. A 409 means an earlier run against this database did it.
+ */
+export async function inviteUser(
+  browser: Browser,
+  admin: APIRequestContext,
+  adminHeaders: Record<string, string>,
+  invitee: Invitee,
+  roleName: string,
+) {
+  await admin.post("/api/v1/test-hooks/emails/capture");
+  const roles: { id: number; name: string }[] = await (await admin.get("/api/v1/roles/")).json();
+  const role = roles.find((candidate) => candidate.name === roleName);
+  expect(role, `role ${roleName}`).toBeTruthy();
+
+  const created = await admin.post("/api/v1/users/", {
+    headers: adminHeaders,
+    data: { first_name: invitee.firstName, last_name: invitee.lastName, email: invitee.email, role_id: role!.id },
+  });
+  if (created.status() === 409) return;
+  expect(created.status(), await created.text()).toBe(201);
+
+  const emails: { body: string }[] = await (
+    await admin.get("/api/v1/test-hooks/emails", { params: { to: invitee.email } })
+  ).json();
+  const token = emails
+    .map((email) => email.body.match(/accept-invitation\?token=([^\s]+)/)?.[1])
+    .findLast((match) => match !== undefined);
+  expect(token, "invitation email with a link").toBeTruthy();
+
+  // Its own context: finishing the second factor opens the invitee's session, not the admin's.
+  const inviteeContext = await browser.newContext();
+  const accepted = await inviteeContext.request.post("/api/v1/auth/invitations/accept", {
+    data: { token, password: invitee.password },
+  });
+  expect(accepted.status(), await accepted.text()).toBe(200);
+  const enrol = await accepted.json();
+  saveSecret(invitee.email, new URL(enrol.otpauth_uri).searchParams.get("secret")!);
+  const verified = await inviteeContext.request.post("/api/v1/auth/login/second-factor", {
+    data: { challenge: enrol.challenge, code: currentCode(invitee.email) },
+  });
+  expect(verified.status(), await verified.text()).toBe(200);
+  await inviteeContext.close();
 }

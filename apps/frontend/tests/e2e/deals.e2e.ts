@@ -1,8 +1,14 @@
 import { expect, test, type Browser } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
-import { ADMIN, MEMBER, signIn, signInApi } from "./identities";
+import { ADMIN, MEMBER, inviteUser, signIn, signInApi } from "./identities";
 
-const PARTNER = { email: "e2e.partner@example.com", password: "E2ePartner!1", name: "E2E Partner" };
+const PARTNER = {
+  firstName: "Pieter",
+  lastName: "Partner",
+  email: "e2e.partner@example.com",
+  password: "Copper-Meadow-42-Signal",
+  name: "Pieter Partner",
+};
 const RUN = Date.now().toString(36);
 
 /** A partner-owned deal, created through the API. The banked analyst is not on its team. */
@@ -11,19 +17,7 @@ async function seedDeal(browser: Browser) {
   const admin = adminContext.request;
   const adminHeaders = await signInApi(admin, ADMIN);
 
-  await admin.post("/api/v1/users/", {
-    headers: adminHeaders,
-    data: { name: PARTNER.name, email: PARTNER.email, password: PARTNER.password },
-  });
-  const roles: { id: number; name: string }[] = await (await admin.get("/api/v1/roles/")).json();
-  const users: { data: { id: number; email: string }[] } = await (
-    await admin.get("/api/v1/users/", { params: { items_per_page: 100 } })
-  ).json();
-  const partner = users.data.find((user) => user.email === PARTNER.email)!;
-  await admin.patch(`/api/v1/users/${partner.id}/role`, {
-    headers: adminHeaders,
-    data: { role_id: roles.find((role) => role.name === "Partner")!.id },
-  });
+  await inviteUser(browser, admin, adminHeaders, PARTNER, "Partner");
   const sector = await admin.post("/api/v1/picklists/", {
     headers: adminHeaders,
     data: { kind: "sector", code: `e2e-${RUN}`, label_en: `E2E sector ${RUN}` },
@@ -35,6 +29,7 @@ async function seedDeal(browser: Browser) {
   const partnerContext = await browser.newContext();
   const request = partnerContext.request;
   const headers = await signInApi(request, PARTNER);
+  const partner: { id: number } = await (await request.get("/api/v1/users/me")).json();
   const countries: { id: number; code: string }[] = await (await request.get("/api/v1/picklists/?kind=country")).json();
   const company = await request.post("/api/v1/companies/", {
     headers,
