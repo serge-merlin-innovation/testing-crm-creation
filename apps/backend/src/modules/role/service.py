@@ -5,7 +5,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..audit.service import AuditContext, AuditService
+from ..audit.service import AuditContext, AuditService, audit_export
 from ..common.exceptions import PermissionDeniedError, RoleNotFoundError
 from ..common.spreadsheet import safe_row
 from .models import Role
@@ -92,6 +92,6 @@ class RoleService:
         writer.writerow(safe_row(["Permission", *[column.name for column in matrix.columns]]))
         for row in matrix.rows:
             writer.writerow(safe_row([row.permission, *["x" if granted else "" for granted in row.granted]]))
-        self.audit.record(db, context, "export", record_type="permission_matrix", new_values={"format": "csv"})
+        audit_export(db, context, "permission_matrix", record_type="permission_matrix", rows=len(matrix.rows))
         await db.commit()
         return buffer.getvalue()

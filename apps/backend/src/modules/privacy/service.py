@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..activity.models import Activity, ActivityLink, Note
 from ..audit.models import AuditEntry
-from ..audit.service import AuditContext, AuditService
+from ..audit.service import AuditContext, AuditService, audit_export
 from ..common.exceptions import ContactNotFoundError, PermissionDeniedError, ResourceNotFoundError
 from ..contact.models import Contact, Employment
 from ..mandate.models import Mandate
@@ -131,13 +131,14 @@ class PrivacyService:
                 {"action": e.action, "at": _jsonable(e.created_at), "old": e.old_values, "new": e.new_values} for e in changes
             ],
         }
-        self.audit.record(
+        audit_export(
             db,
             context,
-            "export",
+            "person",
             record_type="contact",
             record_id=contact_id,
-            new_values={"kind": "person", "filter": {"contact_id": contact_id}, "rows": 1 + len(activities) + len(notes)},
+            filters={"contact_id": contact_id},
+            rows=1 + len(activities) + len(notes),
         )
         await db.commit()
         return json.dumps(document, indent=2, default=str), f"person-{contact_id}.json"

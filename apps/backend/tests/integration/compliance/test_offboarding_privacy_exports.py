@@ -18,7 +18,8 @@ from src.modules.notification.service import NotificationService
 from src.modules.privacy.jobs import MONTHLY, RETENTION_JOB
 from src.modules.privacy.service import PrivacyService
 from src.modules.role.permissions import RoleName
-from tests.integration.crm.deal_helpers import build_world, create_mandate
+from tests.integration.crm.deal_helpers import build_world, create_mandate, seed_buyers
+from tests.integration.foundation.helpers import step_up
 
 pytestmark = pytest.mark.asyncio
 
@@ -415,6 +416,51 @@ async def test_every_export_logs_user_time_filter_and_row_count(world):
     assert entry.created_at == NOW
     assert entry.new_values["filter"] == {"q": "Bulk"}
     assert entry.new_values["rows"] == 3
+
+
+# REP-06 c2 over every export route: one audit row with user, time, kind, filter and row count.
+EXPORTS = {
+    "users": ("admin", "/api/v1/users/export", {"status": "active"}, {"status": "active"}),
+    "mandate": ("partner", "/api/v1/mandates/{mandate}/export", {}, {"mandate_id": "{mandate}"}),
+    "buyer_list": ("partner", "/api/v1/mandates/{mandate}/buyers/export", {}, {"mandate_id": "{mandate}"}),
+    "funnel": ("partner", "/api/v1/mandates/{mandate}/funnel.pdf", {}, {"mandate_id": "{mandate}"}),
+    "fees": ("partner", "/api/v1/fees/export", {"min_expected_fee": "1"}, {"min_expected_fee": "1"}),
+    "fee_forecast": ("partner", "/api/v1/reports/fee-forecast/export", {}, {}),
+    "permission_matrix": ("admin", "/api/v1/roles/matrix/export", {}, {}),
+    "person": ("compliance", "/api/v1/contacts/{contact}/export", {}, {"contact_id": "{contact}"}),
+    "contacts": ("partner", "/api/v1/exports/contacts", {"q": "Jan"}, {"q": "Jan"}),
+}
+
+
+@pytest.mark.parametrize("kind", list(EXPORTS))
+async def test_every_export_route_logs_user_time_kind_filter_and_rows(world, kind):
+    role, path, params, expected = EXPORTS[kind]
+    actor = getattr(world, role)
+    contact_id = await contact(world.partner)
+    mandate = await create_mandate(world, world.partner, world.client_id)
+    url = path.format(mandate=mandate["id"], contact=contact_id)
+    ids = {"{mandate}": mandate["id"], "{contact}": contact_id}
+    expected = {key: ids.get(value, value) for key, value in expected.items()}
+    if kind == "buyer_list":
+        await seed_buyers(world, world.partner, mandate["id"])
+    if kind == "fees":
+        fee_terms = {"retainer_monthly": "1000", "success_fee_kind": "percent", "success_fee_percent": "2"}
+        put = await actor.client.put(f"/api/v1/mandates/{mandate['id']}/fees", json=fee_terms, headers=actor.headers)
+        assert put.status_code == 200, put.text
+    headers = step_up(actor.email, actor.headers) if kind == "users" else actor.headers
+
+    response = await actor.client.get(url, params=params, headers=headers)
+
+    assert response.status_code == 200, response.text
+    entries = (await world.db.execute(select(AuditEntry).where(AuditEntry.action == "export"))).scalars().all()
+    assert len(entries) == 1, [e.new_values for e in entries]
+    entry = entries[0]
+    assert entry.user_id == actor.id
+    assert entry.created_at == NOW
+    assert entry.new_values["kind"] == kind
+    assert entry.new_values["filter"] == expected
+    assert isinstance(entry.new_values["rows"], int)
+    assert entry.new_values["rows"] >= 1
 
 
 # Security review S12: a contact name that starts like a formula is quoted in the CSV.

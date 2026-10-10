@@ -12,7 +12,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..audit.service import AuditContext, AuditService
+from ..audit.service import AuditContext, AuditService, audit_export
 from ..common.exceptions import DealForbiddenError, InvoiceNotFoundError, ValidationError
 from ..common.spreadsheet import safe_dict
 from ..mandate.models import DealLink, Mandate
@@ -249,9 +249,7 @@ class FeeService:
         writer.writeheader()
         for row in rows:
             writer.writerow(safe_dict({**row, "success_fee_kind": SuccessFeeKind(row["success_fee_kind"]).value}))
-        self.audit.record(
-            db, context, "export", record_type="fee_terms", new_values={"kind": "fees", "filter": filters, "rows": len(rows)}
-        )
+        audit_export(db, context, "fees", record_type="fee_terms", filters=filters, rows=len(rows))
         return buffer.getvalue()
 
     # Invoices (REP-07)

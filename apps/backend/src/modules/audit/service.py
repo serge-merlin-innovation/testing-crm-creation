@@ -102,3 +102,26 @@ class AuditService:
             )
         ).scalars()
         return {"data": list(rows), "total_count": total}
+
+
+def audit_export(
+    db: AsyncSession,
+    context: AuditContext,
+    kind: str,
+    *,
+    record_type: str,
+    rows: int,
+    filters: dict[str, Any] | None = None,
+    record_id: Any = None,
+    **extra: Any,
+) -> AuditEntry:
+    """REP-06 c2: every export logs who, when, what kind, with which filter and how many rows."""
+    used = {key: value for key, value in (filters or {}).items() if value is not None}
+    return AuditService().record(
+        db,
+        context,
+        "export",
+        record_type=record_type,
+        record_id=record_id,
+        new_values={"kind": kind, "filter": used, "rows": rows, **extra},
+    )

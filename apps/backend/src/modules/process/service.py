@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..activity.models import Activity, ActivityLink
 from ..activity.schemas import ActivityType, RecordType
-from ..audit.service import AuditContext, AuditService
+from ..audit.service import AuditContext, AuditService, audit_export
 from ..buyer.models import BuyerNda, DealBuyer
 from ..buyer.schemas import Approval, BuyerStatus
 from ..common.exceptions import ResourceNotFoundError, ValidationError
@@ -428,8 +428,14 @@ class ProcessService:
 
     async def funnel_pdf(self, db: AsyncSession, grant: DealGrant, context: AuditContext) -> bytes:
         funnel = await self.funnel(db, grant)
-        self.audit.record(
-            db, context, "export", record_type="mandate", record_id=grant.mandate.id, new_values={"kind": "funnel"}
+        audit_export(
+            db,
+            context,
+            "funnel",
+            record_type="mandate",
+            record_id=grant.mandate.id,
+            filters={"mandate_id": grant.mandate.id},
+            rows=len(funnel["steps"]),
         )
         await db.commit()
         return pdf(f"{grant.mandate.code_name} - funnel", self.funnel_text(funnel, "en"))

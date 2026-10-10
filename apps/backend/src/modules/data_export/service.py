@@ -5,7 +5,7 @@ from typing import Any
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..audit.service import AuditContext, AuditService
+from ..audit.service import AuditContext, AuditService, audit_export
 from ..common.exceptions import PermissionDeniedError, ResourceNotFoundError
 from ..common.spreadsheet import safe_row
 from ..contact.models import Contact
@@ -83,17 +83,14 @@ class DataExportService:
         for contact in contacts:
             writer.writerow(safe_row([getattr(contact, column) for column in COLUMNS]))
             written += 1
-        self.audit.record(
+        audit_export(
             db,
             context,
-            "export",
+            CONTACTS,
             record_type=CONTACTS,
-            new_values={
-                "kind": CONTACTS,
-                "filter": values.model_dump(),
-                "rows": written,
-                "approval_id": approval.id if approval else None,
-            },
+            filters=values.model_dump(),
+            rows=written,
+            approval_id=approval.id if approval else None,
         )
         await db.commit()
         return buffer.getvalue()

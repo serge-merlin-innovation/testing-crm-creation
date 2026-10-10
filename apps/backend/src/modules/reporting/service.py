@@ -16,7 +16,7 @@ from openpyxl import Workbook  # type: ignore[import-untyped]
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..audit.service import AuditContext, AuditService
+from ..audit.service import AuditContext, AuditService, audit_export
 from ..common.spreadsheet import safe_row
 from ..fee.models import FeeTerms, Invoice
 from ..fee.schemas import FeeTermsValues, InvoiceType, LehmanTier, SuccessFeeKind
@@ -370,9 +370,7 @@ class ReportingService:
                     ]
                 )
             )
-        self.audit.record(
-            db, context, "export", record_type="fee_terms", new_values={"kind": "fee_forecast", "rows": len(forecast["months"])}
-        )
+        audit_export(db, context, "fee_forecast", record_type="fee_terms", rows=len(forecast["months"]))
         out = io.BytesIO()
         book.save(out)
         return out.getvalue()

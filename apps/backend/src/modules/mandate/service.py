@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from ..audit.models import AuditEntry
-from ..audit.service import AuditContext, AuditService
+from ..audit.service import AuditContext, AuditService, audit_export
 from ..common.exceptions import (
     DealLinkNotFoundError,
     LastLeadPartnerError,
@@ -469,8 +469,14 @@ class MandateService:
         writer.writerow(safe_row(["team_member", "role", "expires_at"]))
         for member in team["members"]:
             writer.writerow(safe_row([member["name"], member["role"], member["expires_at"] or ""]))
-        self.audit.record(
-            db, context, "export", record_type="mandate", record_id=grant.mandate.id, new_values={"format": "csv"}
+        audit_export(
+            db,
+            context,
+            "mandate",
+            record_type="mandate",
+            record_id=grant.mandate.id,
+            filters={"mandate_id": grant.mandate.id},
+            rows=1 + len(team["members"]),
         )
         await db.commit()
         return buffer.getvalue()

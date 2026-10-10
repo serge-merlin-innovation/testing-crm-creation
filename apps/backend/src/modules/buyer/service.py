@@ -10,7 +10,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from ..audit.service import AuditContext, AuditService
+from ..audit.service import AuditContext, AuditService, audit_export
 from ..common.exceptions import CompanyNotFoundError, DealForbiddenError, ValidationError
 from ..common.spreadsheet import safe_row
 from ..company.models import Company
@@ -654,13 +654,14 @@ class BuyerService:
             sheet.append(
                 safe_row([row["name"], TYPE_LABELS.get(row["type"], row["type"]), row["rationale"], row["contact_name"] or ""])
             )
-        self.audit.record(
+        audit_export(
             db,
             context,
-            "export",
+            "buyer_list",
             record_type="mandate",
             record_id=grant.mandate.id,
-            new_values={"kind": "buyer_list", "rows": sheet.max_row - 1},
+            filters={"mandate_id": grant.mandate.id},
+            rows=sheet.max_row - 1,
         )
         await db.commit()
         out = io.BytesIO()

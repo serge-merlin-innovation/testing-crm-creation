@@ -8,6 +8,7 @@ from ...infrastructure.auth.http_exceptions import HTTPException
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep
 from ..audit.dependencies import AuditContextDep
+from ..audit.service import audit_export
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
 from ..security.dependencies import SecurityServiceDep, StepUpUserDep
@@ -107,12 +108,16 @@ async def export_users(
     clock: ClockDep,
     _: UserManagerDep,
     __: StepUpUserDep,
+    context: AuditContextDep,
     role_id: int | None = None,
     status: Status = None,
 ) -> Response:
     rows, _total = await list_users(db, clock.now(), role_id, status)
+    body = to_csv(rows)
+    audit_export(db, context, "users", record_type="user", filters={"role_id": role_id, "status": status}, rows=len(rows))
+    await db.commit()
     return Response(
-        content=to_csv(rows),
+        content=body,
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": 'attachment; filename="users.csv"'},
     )
