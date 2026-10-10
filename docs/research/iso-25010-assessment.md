@@ -6,7 +6,7 @@ Method: quality gates run locally, then four read-only reviews (security, reliab
 
 ## Verdict
 
-**Not production-ready yet. The code is solid, but it ships with known critical vulnerabilities, and its hosting can't meet its own targets.** The application logic, access control and test discipline are above average. The blockers are a dependency upgrade, the hosting configuration and running more than one replica. Most of the rest is a week of focused work.
+**Not production-ready yet. The code is solid, but it ships with known critical vulnerabilities, and its hosting can't meet its own targets.** The application logic, access control and test discipline are above average. The blockers are a dependency upgrade, the hosting configuration and running more than one replica.
 
 | Characteristic | Score | One line |
 |---|---|---|
@@ -81,6 +81,7 @@ Method: quality gates run locally, then four read-only reviews (security, reliab
 
 ## Limits of this assessment
 
+- Functional suitability is judged from the ticket map (all 20 tickets built) and the stubbed adapters in the decision report. It is not a criterion-by-criterion trace of `docs/specs/ma-crm.md`.
 - Security spot-checked about 15 services, not every route. It's no substitute for the yearly penetration test that NFR-01 c4 requires.
 - No browser test was run as a logged-in user (2FA). The E2E suite was not run here.
 - Performance numbers come from the existing load-test reports. No new run was done against staging, because staging doesn't exist yet.
