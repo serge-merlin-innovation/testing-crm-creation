@@ -408,3 +408,14 @@ async def test_feed_drops_a_deal_hidden_by_conflict_review(world):
     hidden = (await world.anon.get(path)).text
     assert "Falcon" not in hidden
     assert "BEGIN:VEVENT" not in hidden
+
+
+# The webhook is authenticated by its secret alone: a caller that happens to carry a session cookie
+# (no CSRF header) is still accepted.
+async def test_inbound_webhook_ignores_a_session_cookie(world):
+    address = await address_of(world.partner)
+    payload = {"subject": "Hello", "text": "Body", "to": ["jan@acme.be"], "cc": [], "bcc": [address], "attachments": []}
+    response = await world.partner.client.post(
+        "/api/v1/email-logging/inbound", json={"sender": world.partner.email, **payload}, headers={"X-Inbound-Secret": SECRET}
+    )
+    assert response.status_code == 202, response.text

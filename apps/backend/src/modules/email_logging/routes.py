@@ -1,10 +1,11 @@
 from typing import Any
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
+from ..audit.service import AuditContext
 from ..role.authorization import RequireRecordAccess
 from .dependencies import EmailLoggingServiceDep, InboundSecretDep
 from .schemas import InboundEmail, InboundResult, InteractionRead, LoggingAddressRead, UnmatchedLink, UnmatchedRead
@@ -45,8 +46,10 @@ async def inbound(
     service: EmailLoggingServiceDep,
     _: InboundSecretDep,
     clock: ClockDep,
-    context: AuditContextDep,
+    request: Request,
 ) -> InboundResult:
+    # No session lookup: the webhook is authenticated by its secret, and the actor is the sender.
+    context = AuditContext.from_request(request, None, clock)
     return await service.receive(db, email, clock.now(), context)
 
 
