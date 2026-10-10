@@ -187,3 +187,37 @@ class TestDataclassModelRules:
         ]
 
         assert not offenders, f"modules/{module}/models.py has an unindexed foreign key at lines {offenders}."
+
+
+# The boilerplate's auth layer is built on the user model and the shared error handler; nothing else
+# under `infrastructure` may reach up into a feature module.
+INFRASTRUCTURE_MODULE_IMPORTS_ALLOWED = {"user", "common"}
+
+
+def imported_modules_of(path: Path) -> set[str]:
+    names: set[str] = set()
+    for node in ast.walk(parse(path)):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            dotted = node.module.split(".")
+            if "modules" in dotted and (node.level > 0 or dotted[0] == "src"):
+                names.add(dotted[dotted.index("modules") + 1] if len(dotted) > dotted.index("modules") + 1 else "")
+    return names
+
+
+class TestDependencyDirection:
+    def test_infrastructure_imports_no_feature_module(self):
+        offenders = {
+            str(path.relative_to(BACKEND_DIRECTORY)): sorted(imported - INFRASTRUCTURE_MODULE_IMPORTS_ALLOWED)
+            for path in (BACKEND_DIRECTORY / "src" / "infrastructure").rglob("*.py")
+            if (imported := imported_modules_of(path)) - INFRASTRUCTURE_MODULE_IMPORTS_ALLOWED
+        }
+        assert offenders == {}
+
+    def test_modules_never_import_interfaces(self):
+        offenders = [
+            str(path.relative_to(BACKEND_DIRECTORY))
+            for path in MODULES_DIRECTORY.rglob("*.py")
+            for node in ast.walk(parse(path))
+            if isinstance(node, ast.ImportFrom) and node.module and "interfaces" in node.module.split(".")
+        ]
+        assert offenders == []
