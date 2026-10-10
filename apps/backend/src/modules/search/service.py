@@ -14,7 +14,6 @@ from ..user.models import User
 from .models import SavedFilter
 from .schemas import MIN_QUERY_LENGTH, SavedFilterCreate, SearchCriteria
 
-
 FUZZY_THRESHOLD = 0.5
 
 
