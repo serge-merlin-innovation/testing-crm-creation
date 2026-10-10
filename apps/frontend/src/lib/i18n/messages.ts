@@ -5,6 +5,9 @@ export const LANGUAGE_COOKIE = "lang";
 
 const en = {
   "meta.language": "en",
+  "profile.language": "Language",
+  "profile.languageDescription": "Labels, emails and messages use this language. Dates read DD/MM/YYYY.",
+  "profile.languageFailed": "The language could not be saved. Try again.",
   "login.qrAlt": "QR code to scan with your authenticator app",
   "nav.primary": "Main menu",
   "nav.account": "Account menu",
@@ -743,6 +746,9 @@ export type MessageKey = keyof typeof en;
 
 const fr: Record<MessageKey, string> = {
   "meta.language": "fr",
+  "profile.language": "Langue",
+  "profile.languageDescription": "Les libellés, e-mails et messages utilisent cette langue. Les dates s'affichent au format JJ/MM/AAAA.",
+  "profile.languageFailed": "La langue n'a pas pu être enregistrée. Réessayez.",
   "login.qrAlt": "QR-code à scanner avec votre application d'authentification",
   "nav.primary": "Menu principal",
   "nav.account": "Menu du compte",
@@ -1480,6 +1486,9 @@ const fr: Record<MessageKey, string> = {
 
 const nl: Record<MessageKey, string> = {
   "meta.language": "nl",
+  "profile.language": "Taal",
+  "profile.languageDescription": "Labels, e-mails en meldingen gebruiken deze taal. Datums staan als DD/MM/JJJJ.",
+  "profile.languageFailed": "De taal kon niet worden opgeslagen. Probeer opnieuw.",
   "login.qrAlt": "QR-code om te scannen met uw authenticatie-app",
   "nav.primary": "Hoofdmenu",
   "nav.account": "Accountmenu",
@@ -2219,6 +2228,21 @@ export const MESSAGES: Record<Language, Record<MessageKey, string>> = { en, fr, 
 
 export function resolveLanguage(value: string | null | undefined): Language {
   return LANGUAGES.find((language) => language === value) ?? DEFAULT_LANGUAGE;
+}
+
+/** The `lang` cookie (the user's saved choice) first, else the browser's Accept-Language, else English. */
+export function preferredLanguage(cookie: string | null | undefined, acceptLanguage: string | null | undefined): Language {
+  if (cookie) {
+    return resolveLanguage(cookie);
+  }
+  for (const part of (acceptLanguage ?? "").split(",")) {
+    const code = part.trim().slice(0, 2).toLowerCase();
+    const match = LANGUAGES.find((language) => language === code);
+    if (match) {
+      return match;
+    }
+  }
+  return DEFAULT_LANGUAGE;
 }
 
 /** The language a catalogue is written in, so any view holding `messages` formats in it too. */

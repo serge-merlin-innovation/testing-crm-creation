@@ -6,6 +6,7 @@ import {
   sanitizeReturnTo,
   SESSION_COOKIE,
 } from "./lib/auth-routing";
+import { LANGUAGE_COOKIE, resolveLanguage } from "./lib/i18n/messages";
 import {
   audienceFor,
   normalizePagePath,
@@ -32,7 +33,23 @@ function allow(request: NextRequest, identity: SessionIdentity | null) {
 
   applyForwardedIdentity(headers, identity);
 
-  return NextResponse.next({ request: { headers } });
+  // The saved language wins over whatever this browser last used, so a user's choice follows
+  // them to every device. The page renders from the cookie, so it is set on this request too.
+  const saved = identity?.language ? resolveLanguage(identity.language) : null;
+  const stale = saved !== null && request.cookies.get(LANGUAGE_COOKIE)?.value !== saved;
+
+  if (stale) {
+    request.cookies.set(LANGUAGE_COOKIE, saved);
+    headers.set("cookie", request.cookies.toString());
+  }
+
+  const response = NextResponse.next({ request: { headers } });
+
+  if (stale) {
+    response.cookies.set(LANGUAGE_COOKIE, saved, { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 365 });
+  }
+
+  return response;
 }
 
 function sendToLogin(request: NextRequest) {

@@ -13,6 +13,8 @@ export type PageAudience =
 export type SessionIdentity = {
   roleName: string | null;
   permissions: string[];
+  /** The user's saved language (NFR-04); absent when the backend did not say. */
+  language?: string | null;
 };
 
 export type Viewer = SessionIdentity & {

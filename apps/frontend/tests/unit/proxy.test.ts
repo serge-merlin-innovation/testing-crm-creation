@@ -281,3 +281,30 @@ describe("signed-in pages are never cached (AUTH-04 c2)", () => {
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
   });
 });
+
+describe("the user's language follows them to every device (NFR-04 c1)", () => {
+  function backendWithLanguage(language: string) {
+    return vi.fn<Fetcher>(() =>
+      Promise.resolve(
+        jsonResponse({ id: 1, email: "ann@firm.be", role_name: "Partner", permissions: ["deals.read_staffed"], language }),
+      ),
+    );
+  }
+
+  it("renders the page in the saved language and keeps it in the lang cookie", async () => {
+    vi.stubGlobal("fetch", backendWithLanguage("nl"));
+
+    const response = await proxy(signedIn("/overview"));
+
+    expect(response.headers.get("x-middleware-request-cookie")).toContain("lang=nl");
+    expect(response.cookies.get("lang")?.value).toBe("nl");
+  });
+
+  it("leaves the cookie alone when it already matches", async () => {
+    vi.stubGlobal("fetch", backendWithLanguage("fr"));
+
+    const response = await proxy(signedIn("/overview", { Cookie: "session_id=session-1; lang=fr" }));
+
+    expect(response.cookies.get("lang")).toBeUndefined();
+  });
+});

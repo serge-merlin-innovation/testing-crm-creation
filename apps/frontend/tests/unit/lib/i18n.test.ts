@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { formatAmount, formatDate, formatDateTime, formatIsoDate, formatNumber } from "@/lib/i18n/format";
-import { MESSAGES, resolveLanguage, translate } from "@/lib/i18n/messages";
+import { MESSAGES, preferredLanguage, resolveLanguage, translate } from "@/lib/i18n/messages";
 
 describe("message catalogues", () => {
   it("carry the same keys in EN, FR and NL", () => {
@@ -68,5 +68,14 @@ describe("no page formats a date or number by itself", () => {
     expect(source).not.toMatch(
       /[>\s]\{(?!errors\.)[\w.]+\.(due_date|planned_date|actual_date|sent_date|signed_date|closing_date|revisit_date|estimated_ev|final_ev|expected_fee|amount|ev)\}/,
     );
+  });
+});
+
+describe("the language a visitor sees", () => {
+  it("prefers the saved cookie, then the browser, then English", () => {
+    expect(preferredLanguage("nl", "fr-BE,fr;q=0.9")).toBe("nl");
+    expect(preferredLanguage(undefined, "fr-BE,fr;q=0.9,en;q=0.8")).toBe("fr");
+    expect(preferredLanguage(undefined, "de-DE, nl-BE;q=0.5")).toBe("nl");
+    expect(preferredLanguage(undefined, "de-DE")).toBe("en");
   });
 });
