@@ -166,7 +166,12 @@ async def test_unstaffed_deals_count_only_in_aggregates_never_by_name(world):
 
     alone = (await get(world.partner, f"{REPORTS}/dashboard")).json()
     # One hidden deal would be identifiable by the total moving: it is left out entirely.
-    assert alone == {"total_mandates": 0, "by_stage_and_type": [], "weighted_fees_by_quarter": []}
+    assert alone == {
+        "total_mandates": 0,
+        "by_stage_and_type": [],
+        "weighted_fees_by_quarter": [],
+        "other_teams_weighted_fees": None,
+    }
 
     for code in ("Osprey", "Plover"):
         mandate_id = await deal(world, code, lead=world.outsider)
@@ -175,8 +180,11 @@ async def test_unstaffed_deals_count_only_in_aggregates_never_by_name(world):
 
     response = await get(world.partner, f"{REPORTS}/dashboard")
     body = response.json()
+    # Review N6: hidden deals reach only firm-wide totals, so no cell or quarter shows one moving.
     assert body["total_mandates"] == 3
-    assert Decimal(body["weighted_fees_by_quarter"][0]["weighted_fees"]) == Decimal("1500000.00")
+    assert body["by_stage_and_type"] == []
+    assert body["weighted_fees_by_quarter"] == []
+    assert Decimal(body["other_teams_weighted_fees"]) == Decimal("1500000.00")
     for leak in ("Kestrel", "Osprey", "Plover", "Acme"):
         assert leak not in response.text
     assert "mandate_id" not in response.text

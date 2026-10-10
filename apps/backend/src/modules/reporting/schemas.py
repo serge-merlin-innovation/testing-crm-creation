@@ -67,6 +67,8 @@ class DashboardRead(BaseModel):
     by_stage_and_type: list[StageTypeCount]
     # Absent for a caller without fee visibility (AUTHZ-06).
     weighted_fees_by_quarter: list[QuarterFees] | None = None
+    # Firm-wide weighted fees of deals the caller is not staffed on; null below 3 such deals.
+    other_teams_weighted_fees: Decimal | None = None
 
 
 class ForecastMonth(BaseModel):

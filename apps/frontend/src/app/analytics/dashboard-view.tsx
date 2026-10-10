@@ -78,6 +78,11 @@ export function DashboardView({ messages }: { messages: Messages }) {
                 ))}
               </TableBody>
             </Table>
+            {data.other_teams_weighted_fees ? (
+              <p>
+                {messages["dashboard.otherTeams"]}: {data.other_teams_weighted_fees}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}

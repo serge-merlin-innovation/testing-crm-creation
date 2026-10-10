@@ -20,6 +20,7 @@ export type Dashboard = {
   total_mandates: number;
   by_stage_and_type: { stage: string; type: string; count: number }[];
   weighted_fees_by_quarter?: { quarter: string; deals: number; expected_fees: string; weighted_fees: string }[];
+  other_teams_weighted_fees?: string | null;
 };
 
 export type ForecastMonth = {
