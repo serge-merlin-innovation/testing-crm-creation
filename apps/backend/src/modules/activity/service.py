@@ -10,7 +10,7 @@ from ..common.exceptions import ActivityNotFoundError, CompanyNotFoundError, Per
 from ..company.models import Company
 from ..contact.service import ContactService
 from ..mandate.models import Mandate
-from ..mandate.policy import DealAction, DealPolicy
+from ..mandate.policy import DealAction, DealPolicy, record_view
 from ..role.authorization import has_permission
 from ..role.permissions import Permission
 from ..user.models import User
@@ -33,6 +33,16 @@ async def require_record(db: AsyncSession, user: dict[str, Any], ref: RecordRef,
             raise CompanyNotFoundError(f"Company {ref.record_id} not found")
     else:
         await DealPolicy(now).authorize(db, user, ref.record_id, action)
+
+
+async def require_timeline(
+    db: AsyncSession, user: dict[str, Any], ref: RecordRef, now: datetime, context: AuditContext
+) -> None:
+    """A deal's timeline is a deal read: it is logged as a view (AUD-01 c1)."""
+    if ref.record_type == RecordType.MANDATE:
+        await record_view(db, await DealPolicy(now).authorize(db, user, ref.record_id, DealAction.READ), context)
+    else:
+        await require_record(db, user, ref, now, DealAction.READ)
 
 
 def _plain(value: Any) -> Any:
@@ -243,8 +253,10 @@ class NoteService:
         return list((await db.execute(query)).scalars())
 
 
-async def timeline(db: AsyncSession, user: dict[str, Any], ref: RecordRef, now: datetime) -> dict[str, Any]:
-    await require_record(db, user, ref, now, DealAction.READ)
+async def timeline(
+    db: AsyncSession, user: dict[str, Any], ref: RecordRef, now: datetime, context: AuditContext
+) -> dict[str, Any]:
+    await require_timeline(db, user, ref, now, context)
     visible = set(await DealPolicy(now).visible_mandate_ids(db, user))
     deals: list[dict[str, Any]] = []
     if ref.record_type == RecordType.COMPANY:

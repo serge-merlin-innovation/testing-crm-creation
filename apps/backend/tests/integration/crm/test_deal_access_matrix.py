@@ -12,9 +12,11 @@ from typing import Any
 
 import pytest
 from fastapi import APIRouter, FastAPI
+from sqlalchemy import select
 
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
 from src.interfaces.main import app
+from src.modules.audit.models import AuditEntry
 from src.modules.mandate.policy import ReadGrant
 from src.modules.mandate.policy import served_routes as served_routes_of
 from src.modules.role.permissions import RoleName
@@ -568,3 +570,35 @@ async def test_collections_never_name_a_hidden_deal(world, collection: Collectio
             assert response.json()["deals"] == [], (persona, path, body)
         for secret in collection.secrets:
             assert secret not in body, (persona, path, secret, body[:500])
+
+
+# AUD-01 c1: every deal-scoped read a team member makes writes exactly one mandate.viewed row.
+DEAL_READS = [e for e in ENDPOINTS if e.method == "GET" and "{mandate_id}" in e.path and e.expected.get("member") == OK]
+
+
+@pytest.mark.parametrize("endpoint", DEAL_READS, ids=lambda e: e.path)
+async def test_every_deal_scoped_read_is_audited_as_a_view(world, endpoint: Endpoint):
+    mandate_id, path_of, context = await seed_matrix_deal(world)
+    member = world.people["member"]
+    views = select(AuditEntry).where(
+        AuditEntry.action == "mandate.viewed", AuditEntry.user_id == member.id, AuditEntry.record_id == str(mandate_id)
+    )
+    before = len((await world.db.execute(views)).scalars().all())
+
+    response = await call_endpoint(member, endpoint, path_of(endpoint), context)
+
+    assert 200 <= response.status_code < 300, response.text
+    assert len((await world.db.execute(views)).scalars().all()) == before + 1
+
+
+async def test_reading_a_deal_timeline_is_audited_as_a_view(world):
+    mandate_id, _, _ = await seed_matrix_deal(world)
+    member = world.people["member"]
+
+    response = await member.client.get(f"/api/v1/timeline/mandate/{mandate_id}")
+
+    assert response.status_code == 200, response.text
+    rows = await world.db.execute(
+        select(AuditEntry).where(AuditEntry.action == "mandate.viewed", AuditEntry.user_id == member.id)
+    )
+    assert len(rows.scalars().all()) == 1

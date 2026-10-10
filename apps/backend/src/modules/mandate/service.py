@@ -142,18 +142,6 @@ class MandateService:
             raise ValidationError("The lead partner must hold the Partner role", field=field)
         return user
 
-    async def record_view(self, db: AsyncSession, grant: DealGrant, context: AuditContext) -> None:
-        """AUD-01 c1: who opened which deal, from where. Break-glass reads are flagged."""
-        self.audit.record(
-            db,
-            context,
-            "mandate.viewed",
-            record_type="mandate",
-            record_id=grant.mandate.id,
-            new_values={"break_glass": True} if grant.emergency else None,
-        )
-        await db.commit()
-
     async def read(self, db: AsyncSession, mandate: Mandate, grant: DealGrant | None) -> dict[str, Any]:
         client = await db.get(Company, mandate.client_id)
         target = await db.get(Company, mandate.target_id) if mandate.target_id else None

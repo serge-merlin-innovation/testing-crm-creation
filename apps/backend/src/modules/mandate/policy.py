@@ -11,13 +11,14 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Annotated, Any
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.routing import APIRoute
 from sqlalchemy import Select, and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...infrastructure.clock import Clock, get_clock
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
+from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import DealClosedError, DealForbiddenError, DealFrozenError, DealNotFoundError
 from ..role.authorization import has_permission
 from ..role.permissions import Permission
@@ -224,16 +225,36 @@ class DealPolicy:
         raise DealNotFoundError(f"Deal {mandate_id} not visible")
 
 
+async def record_view(db: AsyncSession, grant: DealGrant, context: AuditContext) -> None:
+    """AUD-01 c1: who opened which deal, from where. Break-glass reads are flagged."""
+    AuditService().record(
+        db,
+        context,
+        "mandate.viewed",
+        record_type="mandate",
+        record_id=grant.mandate.id,
+        new_values={"break_glass": True} if grant.emergency else None,
+    )
+    await db.commit()
+
+
+async def _viewed(request: Request, db: AsyncSession, grant: DealGrant, clock: Clock) -> DealGrant:
+    if request.method == "GET":
+        await record_view(db, grant, AuditContext.from_request(request, grant.user["id"], clock))
+    return grant
+
+
 def deal_access(action: DealAction) -> Any:
-    """Route dependency: resolves `{mandate_id}` through the policy for `action`."""
+    """Route dependency: resolves `{mandate_id}` through the policy for `action`. A GET is logged as a view."""
 
     async def dependency(
         mandate_id: int,
+        request: Request,
         db: AsyncSessionDep,
         user: CurrentUserDep,
         clock: Annotated[Clock, Depends(get_clock)],
     ) -> DealGrant:
-        return await DealPolicy(clock.now()).authorize(db, user, mandate_id, action)
+        return await _viewed(request, db, await DealPolicy(clock.now()).authorize(db, user, mandate_id, action), clock)
 
     dependency.__name__ = f"deal_access_{action.value}"
     setattr(dependency, DEAL_SCOPED_MARK, True)
@@ -251,11 +272,12 @@ def mark_deal_scoped(dependency: Callable[..., Any]) -> Callable[..., Any]:
 
 async def _summary_dependency(
     mandate_id: int,
+    request: Request,
     db: AsyncSessionDep,
     user: CurrentUserDep,
     clock: Annotated[Clock, Depends(get_clock)],
 ) -> DealGrant:
-    return await DealPolicy(clock.now()).authorize_summary(db, user, mandate_id)
+    return await _viewed(request, db, await DealPolicy(clock.now()).authorize_summary(db, user, mandate_id), clock)
 
 
 mark_deal_scoped(_summary_dependency)

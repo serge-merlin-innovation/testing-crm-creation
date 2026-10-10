@@ -123,6 +123,11 @@ async def add_note(
     description="Deal-linked items appear only to the deal team; private notes only to their author.",
 )
 async def get_timeline(
-    record_type: RecordType, record_id: int, db: AsyncSessionDep, user: CurrentUserDep, clock: ClockDep
+    record_type: RecordType,
+    record_id: int,
+    db: AsyncSessionDep,
+    user: CurrentUserDep,
+    clock: ClockDep,
+    context: AuditContextDep,
 ) -> dict[str, Any]:
-    return await timeline(db, user, RecordRef(record_type=record_type, record_id=record_id), clock.now())
+    return await timeline(db, user, RecordRef(record_type=record_type, record_id=record_id), clock.now(), context)
