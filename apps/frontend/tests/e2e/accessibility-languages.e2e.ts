@@ -2,12 +2,12 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
 import { PAGE_AUDIENCE } from "@/lib/page-audience";
-import { ADMIN, inviteUser, signIn, signInApi } from "./identities";
+import { ADMIN, inviteUser, signIn, signInApi, runId } from "./identities";
 
 // NFR-04 c2 (375 px, no horizontal scroll), c3 (WCAG 2.1 AA via axe), c4 (Belgian formats) and
 // c1 (FR/NL labels) over every page the app serves, as the people who use each page.
 
-const RUN = Date.now().toString(36);
+const RUN = runId();
 const PARTNER = {
   firstName: "Paulien",
   lastName: "Vennoot",

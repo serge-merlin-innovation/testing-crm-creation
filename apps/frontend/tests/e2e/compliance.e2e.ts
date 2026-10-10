@@ -1,6 +1,6 @@
 import { expect, test, type Browser } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
-import { ADMIN, inviteUser, signIn, signInApi } from "./identities";
+import { ADMIN, inviteUser, signIn, signInApi, runId } from "./identities";
 
 const PARTNER = {
   firstName: "Pieter",
@@ -14,7 +14,7 @@ const COMPLIANCE = {
   email: "e2e.compliance@example.com",
   password: "Granite-Harbour-17-Beacon",
 };
-const RUN = Date.now().toString(36);
+const RUN = runId();
 const reversed = (text: string) => text.split("").reverse().join("");
 
 /**

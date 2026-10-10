@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
-import { ADMIN, MEMBER, inviteUser, signIn, signInApi } from "./identities";
+import { ADMIN, MEMBER, inviteUser, signIn, signInApi, runId } from "./identities";
 import { currentCode } from "./totp";
 
 const PARTNER = {
@@ -15,7 +15,7 @@ const COMPLIANCE = {
   email: "e2e.compliance@example.com",
   password: "Granite-Harbour-17-Beacon",
 };
-const RUN = Date.now().toString(36);
+const RUN = runId();
 const CODE_NAME = `Kestrel ${RUN.split("").reverse().join("")}`;
 
 async function seedDeal(browser: Browser) {

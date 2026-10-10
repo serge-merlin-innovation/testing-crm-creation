@@ -7,6 +7,15 @@ import { currentCode, saveSecret } from "./totp";
 // this directory to CommonJS, because the package has no `"type": "module"`.
 const bankedSessions = "tests/e2e/.auth";
 
+/**
+ * A random lower-case tag for names a spec creates. Not a timestamp: two runs' timestamps share a
+ * long prefix, and the fuzzy search and similar-name duplicate check then match the previous run's
+ * records on a reused database.
+ */
+export function runId(length = 10): string {
+  return Array.from({ length }, () => Math.floor(Math.random() * 36).toString(36)).join("");
+}
+
 export type Identity = {
   email: string;
   password: string;

@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
-import { ADMIN, MEMBER, inviteUser, signIn, signInApi } from "./identities";
+import { ADMIN, MEMBER, inviteUser, signIn, signInApi, runId } from "./identities";
 
 const PARTNER = {
   firstName: "Pieter",
@@ -8,7 +8,7 @@ const PARTNER = {
   email: "e2e.partner@example.com",
   password: "Copper-Meadow-42-Signal",
 };
-const RUN = Date.now().toString(36);
+const RUN = runId();
 const reversed = (text: string) => text.split("").reverse().join("");
 const COMPANY = `Brightwater Foods ${RUN.toUpperCase()}x`;
 const TOMBSTONE = `Tern ${reversed(RUN)}`;

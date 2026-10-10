@@ -1,7 +1,7 @@
 import { expect, request as playwrightRequest, test } from "@playwright/test";
-import { MEMBER, signInApi } from "./identities";
+import { MEMBER, signInApi, runId } from "./identities";
 
-const RUN = Date.now().toString(36);
+const RUN = runId();
 const INBOUND_SECRET = "e2e-inbound-secret";
 
 /** The mail provider's webhook: no session, only the shared secret. */

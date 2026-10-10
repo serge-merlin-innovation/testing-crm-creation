@@ -1,6 +1,6 @@
 import { expect, test, type Browser } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
-import { ADMIN, MEMBER, inviteUser, signIn, signInApi } from "./identities";
+import { ADMIN, MEMBER, inviteUser, signIn, signInApi, runId } from "./identities";
 
 const PARTNER = {
   firstName: "Pieter",
@@ -9,7 +9,7 @@ const PARTNER = {
   password: "Copper-Meadow-42-Signal",
   name: "Pieter Partner",
 };
-const RUN = Date.now().toString(36);
+const RUN = runId();
 
 /** A partner-owned deal, created through the API. The banked analyst is not on its team. */
 async function seedDeal(browser: Browser) {
@@ -45,7 +45,7 @@ async function seedDeal(browser: Browser) {
   const mandate = await request.post("/api/v1/mandates/", {
     headers,
     data: {
-      code_name: `Osprey ${Date.now().toString(36).split("").reverse().join("")}`,
+      code_name: `Osprey ${runId().split("").reverse().join("")}`,
       client_id: (await company.json()).id,
       type: "buy_side",
       sector_id: sectorId,

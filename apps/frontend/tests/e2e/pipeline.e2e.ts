@@ -1,6 +1,6 @@
 import { expect, test, type Browser } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
-import { ADMIN, inviteUser, signIn, signInApi } from "./identities";
+import { ADMIN, inviteUser, signIn, signInApi, runId } from "./identities";
 
 const PARTNER = {
   firstName: "Pieter",
@@ -9,7 +9,7 @@ const PARTNER = {
   password: "Copper-Meadow-42-Signal",
   name: "Pieter Partner",
 };
-const RUN = Date.now().toString(36);
+const RUN = runId();
 const reversed = (text: string) => text.split("").reverse().join("");
 
 /** Two partner-owned deals on the board, created through the API. */

@@ -1,8 +1,8 @@
 import { expect, test, type APIRequestContext, type Browser, type Page } from "@playwright/test";
-import { ADMIN, inviteUser, signIn, signInApi, type Invitee } from "./identities";
+import { ADMIN, inviteUser, signIn, signInApi, type Invitee, runId } from "./identities";
 import { currentCode, saveSecret } from "./totp";
 
-const RUN = Date.now().toString(36);
+const RUN = runId();
 
 function invitee(name: string): Invitee {
   return {

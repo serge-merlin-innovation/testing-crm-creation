@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
-import { ADMIN, MEMBER, inviteUser, signIn, signInApi } from "./identities";
+import { ADMIN, MEMBER, inviteUser, signIn, signInApi, runId } from "./identities";
 
 const PARTNER = {
   firstName: "Pieter",
@@ -14,7 +14,7 @@ const BACK_OFFICE = {
   email: "e2e.backoffice@example.com",
   password: "Ledger-Harbour-58-Quill",
 };
-const RUN = Date.now().toString(36);
+const RUN = runId();
 const reversed = (text: string) => text.split("").reverse().join("");
 
 /** A partner-led deal at EV 25m with the banked analyst on the team. Back-office is not staffed. */

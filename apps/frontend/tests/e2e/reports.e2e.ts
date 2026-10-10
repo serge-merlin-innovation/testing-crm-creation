@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
-import { ADMIN, inviteUser, signIn, signInApi } from "./identities";
+import { ADMIN, inviteUser, signIn, signInApi, runId } from "./identities";
 
 const PARTNER = {
   firstName: "Pieter",
@@ -23,10 +23,10 @@ const READER = {
 const NEWCOMER = {
   firstName: "Nina",
   lastName: "Newcomer",
-  email: `e2e.newcomer.${Date.now().toString(36)}@example.com`,
+  email: `e2e.newcomer.${runId()}@example.com`,
   password: "Silver-Compass-64-Meadow",
 };
-const RUN = Date.now().toString(36);
+const RUN = runId();
 const reversed = (text: string) => text.split("").reverse().join("");
 
 /** A partner-led deal with fees, a close forecast, a milestone this month and a task this week. */

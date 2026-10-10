@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN, MEMBER } from "./identities";
+import { ADMIN, MEMBER, runId } from "./identities";
 
-const RUN = Date.now().toString(36);
+const RUN = runId();
 
 test.describe("an analyst", () => {
   test.use({ storageState: MEMBER.storageState });

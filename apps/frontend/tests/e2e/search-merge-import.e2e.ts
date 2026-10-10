@@ -1,12 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { expect, test } from "@playwright/test";
-import { ADMIN, MEMBER, signInApi } from "./identities";
+import { ADMIN, MEMBER, signInApi, runId } from "./identities";
 
-const RUN = Date.now().toString(36);
-// Search is fuzzy: a timestamp suffix shares its prefix with the previous run's, so on a reused
-// database that run's contact matched and "No results." never showed. 16 random characters do not.
-const NAME_TOKEN = Array.from({ length: 16 }, () => Math.floor(Math.random() * 36).toString(36)).join("");
-const SURNAME = `Lefèvre${NAME_TOKEN}`;
+const RUN = runId();
+const SURNAME = `Lefèvre${RUN}`;
 
 /** An .xlsx built by the backend's own openpyxl, so the e2e needs no spreadsheet dependency. */
 function workbook(rows: (string | null)[][]): Buffer {
@@ -30,7 +27,7 @@ test.describe("an analyst", () => {
     await page.getByRole("button", { name: "Create contact" }).click();
     await expect(page.getByRole("status")).toHaveText("Contact created.");
 
-    await page.getByLabel("Search", { exact: true }).fill(`lefebvre${NAME_TOKEN}`);
+    await page.getByLabel("Search", { exact: true }).fill(`lefebvre${RUN}`);
     await page.getByRole("button", { name: "Search", exact: true }).click();
     const contacts = page.getByRole("list", { name: "Contacts" });
     await expect(contacts).toContainText(`Hélène ${SURNAME}`);
