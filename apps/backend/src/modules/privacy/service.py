@@ -401,3 +401,27 @@ class PrivacyService:
             new_values={"decision": decision.value},
         )
         await db.commit()
+
+
+AML_RETENTION_YEARS = 10
+
+
+async def hold_client_people(db: AsyncSession, mandate: Mandate, context: AuditContext) -> None:
+    """Decision 23 / GDPR-02 c2: a KYC'd client's current people fall under AML retention, so erasure is blocked."""
+    now = context.clock.now()
+    reason = f"AML {AML_RETENTION_YEARS}-year retention: KYC of {mandate.code_name}"
+    people = select(Employment.contact_id).where(Employment.company_id == mandate.client_id, Employment.end_date.is_(None))
+    held = select(LegalHold.contact_id).where(LegalHold.reason == reason, LegalHold.released_at.is_(None))
+    for contact_id in (await db.execute(people.where(Employment.contact_id.not_in(held)).distinct())).scalars():
+        db.add(
+            LegalHold(
+                contact_id=contact_id,
+                reason=reason,
+                created_by=context.user_id,
+                created_at=now,
+                until=now.replace(year=now.year + AML_RETENTION_YEARS),
+            )
+        )
+        AuditService().record(
+            db, context, "legal_hold.added", record_type="contact", record_id=contact_id, new_values={"reason": reason}
+        )

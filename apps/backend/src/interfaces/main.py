@@ -27,6 +27,7 @@ from ..modules.audit.scope import set_audit_scope
 from ..modules.buyer.jobs import register_jobs as register_buyer_jobs
 from ..modules.compliance.jobs import register_jobs as register_compliance_jobs
 from ..modules.compliance.service import install as install_compliance
+from ..modules.compliance.service import set_kyc_approved_hook
 from ..modules.data_import.jobs import register_jobs as register_import_jobs
 from ..modules.fee.service import on_closed_won as raise_invoice_task
 from ..modules.mandate.jobs import register_jobs as register_deal_jobs
@@ -38,6 +39,7 @@ from ..modules.origination.audit_scope import readable_rows as deal_wall_audit_s
 from ..modules.origination.jobs import register_jobs as register_origination_jobs
 from ..modules.picklist.service import seed_default_picklists
 from ..modules.privacy.jobs import register_jobs as register_privacy_jobs
+from ..modules.privacy.service import hold_client_people
 from ..modules.role.authorization import require_permission
 from ..modules.role.permissions import Permission
 from ..modules.role.service import seed_default_roles
@@ -53,6 +55,7 @@ register_compliance_jobs()
 register_access_jobs()
 register_buyer_jobs()
 install_compliance()
+set_kyc_approved_hook(hold_client_people)
 register_origination_jobs()
 register_operations_jobs()
 set_audit_scope(deal_wall_audit_scope)
