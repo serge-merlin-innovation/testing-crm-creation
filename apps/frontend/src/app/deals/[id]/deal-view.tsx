@@ -29,6 +29,7 @@ import { apiFetch } from "@/services/api";
 import { BuyersTab } from "./buyers-tab";
 import { ComplianceTab } from "./compliance-tab";
 import { FeesTab } from "./fees-tab";
+import { ForecastPanel } from "./forecast-panel";
 import { ClosingTab, MilestonesTab } from "./pipeline-tabs";
 import { ActivitiesTasksTab, FunnelPanel, LettersTab, OffersTab } from "./process-tabs";
 
@@ -475,6 +476,7 @@ export function DealView({
           </TabsList>
           <TabsContent value="summary">
             <Summary mandate={mandate} onSaved={setMandate} messages={messages} />
+            {summaryOnly ? null : <ForecastPanel mandateId={mandate.id} canEdit={mandate.can_edit} messages={messages} />}
           </TabsContent>
           {summaryOnly ? null : (
             <>

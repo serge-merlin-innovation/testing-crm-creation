@@ -47,6 +47,8 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/exports": { kind: "authenticated" },
   "/stage-criteria": { kind: "permission", permission: "settings.manage" },
   "/fees": { kind: "permission", permission: "fees.read" },
+  "/fee-forecast": { kind: "permission", permission: "fees.read" },
+  "/win-loss": { kind: "permission", permission: "dashboard.firm" },
   "/conflict-reviews": { kind: "permission", permission: "conflicts.register" },
   "/access": { kind: "authenticated" },
 };

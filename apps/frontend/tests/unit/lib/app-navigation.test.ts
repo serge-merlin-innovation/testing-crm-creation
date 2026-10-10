@@ -67,16 +67,8 @@ describe("getPrimaryNavigation", () => {
   });
 
   it("offers read-only only the dashboards", () => {
-    expect(hrefs(getPrimaryNavigation(readOnly))).toEqual([
-      "/overview",
-      "/search",
-      "/companies",
-      "/contacts",
-      "/analytics",
-      "/merge",
-      "/exports",
-      "/access",
-    ]);
+    // ROLE-01 c3: aggregated dashboards and nothing else.
+    expect(hrefs(getPrimaryNavigation(readOnly))).toEqual(["/overview", "/analytics"]);
   });
 
   // GDPR-02: person export and erasure belong to compliance.

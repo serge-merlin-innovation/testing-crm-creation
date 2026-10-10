@@ -2973,6 +2973,41 @@
         "title": "CriterionKind",
         "type": "string"
       },
+      "DashboardRead": {
+        "properties": {
+          "by_stage_and_type": {
+            "items": {
+              "$ref": "#/components/schemas/StageTypeCount"
+            },
+            "title": "By Stage And Type",
+            "type": "array"
+          },
+          "total_mandates": {
+            "title": "Total Mandates",
+            "type": "integer"
+          },
+          "weighted_fees_by_quarter": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QuarterFees"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weighted Fees By Quarter"
+          }
+        },
+        "required": [
+          "total_mandates",
+          "by_stage_and_type"
+        ],
+        "title": "DashboardRead",
+        "type": "object"
+      },
       "DeactivateRequest": {
         "additionalProperties": false,
         "properties": {
@@ -3460,6 +3495,27 @@
         "title": "ExportPreview",
         "type": "object"
       },
+      "FeeForecastRead": {
+        "properties": {
+          "deals": {
+            "title": "Deals",
+            "type": "integer"
+          },
+          "months": {
+            "items": {
+              "$ref": "#/components/schemas/ForecastMonth"
+            },
+            "title": "Months",
+            "type": "array"
+          }
+        },
+        "required": [
+          "months",
+          "deals"
+        ],
+        "title": "FeeForecastRead",
+        "type": "object"
+      },
       "FeeTermsRead": {
         "properties": {
           "can_edit": {
@@ -3894,6 +3950,119 @@
         "title": "FinancingCertainty",
         "type": "string"
       },
+      "ForecastMonth": {
+        "properties": {
+          "actual_invoiced": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Actual Invoiced",
+            "type": "string"
+          },
+          "actual_paid": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Actual Paid",
+            "type": "string"
+          },
+          "forecast_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Forecast Total",
+            "type": "string"
+          },
+          "month": {
+            "description": "YYYY-MM",
+            "title": "Month",
+            "type": "string"
+          },
+          "retainers": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Retainers",
+            "type": "string"
+          },
+          "success_fees": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Success Fees",
+            "type": "string"
+          }
+        },
+        "required": [
+          "month",
+          "retainers",
+          "success_fees",
+          "forecast_total",
+          "actual_invoiced",
+          "actual_paid"
+        ],
+        "title": "ForecastMonth",
+        "type": "object"
+      },
+      "ForecastRead": {
+        "properties": {
+          "expected_closing_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Closing Date"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          },
+          "probability": {
+            "title": "Probability",
+            "type": "integer"
+          },
+          "probability_is_default": {
+            "title": "Probability Is Default",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mandate_id",
+          "probability",
+          "probability_is_default",
+          "expected_closing_date"
+        ],
+        "title": "ForecastRead",
+        "type": "object"
+      },
+      "ForecastValues": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_closing_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Closing Date"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Percent; null = the stage default",
+            "title": "Probability"
+          }
+        },
+        "title": "ForecastValues",
+        "type": "object"
+      },
       "ForgotPassword": {
         "additionalProperties": false,
         "properties": {
@@ -4178,6 +4347,97 @@
           "strength"
         ],
         "title": "HolderSet",
+        "type": "object"
+      },
+      "HomeDeal": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/DealStage"
+          }
+        },
+        "required": [
+          "id",
+          "code_name",
+          "stage"
+        ],
+        "title": "HomeDeal",
+        "type": "object"
+      },
+      "HomeRead": {
+        "properties": {
+          "deals_by_stage": {
+            "items": {
+              "$ref": "#/components/schemas/HomeStage"
+            },
+            "title": "Deals By Stage",
+            "type": "array"
+          },
+          "is_new": {
+            "title": "Is New",
+            "type": "boolean"
+          },
+          "key_dates": {
+            "items": {
+              "$ref": "#/components/schemas/KeyDate"
+            },
+            "title": "Key Dates",
+            "type": "array"
+          },
+          "tasks_due_this_week": {
+            "items": {
+              "$ref": "#/components/schemas/TaskRead"
+            },
+            "title": "Tasks Due This Week",
+            "type": "array"
+          },
+          "week_end": {
+            "format": "date",
+            "title": "Week End",
+            "type": "string"
+          },
+          "week_start": {
+            "format": "date",
+            "title": "Week Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deals_by_stage",
+          "tasks_due_this_week",
+          "key_dates",
+          "week_start",
+          "week_end",
+          "is_new"
+        ],
+        "title": "HomeRead",
+        "type": "object"
+      },
+      "HomeStage": {
+        "properties": {
+          "deals": {
+            "items": {
+              "$ref": "#/components/schemas/HomeDeal"
+            },
+            "title": "Deals",
+            "type": "array"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/DealStage"
+          }
+        },
+        "required": [
+          "stage",
+          "deals"
+        ],
+        "title": "HomeStage",
         "type": "object"
       },
       "ImportEntity": {
@@ -4969,6 +5229,35 @@
           }
         },
         "title": "InvoiceUpdate",
+        "type": "object"
+      },
+      "KeyDate": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "planned_date": {
+            "format": "date",
+            "title": "Planned Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mandate_id",
+          "code_name",
+          "name",
+          "planned_date"
+        ],
+        "title": "KeyDate",
         "type": "object"
       },
       "KycRead": {
@@ -8269,6 +8558,37 @@
         "title": "PreviewRead",
         "type": "object"
       },
+      "QuarterFees": {
+        "properties": {
+          "deals": {
+            "title": "Deals",
+            "type": "integer"
+          },
+          "expected_fees": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Expected Fees",
+            "type": "string"
+          },
+          "quarter": {
+            "description": "YYYY-Qn, or 'unscheduled' for deals without an expected closing date",
+            "title": "Quarter",
+            "type": "string"
+          },
+          "weighted_fees": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Weighted Fees",
+            "type": "string"
+          }
+        },
+        "required": [
+          "quarter",
+          "deals",
+          "expected_fees",
+          "weighted_fees"
+        ],
+        "title": "QuarterFees",
+        "type": "object"
+      },
       "Reactivated": {
         "properties": {
           "deal_memberships": {
@@ -8297,6 +8617,24 @@
           "deal_memberships"
         ],
         "title": "Reactivated",
+        "type": "object"
+      },
+      "ReasonCount": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "count"
+        ],
+        "title": "ReasonCount",
         "type": "object"
       },
       "RecordRef": {
@@ -8980,6 +9318,35 @@
         "title": "SecondFactorSubmit",
         "type": "object"
       },
+      "SectorMultiple": {
+        "properties": {
+          "average_ev_ebitda": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Average Ev Ebitda",
+            "type": "string"
+          },
+          "deals": {
+            "title": "Deals",
+            "type": "integer"
+          },
+          "sector": {
+            "title": "Sector",
+            "type": "string"
+          },
+          "sector_id": {
+            "title": "Sector Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sector_id",
+          "sector",
+          "deals",
+          "average_ev_ebitda"
+        ],
+        "title": "SectorMultiple",
+        "type": "object"
+      },
       "SecurityPolicyRead": {
         "properties": {
           "trusted_devices_enabled": {
@@ -9395,6 +9762,28 @@
           "stage"
         ],
         "title": "StageMove",
+        "type": "object"
+      },
+      "StageTypeCount": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/DealStage"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "type",
+          "count"
+        ],
+        "title": "StageTypeCount",
         "type": "object"
       },
       "Stake": {
@@ -10643,6 +11032,89 @@
         ],
         "title": "WarningReason",
         "type": "string"
+      },
+      "WinLossRead": {
+        "properties": {
+          "average_duration_days": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Duration Days"
+          },
+          "closed_deals": {
+            "title": "Closed Deals",
+            "type": "integer"
+          },
+          "ev_ebitda_by_sector": {
+            "items": {
+              "$ref": "#/components/schemas/SectorMultiple"
+            },
+            "title": "Ev Ebitda By Sector",
+            "type": "array"
+          },
+          "lost": {
+            "title": "Lost",
+            "type": "integer"
+          },
+          "period_end": {
+            "format": "date",
+            "title": "Period End",
+            "type": "string"
+          },
+          "period_start": {
+            "format": "date",
+            "title": "Period Start",
+            "type": "string"
+          },
+          "pitches": {
+            "title": "Pitches",
+            "type": "integer"
+          },
+          "top_lost_reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonCount"
+            },
+            "title": "Top Lost Reasons",
+            "type": "array"
+          },
+          "win_rate": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Percent of decided pitches won; null when none were decided",
+            "title": "Win Rate"
+          },
+          "won": {
+            "title": "Won",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "period_start",
+          "period_end",
+          "pitches",
+          "won",
+          "lost",
+          "win_rate",
+          "top_lost_reasons",
+          "closed_deals",
+          "average_duration_days",
+          "ev_ebitda_by_sector"
+        ],
+        "title": "WinLossRead",
+        "type": "object"
       },
       "WinRead": {
         "properties": {
@@ -17305,6 +17777,120 @@
         ]
       }
     },
+    "/api/v1/mandates/{mandate_id}/forecast": {
+      "get": {
+        "operationId": "get_forecast_api_v1_mandates__mandate_id__forecast_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "expected_closing_date": "2026-10-10",
+                  "mandate_id": 1,
+                  "probability": 1,
+                  "probability_is_default": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or a deal you may not read"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Close probability and date",
+        "tags": [
+          "Reports"
+        ]
+      },
+      "put": {
+        "operationId": "put_forecast_api_v1_mandates__mandate_id__forecast_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "expected_closing_date": "2026-10-10",
+                "probability": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ForecastValues"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "expected_closing_date": "2026-10-10",
+                  "mandate_id": 1,
+                  "probability": 1,
+                  "probability_is_default": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or a deal you may not read"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set the close probability and expected closing date (deal team)",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
     "/api/v1/mandates/{mandate_id}/funnel": {
       "get": {
         "operationId": "get_funnel_api_v1_mandates__mandate_id__funnel_get",
@@ -21289,6 +21875,229 @@
         "summary": "Keep or anonymise an inactive contact",
         "tags": [
           "Privacy"
+        ]
+      }
+    },
+    "/api/v1/reports/dashboard": {
+      "get": {
+        "description": "Counts running deals firm-wide. Deals the caller is not staffed on count only inside a cell with at least 3 of them, so no figure reveals one deal. Fee figures need `fees.read`.",
+        "operationId": "dashboard_api_v1_reports_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "by_stage_and_type": [
+                    {
+                      "count": 1,
+                      "stage": "conflict_review",
+                      "type": "type"
+                    }
+                  ],
+                  "total_mandates": 1,
+                  "weighted_fees_by_quarter": [
+                    {
+                      "deals": 1,
+                      "expected_fees": "expected_fees",
+                      "quarter": "quarter",
+                      "weighted_fees": "weighted_fees"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Firm pipeline: mandates by stage and type, weighted expected fees by quarter",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/fee-forecast": {
+      "get": {
+        "operationId": "fee_forecast_api_v1_reports_fee_forecast_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "deals": 1,
+                  "months": [
+                    {
+                      "actual_invoiced": "actual_invoiced",
+                      "actual_paid": "actual_paid",
+                      "forecast_total": "forecast_total",
+                      "month": "month",
+                      "retainers": "retainers",
+                      "success_fees": "success_fees"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/FeeForecastRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Retainers and success fees per month for 12 months, with invoiced and paid actuals (fees.read)",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/fee-forecast/export": {
+      "get": {
+        "operationId": "fee_forecast_export_api_v1_reports_fee_forecast_export_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "The fee forecast as an Excel workbook (fees.read); the export is audited",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/home": {
+      "get": {
+        "operationId": "home_api_v1_reports_home_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "deals_by_stage": [
+                    {
+                      "deals": [
+                        null
+                      ],
+                      "stage": "conflict_review"
+                    }
+                  ],
+                  "is_new": true,
+                  "key_dates": [
+                    {
+                      "code_name": "code_name",
+                      "mandate_id": 1,
+                      "name": "name",
+                      "planned_date": "2026-10-10"
+                    }
+                  ],
+                  "tasks_due_this_week": [
+                    {
+                      "assignee_id": 1,
+                      "completed_at": "2026-10-10T09:00:00Z",
+                      "created_by": 1,
+                      "due_date": "2026-10-10",
+                      "id": 1,
+                      "mandate_id": 1,
+                      "overdue": true,
+                      "record_id": 1,
+                      "record_type": null,
+                      "recurrence": "none",
+                      "title": "title"
+                    }
+                  ],
+                  "week_end": "2026-10-10",
+                  "week_start": "2026-10-10"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HomeRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My home page: my active deals by stage, tasks due this week, key dates in the next 30 days",
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/reports/win-loss": {
+      "get": {
+        "description": "Counts only opportunities and deals the caller may read.",
+        "operationId": "win_loss_api_v1_reports_win_loss_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "From",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "To",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "average_duration_days": "text",
+                  "closed_deals": 1,
+                  "ev_ebitda_by_sector": [
+                    {
+                      "average_ev_ebitda": "average_ev_ebitda",
+                      "deals": 1,
+                      "sector": "sector",
+                      "sector_id": 1
+                    }
+                  ],
+                  "lost": 1,
+                  "period_end": "2026-10-10",
+                  "period_start": "2026-10-10",
+                  "pitches": 1,
+                  "top_lost_reasons": [
+                    {
+                      "count": 1,
+                      "reason": "reason"
+                    }
+                  ],
+                  "win_rate": "text",
+                  "won": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/WinLossRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pitches, win rate, top lost reasons, deal duration and EV/EBITDA by sector for a period (Partner)",
+        "tags": [
+          "Reports"
         ]
       }
     },
