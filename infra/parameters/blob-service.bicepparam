@@ -22,4 +22,4 @@ param corsRules = [
   }
 ]
 param versioningEnabled = true
-param softDeleteRetentionDays = 7
+param softDeleteRetentionDays = 35
