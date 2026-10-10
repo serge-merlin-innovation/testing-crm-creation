@@ -131,6 +131,9 @@ class AuthSettings(BaseSettings):
     # The Have I Been Pwned lookup on every new password. Off only for Playwright, whose runs must not
     # depend on an outside service; refused off on staging and production.
     BREACH_CHECK_ENABLED: bool = config("BREACH_CHECK_ENABLED", default=True, cast=bool)
+    # The geo-IP service behind new-country login alerts (AUTH-06 c1, decision 7). Empty: no provider
+    # chosen, alerts fire on new devices only and startup warns. Set: its adapter must be wired.
+    GEOIP_PROVIDER: str = config("GEOIP_PROVIDER", default="")
 
     SCHEDULED_JOBS_ENABLED: bool = config("SCHEDULED_JOBS_ENABLED", default=True, cast=bool)
     SCHEDULED_JOBS_TICK_SECONDS: int = config("SCHEDULED_JOBS_TICK_SECONDS", default=60, cast=int)
