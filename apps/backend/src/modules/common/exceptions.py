@@ -130,6 +130,14 @@ class TaskNotFoundError(ResourceNotFoundError):
     pass
 
 
+class AccessRequestNotFoundError(ResourceNotFoundError):
+    pass
+
+
+class AccessReviewNotFoundError(ResourceNotFoundError):
+    pass
+
+
 class MergeBlockedError(PermissionDeniedError):
     """A record to merge sits on a deal the caller cannot see; only Compliance may merge it."""
 

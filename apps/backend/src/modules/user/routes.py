@@ -6,6 +6,7 @@ from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
+from ..security.dependencies import StepUpUserDep
 from .dependencies import UserServiceDep
 from .schemas import UserRead, UserRoleUpdate, UserUpdate
 
@@ -88,6 +89,7 @@ async def change_user_role(
     user_service: UserServiceDep,
     context: AuditContextDep,
     _: UserManagerDep,
+    __: StepUpUserDep,
 ) -> dict[str, Any]:
     return await user_service.change_role(user_id, values, db, context)
 

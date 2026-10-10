@@ -44,8 +44,11 @@ class TestSettings:
             del os.environ["DATABASE_URL"]
 
         settings = Settings()
-        assert "postgresql+asyncpg://" in settings.DATABASE_URL
-        assert "postgres:postgres@localhost:5432" in settings.DATABASE_URL
+        assert settings.DATABASE_URL.startswith("postgresql+asyncpg://")
+        assert (
+            f"{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_SERVER}:"
+            f"{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+        ) in settings.DATABASE_URL
 
     @patch.dict(os.environ, {"DEBUG": "true"})
     def test_debug_mode_setting(self):

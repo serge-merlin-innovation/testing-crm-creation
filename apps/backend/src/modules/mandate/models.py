@@ -114,3 +114,16 @@ class Milestone(Base):
     actual_date: Mapped[date | None] = mapped_column(Date, default=None)
     # Set when the 3-day reminder went out; cleared when the planned date moves.
     reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+
+
+class EmergencyAccess(Base):
+    """Break-glass (AUTHZ-08): an admin's time-boxed, read-only access to one deal."""
+
+    __tablename__ = "deal_emergency_access"
+
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    mandate_id: Mapped[int] = mapped_column(ForeignKey("mandates.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True)
+    reason: Mapped[str] = mapped_column(String(1000), nullable=False)
+    granted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
