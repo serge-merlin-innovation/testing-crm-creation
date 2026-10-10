@@ -1,9 +1,8 @@
 """Home page, firm dashboard, fee forecast and win/loss report (REP-01..04).
 
 The wall (AUTHZ-02 c4): a deal the viewer cannot read never appears by id, code name, client or
-fee in any payload here. The firm dashboard counts such deals only in its firm-wide totals, and only
-once there are at least HIDDEN_CELL_MINIMUM of them: no stage, type or quarter cell ever holds one,
-so comparing dashboards over time cannot show a hidden deal moving between cells.
+fee in any payload here. The firm dashboard counts such deals in a stage x type cell, a quarter or the
+firm total only when that bucket holds at least HIDDEN_CELL_MINIMUM of them (REP-02 c1).
 """
 
 import io
@@ -268,19 +267,19 @@ class ReportingService:
             for (cell_stage, cell_type), members in sorted(cells.items()):
                 if cell_stage != stage:
                     continue
-                shown = [deal for deal in members if deal.mandate.id in visible]
+                shown = _countable(members, visible)
                 if shown:
                     by_stage_and_type.append({"stage": stage, "type": cell_type, "count": len(shown)})
         result: dict[str, Any] = {"total_mandates": len(seen) + len(hidden), "by_stage_and_type": by_stage_and_type}
 
         if has_permission(user, Permission.FEES_READ):
             quarters: dict[str, list[_Deal]] = defaultdict(list)
-            for deal in seen:
+            for deal in deals:
                 if deal.terms is not None:
                     quarters[quarter_of(deal.closing)].append(deal)
             fees = []
             for quarter in sorted(quarters, key=lambda q: (q == "unscheduled", q)):
-                shown = quarters[quarter]
+                shown = _countable(quarters[quarter], visible)
                 if shown:
                     fees.append(
                         {
@@ -439,6 +438,11 @@ class ReportingService:
                 for sector_id, (label, values) in sorted(sectors.items(), key=lambda item: item[1][0])
             ],
         }
+
+
+def _countable(members: list[_Deal], visible: set[int]) -> list[_Deal]:
+    """The viewer's own deals in a bucket, plus its hidden ones when there are enough to stay anonymous."""
+    return [d for d in members if d.mandate.id in visible] + _anonymous([d for d in members if d.mandate.id not in visible])
 
 
 def _anonymous(hidden: list[_Deal]) -> list[_Deal]:

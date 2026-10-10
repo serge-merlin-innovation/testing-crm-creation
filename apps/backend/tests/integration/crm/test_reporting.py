@@ -180,11 +180,21 @@ async def test_unstaffed_deals_count_only_in_aggregates_never_by_name(world):
 
     response = await get(world.partner, f"{REPORTS}/dashboard")
     body = response.json()
-    # Review N6: hidden deals reach only firm-wide totals, so no cell or quarter shows one moving.
+    # REP-02 c1: a cell or quarter counts hidden deals once it holds HIDDEN_CELL_MINIMUM of them.
     assert body["total_mandates"] == 3
-    assert body["by_stage_and_type"] == []
-    assert body["weighted_fees_by_quarter"] == []
+    assert [(c["type"], c["count"]) for c in body["by_stage_and_type"]] == [("sell_side", 3)]
+    quarters = {q["quarter"]: q for q in body["weighted_fees_by_quarter"]}
+    assert list(quarters) == ["2026-Q4"]
+    assert quarters["2026-Q4"]["deals"] == 3
+    assert Decimal(quarters["2026-Q4"]["weighted_fees"]) == Decimal("1500000.00")
     assert Decimal(body["other_teams_weighted_fees"]) == Decimal("1500000.00")
+
+    mine = await deal(world, "Falcon", mandate_type="buy_side")
+    await fees(world, mine)
+    await forecast(world, mine, 100, "2027-02-01")
+    mixed = (await get(world.partner, f"{REPORTS}/dashboard")).json()
+    assert sorted((c["type"], c["count"]) for c in mixed["by_stage_and_type"]) == [("buy_side", 1), ("sell_side", 3)]
+    assert {q["quarter"]: q["deals"] for q in mixed["weighted_fees_by_quarter"]} == {"2026-Q4": 3, "2027-Q1": 1}
     for leak in ("Kestrel", "Osprey", "Plover", "Acme"):
         assert leak not in response.text
     assert "mandate_id" not in response.text
