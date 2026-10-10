@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -35,6 +35,7 @@ class UserRead(BaseModel):
     last_name: str | None = None
     title: str | None = None
     status: str = "active"
+    language: str = "en"
 
 
 class UserCreate(BaseModel):
@@ -58,6 +59,7 @@ class UserUpdate(BaseModel):
         str | None,
         Field(pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.profileimageurl.com"], default=None),
     ]
+    language: Literal["en", "fr", "nl"] | None = None
 
 
 class UserUpdateInternal(UserUpdate):
