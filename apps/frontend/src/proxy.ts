@@ -33,10 +33,11 @@ function allow(request: NextRequest, identity: SessionIdentity | null) {
 
   applyForwardedIdentity(headers, identity);
 
-  // The saved language wins over whatever this browser last used, so a user's choice follows
-  // them to every device. The page renders from the cookie, so it is set on this request too.
+  // A browser without a language cookie (a new device, a cleared browser) takes the account's
+  // saved language, so the choice follows the user. Changing it on Profile rewrites the cookie
+  // itself, which is why an existing cookie is not overwritten from the minute-long identity cache.
   const saved = identity?.language ? resolveLanguage(identity.language) : null;
-  const stale = saved !== null && request.cookies.get(LANGUAGE_COOKIE)?.value !== saved;
+  const stale = saved !== null && !request.cookies.has(LANGUAGE_COOKIE);
 
   if (stale) {
     request.cookies.set(LANGUAGE_COOKIE, saved);

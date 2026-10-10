@@ -300,10 +300,10 @@ describe("the user's language follows them to every device (NFR-04 c1)", () => {
     expect(response.cookies.get("lang")?.value).toBe("nl");
   });
 
-  it("leaves the cookie alone when it already matches", async () => {
+  it("leaves an existing cookie alone: Profile rewrites it when the user changes language", async () => {
     vi.stubGlobal("fetch", backendWithLanguage("fr"));
 
-    const response = await proxy(signedIn("/overview", { Cookie: "session_id=session-1; lang=fr" }));
+    const response = await proxy(signedIn("/overview", { Cookie: "session_id=session-1; lang=nl" }));
 
     expect(response.cookies.get("lang")).toBeUndefined();
   });
