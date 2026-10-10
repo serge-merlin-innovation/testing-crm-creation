@@ -43,7 +43,8 @@ from ....modules.process.routes import router as process_router
 from ....modules.process.routes import templates_router
 from ....modules.reporting.routes import deal_router as deal_forecast_router
 from ....modules.reporting.routes import router as reports_router
-from ....modules.role.authorization import RequireRecordAccess
+from ....modules.role.authorization import RequireRecordAccess, require_permission
+from ....modules.role.permissions import Permission
 from ....modules.role.routes import router as roles_router
 from ....modules.search.routes import filters_router as saved_filters_router
 from ....modules.search.routes import router as search_router
@@ -59,7 +60,7 @@ router.include_router(account_users_router, prefix="/users")
 router.include_router(users_router, prefix="/users")
 router.include_router(offboarding_router, prefix="/users")
 router.include_router(roles_router, prefix="/roles")
-router.include_router(audit_router, prefix="/audit")
+router.include_router(audit_router, prefix="/audit", dependencies=[require_permission(Permission.AUDIT_READ)])
 router.include_router(companies_router, prefix="/companies", dependencies=RECORDS)
 router.include_router(contacts_router, prefix="/contacts", dependencies=RECORDS)
 router.include_router(picklists_router, prefix="/picklists")

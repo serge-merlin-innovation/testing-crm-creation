@@ -9,6 +9,7 @@ from src.infrastructure.clock import SystemClock, set_clock
 from src.infrastructure.email import EmailMessage, LoggingEmailSender, get_email_sender, set_email_sender
 from src.infrastructure.jobs import job_runner
 from src.modules.audit.models import AuditEntry
+from src.modules.notification.dependencies import get_notification_service
 from src.modules.role.permissions import RoleName
 
 from .helpers import login, make_user
@@ -67,3 +68,17 @@ async def test_captured_email_can_be_read_back(client: AsyncClient):
         set_email_sender(LoggingEmailSender())
 
     assert sent == [{"to": "ann@firm.be", "subject": "Hi", "body": "link"}]
+
+
+async def test_notification_mail_reaches_the_captured_mailbox(client: AsyncClient):
+    try:
+        await client.post("/api/v1/test-hooks/emails/capture")
+        notifications = get_notification_service(get_email_sender())
+        notifications._outbox.append(EmailMessage(to="cy@firm.be", subject="Digest", body="3 overdue"))
+        await notifications.flush_emails()
+
+        sent = (await client.get("/api/v1/test-hooks/emails", params={"to": "cy@firm.be"})).json()
+    finally:
+        set_email_sender(LoggingEmailSender())
+
+    assert sent == [{"to": "cy@firm.be", "subject": "Digest", "body": "3 overdue"}]

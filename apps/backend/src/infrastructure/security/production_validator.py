@@ -27,6 +27,11 @@ class ProductionSecurityValidator:
                 "BREACH_CHECK_ENABLED is false on a deployed environment. New passwords must be checked "
                 "against known breaches (AUTH-12); the switch is for offline e2e runs only."
             )
+        if deployed and len(self.settings.TOTP_ENCRYPTION_KEY) < 32:
+            raise ProductionSecurityError(
+                "TOTP_ENCRYPTION_KEY is missing or shorter than 32 characters on a deployed environment. "
+                "Without it 2FA secrets are encrypted with a key derived from SECRET_KEY; set it from Key Vault."
+            )
 
     def validate_production_security(self) -> None:
         self.validate_test_hooks()

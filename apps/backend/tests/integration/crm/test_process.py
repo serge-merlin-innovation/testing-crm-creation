@@ -1,4 +1,4 @@
-"""Ticket #14: offers and bid comparison (BUY-05), process letters (BUY-06), the funnel (BUY-07), templates (ADM-07),
+"""Offers and bid comparison (BUY-05), process letters (BUY-06), the funnel (BUY-07), templates (ADM-07),
 the client status report (REP-05), contact language/salutation in templates (CON-01 c3), opted-out contacts excluded
 from mailings (GDPR-01 c2) and the full deal page (DEAL-03 c1)."""
 

@@ -6,9 +6,9 @@ from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
 from ..audit.service import AuditService
-from ..mandate.policy import DealPolicy
 from .dependencies import NotificationServiceDep
 from .schemas import NotificationRead, PreferenceRead, PreferencesUpdate
+from .visibility import visible_deal_ids
 
 router = APIRouter(tags=["Notifications"])
 
@@ -22,7 +22,7 @@ router = APIRouter(tags=["Notifications"])
 async def list_notifications(
     db: AsyncSessionDep, service: NotificationServiceDep, user: CurrentUserDep, clock: ClockDep
 ) -> list[Any]:
-    visible = await DealPolicy(clock.now()).visible_mandate_ids(db, user)
+    visible = await visible_deal_ids(db, user, clock.now())
     return await service.list_for(db, user["id"], visible)
 
 

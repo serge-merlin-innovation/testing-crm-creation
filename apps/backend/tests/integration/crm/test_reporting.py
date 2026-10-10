@@ -1,4 +1,4 @@
-"""Ticket #17: home page (REP-01), firm dashboard (REP-02), fee forecast (REP-03), win/loss (REP-04),
+"""Home page (REP-01), firm dashboard (REP-02), fee forecast (REP-03), win/loss (REP-04),
 reports and exports behind the wall (AUTHZ-02 c4), Read-only sees aggregates only (ROLE-01 c3)."""
 
 import io
@@ -180,7 +180,7 @@ async def test_unstaffed_deals_count_only_in_aggregates_never_by_name(world):
 
     response = await get(world.partner, f"{REPORTS}/dashboard")
     body = response.json()
-    # Review N6: hidden deals reach only firm-wide totals, so no cell or quarter shows one moving.
+    # REP-02: hidden deals reach only firm-wide totals, so no cell or quarter shows one moving.
     assert body["total_mandates"] == 3
     assert body["by_stage_and_type"] == []
     assert body["weighted_fees_by_quarter"] == []

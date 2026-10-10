@@ -1,7 +1,7 @@
 """Conflict check (AUTHZ-05) and KYC / engagement letter gate (ORI-05).
 
 The mandate module calls in through two hooks installed by `install()`: the conflict check on
-creation and the KYC answer of the Preparation gate (decision 14).
+creation and the KYC answer of the Preparation gate (ORI-05).
 """
 
 from datetime import datetime, timedelta
@@ -12,8 +12,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
+from ...infrastructure.email import get_email_sender
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import ValidationError
+from ..common.text import blank
 from ..company.models import Company
 from ..company.service import normalize_name
 from ..mandate import pipeline as mandate_pipeline
@@ -22,10 +24,10 @@ from ..mandate.models import Mandate
 from ..mandate.policy import DealGrant
 from ..mandate.schemas import ConflictStatus
 from ..mandate.stages import DealStage
-from ..notification.ports import LoggingEmailSender
 from ..notification.schemas import EventKind
 from ..notification.service import Message, NotificationService
 from ..role.permissions import Permission
+from ..role.service import users_with_permission
 from ..task.models import Task
 from ..user.models import User
 from .models import ConflictHit, ConflictReview, DealCounterparty, KycRecord
@@ -48,23 +50,14 @@ def add_working_days(start: datetime, days: int) -> datetime:
     return current
 
 
-def _blank(text: str | None) -> bool:
-    return text is None or not text.strip()
-
-
 def is_conflict(role: str, other_role: str) -> bool:
     """Same company, same side twice (a repeat client, a bidder in two processes) is not advising both sides."""
     return not (role == other_role and role in ("client", "counterparty"))
 
 
-async def _users_with(db: AsyncSession, permission: Permission) -> list[User]:
-    users = (await db.execute(select(User).where(User.is_deleted.is_(False), User.role_id.is_not(None)))).scalars()
-    return [user for user in users if permission.value in (user.permissions or [])]
-
-
 class ConflictService:
     def __init__(self, notifications: NotificationService | None = None, audit: AuditService | None = None) -> None:
-        self.notifications = notifications or NotificationService(LoggingEmailSender())
+        self.notifications = notifications or NotificationService(get_email_sender())
         self.audit = audit or AuditService()
 
     # The check
@@ -262,7 +255,7 @@ class ConflictService:
     ) -> dict[str, Any]:
         assert context.user_id is not None
         mandate = grant.mandate
-        if _blank(values.reason):
+        if blank(values.reason):
             raise ValidationError("Give the reason for the decision", field="reason")
         assert values.reason is not None
         reviews = (
@@ -328,7 +321,7 @@ class ConflictService:
                 .where(ConflictReview.decision.is_(None), ConflictReview.reminded_at.is_(None))
             )
         ).all()
-        compliance = await _users_with(db, Permission.CONFLICTS_REGISTER)
+        compliance = await users_with_permission(db, Permission.CONFLICTS_REGISTER)
         for review, mandate in reviews:
             if add_working_days(review.opened_at, REVIEW_WORKING_DAYS) > now:
                 continue
@@ -432,7 +425,7 @@ class KycService:
 
     async def unfreeze(self, db: AsyncSession, grant: DealGrant, values: Unfreeze, context: AuditContext) -> dict[str, Any]:
         mandate = grant.mandate
-        if _blank(values.reason):
+        if blank(values.reason):
             raise ValidationError("Say why the deal is unfrozen", field="reason")
         if mandate.frozen_at is None:
             raise ValidationError("This deal is not frozen", field="reason")
@@ -466,7 +459,7 @@ class KycService:
                 )
             )
         ).all()
-        compliance = await _users_with(db, Permission.KYC_MANAGE)
+        compliance = await users_with_permission(db, Permission.KYC_MANAGE)
         for record, code_name in rows:
             # Compliance is not on the deal team, so the task names the code name and links no deal record.
             for user in compliance:
@@ -494,6 +487,6 @@ async def conflict_check(db: AsyncSession, mandate: Mandate, counterparty_ids: l
 
 
 def install() -> None:
-    """Plugs the compliance slice into mandate creation and the Preparation gate (decision 14)."""
+    """Plugs the compliance slice into mandate creation and the Preparation gate."""
     mandate_pipeline.set_kyc_check(kyc_approved)
     mandate_service.set_conflict_check(conflict_check)

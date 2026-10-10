@@ -1,4 +1,4 @@
-"""offers, bid deadlines, document templates, generated letters and reports (ticket #14)
+"""offers, bid deadlines, document templates, generated letters and reports
 
 Revision ID: 846f5d7b5c39
 Revises: b32b7af0bfc9

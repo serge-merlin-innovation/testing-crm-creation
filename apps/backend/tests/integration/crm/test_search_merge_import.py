@@ -478,7 +478,7 @@ async def hidden_deal_with_parties(world):
     return {"buyer": buyer_id, "contact": buyer_contact, "counterparty": counterparty_id}
 
 
-# CON-04 c3 (review B2): a buyer or counterparty on a hidden deal blocks the merge, and nothing moves.
+# CON-04 c3: a buyer or counterparty on a hidden deal blocks the merge, and nothing moves.
 @pytest.mark.parametrize("party", ["buyer", "contact", "counterparty"])
 async def test_merge_blocked_for_a_party_on_a_hidden_deal(world, party):
     parties = await hidden_deal_with_parties(world)

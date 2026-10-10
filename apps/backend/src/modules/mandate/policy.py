@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...infrastructure.clock import Clock, get_clock
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..common.exceptions import DealClosedError, DealForbiddenError, DealFrozenError, DealNotFoundError
-from ..role.authorization import has_permission
+from ..role.authorization import has_permission, is_compliance
 from ..role.permissions import Permission
 from .models import DealTeamMember, EmergencyAccess, Mandate
 from .schemas import ConflictStatus
@@ -90,10 +90,6 @@ class DealGrant:
             and self.membership.role in CLOSER_ROLES
             and has_permission(self.user, Permission.DEALS_EDIT_STAFFED)
         )
-
-
-def is_compliance(user: dict[str, Any]) -> bool:
-    return has_permission(user, Permission.CONFLICTS_REGISTER)
 
 
 def in_conflict_hiding() -> Any:
@@ -306,3 +302,7 @@ SummaryGrant = Annotated[DealGrant, Depends(_summary_dependency)]
 ComplianceGrant = Annotated[DealGrant, deal_access(DealAction.COMPLIANCE)]
 ExportGrant = Annotated[DealGrant, deal_access(DealAction.EXPORT)]
 ComplianceReadGrant = Annotated[DealGrant, deal_access(DealAction.COMPLIANCE_READ)]
+
+
+async def visible_deal_ids(db: AsyncSession, user: dict[str, Any], now: datetime) -> list[int]:
+    return list(await DealPolicy(now).visible_mandate_ids(db, user))

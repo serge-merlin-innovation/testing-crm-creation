@@ -4,21 +4,12 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.infrastructure.email import InMemoryEmailSender, LoggingEmailSender, set_email_sender
 from src.interfaces.main import app
-from src.modules.notification.dependencies import get_email_sender
-from src.modules.notification.ports import SentEmail
 from src.modules.picklist.models import PicklistValue
 from src.modules.picklist.service import seed_default_picklists
 from src.modules.role.permissions import RoleName
 from tests.integration.foundation.helpers import login, make_user
-
-
-class FakeEmailSender:
-    def __init__(self) -> None:
-        self.sent: list[SentEmail] = []
-
-    async def send(self, email: SentEmail) -> None:
-        self.sent.append(email)
 
 
 @dataclass
@@ -32,7 +23,7 @@ class Actor:
 @dataclass
 class World:
     db: AsyncSession
-    emails: FakeEmailSender
+    emails: InMemoryEmailSender
     sector_id: int
     country_id: int
     actors: dict[str, Actor] = field(default_factory=dict)
@@ -59,6 +50,7 @@ class World:
         return response.json()["id"]
 
     async def close(self) -> None:
+        set_email_sender(LoggingEmailSender())
         for session in self.clients:
             await session.aclose()
 
@@ -71,8 +63,8 @@ async def build_world(db: AsyncSession) -> World:
     country_id = (
         await db.execute(select(PicklistValue.id).where(PicklistValue.kind == "country", PicklistValue.code == "NL"))
     ).scalar_one()
-    emails = FakeEmailSender()
-    app.dependency_overrides[get_email_sender] = lambda: emails
+    emails = InMemoryEmailSender()
+    set_email_sender(emails)
     return World(db=db, emails=emails, sector_id=sector.id, country_id=country_id)
 
 

@@ -218,7 +218,7 @@ if ! command -v gh >/dev/null 2>&1 || ! gh auth status >/dev/null 2>&1; then
   exit 1
 fi
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-say "The three secrets go to $REPO."
+say "The four secrets go to $REPO."
 note "They only bootstrap Key Vault: the first Infra run copies them into the vault."
 confirm "Set them on $REPO?" || exit 1
 

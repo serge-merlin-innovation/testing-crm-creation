@@ -1,4 +1,4 @@
-"""Ticket #12: origination pipeline (ORI-01), pitches, credentials (ORI-02), outcomes (ORI-03), dormant prospects (ORI-04)."""
+"""Origination pipeline (ORI-01), pitches, credentials (ORI-02), outcomes (ORI-03), dormant prospects (ORI-04)."""
 
 from datetime import UTC, datetime, timedelta
 

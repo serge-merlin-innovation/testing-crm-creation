@@ -47,6 +47,17 @@ class TestProductionSecurityValidator:
 
         return settings
 
+    def test_staging_refuses_a_missing_totp_key(self):
+        settings = self.create_mock_settings(ENVIRONMENT=EnvironmentOption.STAGING, TOTP_ENCRYPTION_KEY="")
+
+        with pytest.raises(ProductionSecurityError, match="TOTP_ENCRYPTION_KEY"):
+            ProductionSecurityValidator(settings).validate_production_security()
+
+    def test_development_allows_a_missing_totp_key(self):
+        settings = self.create_mock_settings(ENVIRONMENT=EnvironmentOption.DEVELOPMENT, TOTP_ENCRYPTION_KEY="")
+
+        ProductionSecurityValidator(settings).validate_production_security()
+
     def test_non_production_environment_skips_validation(self):
         settings = self.create_mock_settings(ENVIRONMENT=EnvironmentOption.DEVELOPMENT)
         validator = ProductionSecurityValidator(settings)

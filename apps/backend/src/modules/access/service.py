@@ -29,8 +29,9 @@ from ..mandate.schemas import TeamRole
 from ..mandate.service import MandateService
 from ..notification.schemas import EventKind
 from ..notification.service import Message, NotificationService
-from ..role.authorization import has_permission
+from ..role.authorization import has_permission, is_compliance
 from ..role.permissions import Permission
+from ..role.service import users_with_permission
 from ..task.models import Task
 from ..user.models import User
 from .models import AccessRequest, AccessRequestApprover, AccessRequestComment, AccessReview, Delegation
@@ -60,19 +61,10 @@ def quarter_start(moment: datetime) -> datetime:
     return moment.replace(month=(moment.month - 1) // 3 * 3 + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
 
-def is_compliance(user: dict[str, Any]) -> bool:
-    return has_permission(user, Permission.CONFLICTS_REGISTER)
-
-
 def _required(text: str | None, field: str) -> str:
     if text is None or not text.strip():
         raise ValidationError("A reason is required", field=field)
     return text.strip()
-
-
-async def _users_with(db: AsyncSession, permission: Permission) -> list[User]:
-    users = (await db.execute(select(User).where(User.is_deleted.is_(False), User.role_id.is_not(None)))).scalars()
-    return [user for user in users if permission.value in (user.permissions or [])]
 
 
 async def _names(db: AsyncSession, ids: set[int]) -> dict[int, str]:
@@ -186,7 +178,7 @@ class AccessService:
         approvers: dict[int, tuple[int | None, int | None]] = {pid: (None, None) for pid in partners}
         for delegation in await self._active_delegations(db, partners, now.date()):
             approvers.setdefault(delegation.delegate_id, (delegation.partner_id, delegation.id))
-        for compliance in await _users_with(db, Permission.CONFLICTS_REGISTER):
+        for compliance in await users_with_permission(db, Permission.CONFLICTS_REGISTER):
             approvers.setdefault(compliance.id, (None, None))
         approvers.pop(context.user_id, None)
 
@@ -570,7 +562,7 @@ class AccessService:
             record_id=mandate.id,
             new_values={"reason": reason, "expires_at": access.expires_at.isoformat()},
         )
-        watchers = {u.id: u for u in await _users_with(db, Permission.CONFLICTS_REGISTER)}
+        watchers = {u.id: u for u in await users_with_permission(db, Permission.CONFLICTS_REGISTER)}
         for partner_id in await self._deal_partners(db, mandate.id, now):
             partner = await db.get(User, partner_id)
             if partner is not None:
@@ -655,7 +647,7 @@ class AccessService:
                 .where(AccessReview.completed_at.is_(None), AccessReview.escalated_at.is_(None), AccessReview.due_at <= now)
             )
         ).tuples()
-        compliance = await _users_with(db, Permission.CONFLICTS_REGISTER)
+        compliance = await users_with_permission(db, Permission.CONFLICTS_REGISTER)
         for review, code_name, partner_name in rows:
             for user in compliance:
                 await self.notifications.add(

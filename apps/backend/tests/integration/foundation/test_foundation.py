@@ -319,7 +319,7 @@ async def test_audit_entry_records_the_forwarded_client_ip(client: AsyncClient, 
     assert entries[0]["ip_address"] == "127.0.0.1"
 
 
-# AUD-01 criterion 1 (review S6): viewing a deal is logged with user, IP and record, break-glass reads too.
+# AUD-01 criterion 1: viewing a deal is logged with user, IP and record, break-glass reads too.
 async def test_viewing_a_deal_is_audited(client: AsyncClient, seeded_db: AsyncSession):
     world = await build_world(seeded_db)
     partner = await world.actor("paula", RoleName.PARTNER)

@@ -26,7 +26,7 @@ async def main() -> None:
         await seed_default_picklists(db)
         dataset = await seed_load_dataset(db)
     roles = {uid: ROLE_MIX[index % len(ROLE_MIX)] for index, uid in enumerate(dataset.user_ids)}
-    # Read-only users see the aggregated dashboards only (ticket #17), so k6 sends them there.
+    # Read-only users see the aggregated dashboards only (ROLE-01 c3), so k6 sends them there.
     users = [{"token": token, "dashboards_only": roles[uid] == "Read-only"} for uid, token in dataset.tokens.items()]
     TOKENS_FILE.write_text(json.dumps(users))
     print(  # noqa: T201

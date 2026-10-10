@@ -1,4 +1,4 @@
-"""operations: recovery drills, security findings, maintenance windows; user language (ticket #20)
+"""operations: recovery drills, security findings, maintenance windows; user language
 
 Revision ID: 53c790ab1c3e
 Revises: 87dc941ce57c

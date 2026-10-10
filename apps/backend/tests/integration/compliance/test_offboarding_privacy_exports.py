@@ -417,7 +417,7 @@ async def test_every_export_logs_user_time_filter_and_row_count(world):
     assert entry.new_values["rows"] == 3
 
 
-# Security review S12: a contact name that starts like a formula is quoted in the CSV.
+# A contact name that starts like a formula is quoted in the CSV.
 async def test_contact_export_quotes_formula_like_values(world):
     await contact(world.partner, first="=HYPERLINK(evil)", last="@Attack")
 
@@ -427,7 +427,7 @@ async def test_contact_export_quotes_formula_like_values(world):
     assert "'@Attack" in body
 
 
-# Review S2 (decision 70): the person file leaves out other users' private notes (ACT-02 c1) and names a
+# The person file leaves out other users' private notes (ACT-02 c1) and names a
 # deal by its code name only (AUTHZ-06 c2), so it carries no deal id, client or target.
 async def test_export_person_excludes_others_private_notes_and_names_deals_by_code_name(world):
     contact_id = await contact(world.partner, email="jan@acme.be")

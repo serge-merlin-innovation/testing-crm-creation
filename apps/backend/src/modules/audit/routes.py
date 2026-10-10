@@ -4,13 +4,12 @@ from fastapi import APIRouter, Query
 from fastcrud import PaginatedListResponse, compute_offset, paginated_response
 
 from ...infrastructure.clock import ClockDep
-from ...infrastructure.dependencies import AsyncSessionDep
-from ..role.authorization import require_permission
-from ..role.permissions import Permission
+from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from .dependencies import AuditServiceDep
 from .schemas import AuditEntryRead
 from .scope import readable_rows
 
+# interfaces/api/v1 gates this router with audit.read.
 router = APIRouter(tags=["Audit log"])
 
 
@@ -24,7 +23,7 @@ router = APIRouter(tags=["Audit log"])
 async def search_audit_log(
     db: AsyncSessionDep,
     audit_service: AuditServiceDep,
-    reader: Annotated[dict, require_permission(Permission.AUDIT_READ)],
+    reader: CurrentUserDep,
     clock: ClockDep,
     user_id: int | None = None,
     record_type: str | None = None,

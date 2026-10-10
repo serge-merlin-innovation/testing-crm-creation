@@ -2,10 +2,10 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
-from urllib.parse import urlparse
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
+from ..common.validators import https_url
 from .stages import DealStage
 
 
@@ -145,16 +145,9 @@ class HistoryEntry(BaseModel):
     new_value: str | None
 
 
-def _https(value: str) -> str:
-    parsed = urlparse(value)
-    if parsed.scheme != "https" or not parsed.netloc:
-        raise ValueError("Only https links are accepted")
-    return value
-
-
 class DealLinkCreate(BaseModel):
     label: Annotated[str, Field(min_length=1, max_length=50, examples=["VDR"])]
-    url: Annotated[str, Field(max_length=2000, examples=["https://vdr.example.com/rooms/falcon"]), AfterValidator(_https)]
+    url: Annotated[str, Field(max_length=2000, examples=["https://vdr.example.com/rooms/falcon"]), AfterValidator(https_url)]
 
 
 class DealLinkRead(BaseModel):

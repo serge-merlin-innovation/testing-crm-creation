@@ -1,4 +1,4 @@
-"""Ticket #9: conflict check on new mandates (AUTHZ-05, DEAL-01 c2/c4) and the KYC / engagement letter gate (ORI-05)."""
+"""Conflict check on new mandates (AUTHZ-05, DEAL-01 c2/c4) and the KYC / engagement letter gate (ORI-05)."""
 
 from datetime import UTC, datetime, timedelta
 
@@ -213,7 +213,7 @@ async def test_unrelated_names_are_not_flagged(world):
     assert mandate["conflict_status"] == "clear"
 
 
-# AUTHZ-05 (decision 16): the same company as client of two mandates is a repeat client, not two sides.
+# AUTHZ-05: the same company as client of two mandates is a repeat client, not two sides.
 async def test_a_repeat_client_is_not_a_conflict(world):
     await create_mandate(world, world.other, world.client_id, code_name="Heron")
     mandate = await create_mandate(world, world.partner, world.client_id, code_name="Falcon")
