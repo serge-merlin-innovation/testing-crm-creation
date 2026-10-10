@@ -12,8 +12,11 @@ from ....modules.api_access.routes import clients_router as api_clients_router
 from ....modules.api_access.routes import oauth_router
 from ....modules.api_access.routes import tokens_router as api_tokens_router
 from ....modules.audit.routes import router as audit_router
+from ....modules.calendar_feed.routes import router as calendar_feed_router
 from ....modules.company.routes import router as companies_router
 from ....modules.contact.routes import router as contacts_router
+from ....modules.email_logging.routes import interactions_router
+from ....modules.email_logging.routes import router as email_logging_router
 from ....modules.mandate.routes import criteria_router
 from ....modules.mandate.routes import router as mandates_router
 from ....modules.notification.routes import router as notifications_router
@@ -39,6 +42,9 @@ router.include_router(activities_router, prefix="/activities")
 router.include_router(notes_router, prefix="/notes")
 router.include_router(timeline_router, prefix="/timeline")
 router.include_router(tasks_router, prefix="/tasks")
+router.include_router(email_logging_router, prefix="/email-logging")
+router.include_router(interactions_router, prefix="/contacts")
+router.include_router(calendar_feed_router, prefix="/calendar-feed")
 router.include_router(auth_router, prefix="/auth")
 router.include_router(account_auth_router, prefix="/auth")
 router.include_router(security_router)

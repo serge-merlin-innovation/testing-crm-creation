@@ -588,6 +588,25 @@
         "title": "Body_oauth_token_api_v1_oauth_token_post",
         "type": "object"
       },
+      "CalendarFeedRead": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "created_at"
+        ],
+        "title": "CalendarFeedRead",
+        "type": "object"
+      },
       "ChangePassword": {
         "additionalProperties": false,
         "properties": {
@@ -2066,6 +2085,205 @@
         "title": "ImportRow",
         "type": "object"
       },
+      "InboundAttachment": {
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "content_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Type"
+          },
+          "filename": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Filename",
+            "type": "string"
+          }
+        },
+        "required": [
+          "filename"
+        ],
+        "title": "InboundAttachment",
+        "type": "object"
+      },
+      "InboundEmail": {
+        "description": "The inbound-parse port: what a mail provider's webhook adapter hands the CRM, normalized.",
+        "properties": {
+          "attachments": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/InboundAttachment"
+            },
+            "maxItems": 100,
+            "title": "Attachments",
+            "type": "array"
+          },
+          "bcc": {
+            "default": [],
+            "items": {
+              "maxLength": 500,
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Bcc",
+            "type": "array"
+          },
+          "cc": {
+            "default": [],
+            "items": {
+              "maxLength": 500,
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Cc",
+            "type": "array"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id"
+          },
+          "sender": {
+            "maxLength": 500,
+            "title": "Sender",
+            "type": "string"
+          },
+          "subject": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Subject",
+            "type": "string"
+          },
+          "text": {
+            "default": "",
+            "maxLength": 1000000,
+            "title": "Text",
+            "type": "string"
+          },
+          "to": {
+            "default": [],
+            "items": {
+              "maxLength": 500,
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "To",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sender"
+        ],
+        "title": "InboundEmail",
+        "type": "object"
+      },
+      "InboundResult": {
+        "properties": {
+          "activity_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InboundStatus"
+          },
+          "unmatched_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unmatched Id"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "InboundResult",
+        "type": "object"
+      },
+      "InboundStatus": {
+        "enum": [
+          "logged",
+          "unmatched"
+        ],
+        "title": "InboundStatus",
+        "type": "string"
+      },
+      "InteractionRead": {
+        "description": "CON-02 c2: how well one colleague knows a contact, from logged emails and meetings.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "last_interaction_at": {
+            "format": "date-time",
+            "title": "Last Interaction At",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "count",
+          "last_interaction_at"
+        ],
+        "title": "InteractionRead",
+        "type": "object"
+      },
       "InvitationRead": {
         "properties": {
           "email": {
@@ -2120,6 +2338,19 @@
         ],
         "title": "LegalBasis",
         "type": "string"
+      },
+      "LoggingAddressRead": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address"
+        ],
+        "title": "LoggingAddressRead",
+        "type": "object"
       },
       "LoginCompleted": {
         "properties": {
@@ -4453,6 +4684,92 @@
         "title": "TravelUpdate",
         "type": "object"
       },
+      "UnmatchedLink": {
+        "properties": {
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/RecordRef"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Links",
+            "type": "array"
+          }
+        },
+        "required": [
+          "links"
+        ],
+        "title": "UnmatchedLink",
+        "type": "object"
+      },
+      "UnmatchedRead": {
+        "properties": {
+          "attachment_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Attachment Names",
+            "type": "array"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "correspondents": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Correspondents",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mandate_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mandate Id"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "received_at": {
+            "format": "date-time",
+            "title": "Received At",
+            "type": "string"
+          },
+          "sender": {
+            "title": "Sender",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sender",
+          "subject",
+          "body",
+          "correspondents",
+          "attachment_names",
+          "occurred_at",
+          "received_at",
+          "mandate_id"
+        ],
+        "title": "UnmatchedRead",
+        "type": "object"
+      },
       "UserCreate": {
         "additionalProperties": false,
         "description": "An admin creates the account as Invited; the person sets their own password from the invitation.",
@@ -6159,6 +6476,99 @@
         ]
       }
     },
+    "/api/v1/calendar-feed/": {
+      "get": {
+        "description": "Subscribe to it in any calendar app: my meetings, open tasks and my deals' milestones.",
+        "operationId": "my_feed_api_v1_calendar_feed__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "url": "url"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarFeedRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My private iCal feed URL",
+        "tags": [
+          "Calendar feed"
+        ]
+      }
+    },
+    "/api/v1/calendar-feed/ics/{token}.ics": {
+      "get": {
+        "description": "Deal events show the deal code name only. An unknown or replaced token is 404.",
+        "operationId": "feed_ics_api_v1_calendar_feed_ics__token__ics_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/calendar": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Unknown feed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The iCal feed itself (the URL is the credential)",
+        "tags": [
+          "Calendar feed"
+        ]
+      }
+    },
+    "/api/v1/calendar-feed/regenerate": {
+      "post": {
+        "operationId": "regenerate_feed_api_v1_calendar_feed_regenerate_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "url": "url"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarFeedRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Replace my feed URL; the old one stops working at once",
+        "tags": [
+          "Calendar feed"
+        ]
+      }
+    },
     "/api/v1/companies/": {
       "get": {
         "operationId": "list_companies_api_v1_companies__get",
@@ -7086,6 +7496,303 @@
         "summary": "Update a contact; a new company keeps the old role as history",
         "tags": [
           "Contacts"
+        ]
+      }
+    },
+    "/api/v1/contacts/{contact_id}/interactions": {
+      "get": {
+        "description": "Count and last interaction date per colleague, most recent first. Deal activities the reader is not staffed on do not count.",
+        "operationId": "contact_interactions_api_v1_contacts__contact_id__interactions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "count": 1,
+                    "last_interaction_at": "2026-10-10T09:00:00Z",
+                    "name": "name",
+                    "user_id": 1
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InteractionRead"
+                  },
+                  "title": "Response Contact Interactions Api V1 Contacts  Contact Id  Interactions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Who in the firm knows this contact: emails and meetings per colleague",
+        "tags": [
+          "Contacts"
+        ]
+      }
+    },
+    "/api/v1/email-logging/address": {
+      "get": {
+        "description": "BCC or forward an email to it to log the email on the matching contacts.",
+        "operationId": "my_address_api_v1_email_logging_address_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "address": "address"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/LoggingAddressRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My personal CRM logging address",
+        "tags": [
+          "Email logging"
+        ]
+      }
+    },
+    "/api/v1/email-logging/inbound": {
+      "post": {
+        "description": "Called by the inbound-parse adapter with `X-Inbound-Secret`. The sender must be a CRM user writing to their own logging address (403 otherwise). Matched contacts get the email on their timeline; no match puts it in the sender's Unmatched inbox. A `[CodeName]` subject links the deal only for its team. Attachment files are dropped: only names are kept.",
+        "operationId": "inbound_api_v1_email_logging_inbound_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-inbound-secret",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "X-Inbound-Secret",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "attachments": [],
+                "bcc": [],
+                "cc": [],
+                "date": "2026-10-10T09:00:00Z",
+                "message_id": "text",
+                "sender": "sender",
+                "subject": "",
+                "text": "",
+                "to": []
+              },
+              "schema": {
+                "$ref": "#/components/schemas/InboundEmail"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "activity_id": 1,
+                  "status": "logged",
+                  "unmatched_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/InboundResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Bad webhook secret"
+          },
+          "403": {
+            "description": "Sender is not a CRM user"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mail provider webhook: an email sent to a CRM logging address",
+        "tags": [
+          "Email logging"
+        ]
+      }
+    },
+    "/api/v1/email-logging/unmatched": {
+      "get": {
+        "operationId": "list_unmatched_api_v1_email_logging_unmatched_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "attachment_names": [
+                      "text"
+                    ],
+                    "body": "body",
+                    "correspondents": [
+                      "text"
+                    ],
+                    "id": 1,
+                    "mandate_id": 1,
+                    "occurred_at": "2026-10-10T09:00:00Z",
+                    "received_at": "2026-10-10T09:00:00Z",
+                    "sender": "sender",
+                    "subject": "subject"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UnmatchedRead"
+                  },
+                  "title": "Response List Unmatched Api V1 Email Logging Unmatched Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My Unmatched inbox, newest first",
+        "tags": [
+          "Email logging"
+        ]
+      }
+    },
+    "/api/v1/email-logging/unmatched/{unmatched_id}": {
+      "delete": {
+        "operationId": "discard_unmatched_api_v1_email_logging_unmatched__unmatched_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unmatched_id",
+            "required": true,
+            "schema": {
+              "title": "Unmatched Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discard an unmatched email",
+        "tags": [
+          "Email logging"
+        ]
+      }
+    },
+    "/api/v1/email-logging/unmatched/{unmatched_id}/link": {
+      "post": {
+        "description": "Linking a deal needs edit access to it. Returns the new activity id.",
+        "operationId": "link_unmatched_api_v1_email_logging_unmatched__unmatched_id__link_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unmatched_id",
+            "required": true,
+            "schema": {
+              "title": "Unmatched Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "links": [
+                  {
+                    "record_id": 1,
+                    "record_type": "contact"
+                  }
+                ]
+              },
+              "schema": {
+                "$ref": "#/components/schemas/UnmatchedLink"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {},
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Link Unmatched Api V1 Email Logging Unmatched  Unmatched Id  Link Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Log an unmatched email on the records I pick",
+        "tags": [
+          "Email logging"
         ]
       }
     },
