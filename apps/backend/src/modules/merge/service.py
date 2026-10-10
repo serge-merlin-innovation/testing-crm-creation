@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..activity.models import ActivityLink, Note
 from ..audit.service import AuditContext, AuditService
+from ..buyer.models import ClientExclusion, DealBuyer, InvestorCriterion, InvestorProfile
 from ..common.exceptions import MergeBlockedError, MergeNotFoundError, UndoWindowClosedError, ValidationError
 from ..company.models import Company, FinancialFigure
 from ..company.service import normalize_name
@@ -80,6 +81,7 @@ REFERENCES: dict[MergeableType, list[Reference]] = {
         Reference("relationship_holders", RelationshipHolder.__table__, "contact_id", None, ("user_id",)),  # type: ignore[arg-type]
         Reference("legal_holds", LegalHold.__table__, "contact_id"),  # type: ignore[arg-type]
         Reference("retention_reviews", RetentionReview.__table__, "contact_id"),  # type: ignore[arg-type]
+        Reference("deal_buyers.contact", DealBuyer.__table__, "contact_id"),  # type: ignore[arg-type]
         *_polymorphic("contact"),
     ],
     MergeableType.COMPANY: [
@@ -97,6 +99,12 @@ REFERENCES: dict[MergeableType, list[Reference]] = {
         Reference("deal_counterparties", DealCounterparty.__table__, "company_id", None, ("mandate_id",)),  # type: ignore[arg-type]
         Reference("conflict_hits", ConflictHit.__table__, "company_id"),  # type: ignore[arg-type]
         Reference("conflict_hits.matched", ConflictHit.__table__, "matched_company_id"),  # type: ignore[arg-type]
+        # The survivor keeps its own investor profile, criteria and buyer rows; the duplicate's are dropped on a clash.
+        Reference("investor_profile", InvestorProfile.__table__, "company_id", None, ("company_id",)),  # type: ignore[arg-type]
+        Reference("investor_criteria", InvestorCriterion.__table__, "company_id", None, ("kind", "value_id")),  # type: ignore[arg-type]
+        Reference("client_exclusions", ClientExclusion.__table__, "client_id", None, ("company_id",)),  # type: ignore[arg-type]
+        Reference("client_exclusions.excluded", ClientExclusion.__table__, "company_id", None, ("client_id",)),  # type: ignore[arg-type]
+        Reference("deal_buyers", DealBuyer.__table__, "company_id", None, ("mandate_id",)),  # type: ignore[arg-type]
         *_polymorphic("company"),
     ],
 }

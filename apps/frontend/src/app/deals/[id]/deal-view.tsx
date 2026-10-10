@@ -26,6 +26,7 @@ import { stageLabel } from "@/lib/pipeline";
 import { sendJson, useApiData } from "@/lib/use-api";
 import { canRecordInvoices, canSeeFees } from "@/lib/fees";
 import { apiFetch } from "@/services/api";
+import { BuyersTab } from "./buyers-tab";
 import { ComplianceTab } from "./compliance-tab";
 import { FeesTab } from "./fees-tab";
 import { ClosingTab, MilestonesTab } from "./pipeline-tabs";
@@ -460,6 +461,7 @@ export function DealView({
                 <TabsTrigger value="links">{messages["deals.links"]}</TabsTrigger>
                 <TabsTrigger value="milestones">{messages["milestones.title"]}</TabsTrigger>
                 <TabsTrigger value="closing">{messages["closing.title"]}</TabsTrigger>
+                <TabsTrigger value="buyers">{messages["buyers.title"]}</TabsTrigger>
               </>
             )}
             <TabsTrigger value="compliance">{messages["compliance.title"]}</TabsTrigger>
@@ -482,6 +484,9 @@ export function DealView({
               </TabsContent>
               <TabsContent value="closing">
                 <ClosingTab key={mandate.version} mandate={mandate} onSaved={setMandate} messages={messages} />
+              </TabsContent>
+              <TabsContent value="buyers">
+                <BuyersTab mandate={mandate} messages={messages} />
               </TabsContent>
             </>
           )}
