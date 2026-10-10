@@ -47,6 +47,12 @@ class ProductionSecurityValidator:
                 "Generate a strong, unique secret key for production."
             )
 
+        if len(self.settings.TOTP_ENCRYPTION_KEY) < 32:
+            errors.append(
+                "TOTP_ENCRYPTION_KEY is missing or shorter than 32 characters. "
+                "It encrypts 2FA secrets at rest; set it from Key Vault."
+            )
+
         if self._is_database_using_default_credentials():
             errors.append(
                 "Database is using default credentials (POSTGRES_PASSWORD='postgres'). "

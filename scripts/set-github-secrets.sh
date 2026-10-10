@@ -251,4 +251,13 @@ until ask_secret BACKEND_SECRET_KEY "Paste the key:" && secret_key_ok "$BACKEND_
 done
 set_secret BACKEND_SECRET_KEY "$BACKEND_SECRET_KEY"
 
+stage "TOTP encryption key"
+say "Encrypts each user's authenticator secret in the database."
+step "Use a different 32+ character value. Changing it later forces every user to re-enrol 2FA."
+note "One way, in another terminal: openssl rand -hex 32"
+until ask_secret TOTP_ENCRYPTION_KEY "Paste the key:" && secret_key_ok "$TOTP_ENCRYPTION_KEY"; do
+  warn "That key is too weak. Generate another and try again."
+done
+set_secret TOTP_ENCRYPTION_KEY "$TOTP_ENCRYPTION_KEY"
+
 finish

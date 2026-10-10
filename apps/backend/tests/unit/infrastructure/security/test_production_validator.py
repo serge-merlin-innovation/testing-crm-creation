@@ -15,6 +15,7 @@ class TestProductionSecurityValidator:
         defaults = {
             "ENVIRONMENT": EnvironmentOption.PRODUCTION,
             "SECRET_KEY": "xF9mWqP3nL7vBfKsRt8HjZ2CyE5QaM6NuV4DgX1SpY7LwB9KzT3RhI0UoJ5PcA2MvS8",
+            "TOTP_ENCRYPTION_KEY": "Qz7vR2nK9pW4sL8mX3cB6tY1hF5jD0gA",
             "POSTGRES_PASSWORD": "secure_db_password",
             "CORS_ENABLED": True,
             "CORS_ORIGINS": "https://example.com",
@@ -185,3 +186,9 @@ class TestProductionSecurityValidator:
         warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
         credential_warnings = [log for log in warning_logs if "First admin" in log.message]
         assert len(credential_warnings) == 0
+
+    def test_missing_totp_encryption_key_is_critical(self):
+        settings = self.create_mock_settings(TOTP_ENCRYPTION_KEY="")
+        with pytest.raises(ProductionSecurityError) as exc_info:
+            ProductionSecurityValidator(settings).validate_production_security()
+        assert "TOTP_ENCRYPTION_KEY" in str(exc_info.value)

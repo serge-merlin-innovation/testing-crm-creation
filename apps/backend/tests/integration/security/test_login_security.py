@@ -3,7 +3,7 @@ from datetime import UTC, date, datetime, timedelta
 import pytest
 from fastapi import APIRouter
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
@@ -14,6 +14,7 @@ from src.modules.audit.models import AuditEntry
 from src.modules.role.permissions import RoleName
 from src.modules.security import service as security_service
 from src.modules.security.dependencies import StepUpUserDep
+from src.modules.security.secret_box import open_secret
 from src.modules.security.totp import totp_code
 from tests.integration.foundation.helpers import PASSWORD, TOTP_SECRETS, current_code, login, make_user, start_login
 
@@ -338,3 +339,18 @@ async def test_step_up_requires_a_fresh_code(client, seeded_db, clock):
     finally:
         app.router.routes[:] = original_routes
         app.openapi_schema = None
+
+
+# Spec (AUTH-02, "secrets encrypted at rest"): the TOTP secret is never stored in plaintext.
+async def test_totp_secret_is_encrypted_at_rest(client, seeded_db, clock, mailbox):
+    ana = await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
+    await login(client, "ana@firm.be")
+    plain = TOTP_SECRETS["ana@firm.be"]
+
+    stored = (
+        await seeded_db.execute(text("SELECT totp_secret FROM user_security WHERE user_id = :id"), {"id": ana["id"]})
+    ).scalar_one()
+
+    assert stored
+    assert plain not in stored
+    assert open_secret(stored) == plain

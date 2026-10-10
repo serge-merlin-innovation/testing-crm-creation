@@ -107,6 +107,9 @@ class APIDocSettings(BaseSettings):
 
 class AuthSettings(BaseSettings):
     SECRET_KEY: str = config("SECRET_KEY", default="insecure-secret-key-change-this")
+    # Encrypts TOTP secrets at rest. Changing it makes every enrolled authenticator unreadable, so
+    # all users must re-enrol. Empty = derived from SECRET_KEY (refused in production).
+    TOTP_ENCRYPTION_KEY: str = config("TOTP_ENCRYPTION_KEY", default="")
 
     SESSION_TIMEOUT_MINUTES: int = config("SESSION_TIMEOUT_MINUTES", default=30, cast=int)
     SESSION_CLEANUP_INTERVAL_MINUTES: int = config("SESSION_CLEANUP_INTERVAL_MINUTES", default=15, cast=int)

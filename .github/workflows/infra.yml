@@ -11,7 +11,7 @@ name: Infra
 # Secrets Officer assignment, and create the account-scoped Foundry assignments
 # that let it deploy models and publish agent versions.
 #
-# POSTGRES_ADMIN_PASSWORD, GHCR_TOKEN, and BACKEND_SECRET_KEY are optional GitHub bootstrap
+# POSTGRES_ADMIN_PASSWORD, GHCR_TOKEN, BACKEND_SECRET_KEY and TOTP_ENCRYPTION_KEY are optional GitHub bootstrap
 # secrets when the matching values already exist in Key Vault; a new vault requires all three.
 # Their values are never stored in the checked-in Bicep parameter files.
 on:
@@ -269,6 +269,7 @@ jobs:
           BOOTSTRAP_POSTGRES_ADMIN_PASSWORD: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
           BOOTSTRAP_GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           BOOTSTRAP_BACKEND_SECRET_KEY: ${{ secrets.BACKEND_SECRET_KEY }}
+          BOOTSTRAP_TOTP_ENCRYPTION_KEY: ${{ secrets.TOTP_ENCRYPTION_KEY }}
           REQUIRE_POSTGRES_SECRET: ${{ inputs.deploy_key_vault || inputs.deploy_postgres_server }}
           REQUIRE_GHCR_SECRET: ${{ inputs.deploy_key_vault }}
           REQUIRE_BACKEND_SECRET_KEY: ${{ inputs.deploy_key_vault }}
