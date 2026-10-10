@@ -1,7 +1,7 @@
 """Two-factor login, lockout, trusted devices, login alerts and travel flag
 
-Revision ID: d4e5f6a7b8c9
-Revises: c3d4e5f6a7b8
+Revision ID: e5f6a7b8c9d0
+Revises: d4e5f6a7b8c9
 Create Date: 2026-10-10 04:15:00
 
 """
@@ -11,8 +11,8 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "d4e5f6a7b8c9"
-down_revision: str | Sequence[str] | None = "c3d4e5f6a7b8"
+revision: str = "e5f6a7b8c9d0"
+down_revision: str | Sequence[str] | None = "d4e5f6a7b8c9"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
