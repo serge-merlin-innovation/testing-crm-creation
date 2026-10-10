@@ -15,8 +15,10 @@ from ..modules.picklist.service import seed_default_picklists
 from ..modules.role.authorization import require_permission
 from ..modules.role.permissions import Permission
 from ..modules.role.service import seed_default_roles
+from ..modules.task.jobs import register_jobs as register_task_jobs
 
 settings = get_settings()
+register_task_jobs()
 
 
 @asynccontextmanager

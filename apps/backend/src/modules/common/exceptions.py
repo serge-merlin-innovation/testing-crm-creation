@@ -96,3 +96,15 @@ class TeamMemberExistsError(ResourceExistsError):
 
 class DealLinkNotFoundError(ResourceNotFoundError):
     pass
+
+
+class ActivityNotFoundError(ResourceNotFoundError):
+    pass
+
+
+class RestoreWindowClosedError(ResourceExistsError):
+    pass
+
+
+class TaskNotFoundError(ResourceNotFoundError):
+    pass
