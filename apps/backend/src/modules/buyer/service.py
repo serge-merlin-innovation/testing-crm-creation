@@ -52,7 +52,15 @@ ACTIVE_PHASES = frozenset(
     }
 )
 # Statuses reachable only after the NDA is signed (BUY-03 c2).
-AFTER_NDA = (BuyerStatus.IM_SENT, BuyerStatus.INDICATIVE_OFFER, BuyerStatus.MANAGEMENT_MEETING, BuyerStatus.BINDING_OFFER)
+AFTER_NDA = (
+    BuyerStatus.IM_SENT,
+    BuyerStatus.INDICATIVE_OFFER,
+    BuyerStatus.DATA_ROOM_ACCESS,
+    BuyerStatus.BINDING_OFFER,
+    BuyerStatus.PREFERRED_BIDDER,
+)
+# Not yet approached: the client's approval alone moves a buyer between these two.
+NOT_APPROACHED = (BuyerStatus.LONG_LIST.value, BuyerStatus.CLIENT_APPROVED.value)
 ORDER = list(BuyerStatus)
 TYPE_LABELS = {
     "target": "Target",
@@ -522,11 +530,19 @@ class BuyerService:
             raise ValidationError("Give a rationale for the buyer", field="rationale")
         if "contact_id" in changes:
             await self._check_contact(db, values.contact_id)
-        if values.approval == Approval.EXCLUDED and buyer.status != BuyerStatus.LONG_LIST.value:
+        if values.approval == Approval.EXCLUDED and buyer.status not in NOT_APPROACHED:
             raise ValidationError("A buyer already approached cannot be excluded", field="approval")
         old = {field: getattr(buyer, field) for field in changes}
         for field, value in changes.items():
             setattr(buyer, field, value.strip() if field == "rationale" and value else value)
+        if "approval" in changes and buyer.status in NOT_APPROACHED:
+            approved = values.approval == Approval.APPROVED
+            status = BuyerStatus.CLIENT_APPROVED if approved else BuyerStatus.LONG_LIST
+            if buyer.status != status.value:
+                assert context.user_id is not None
+                buyer.status = status.value
+                buyer.status_changed_at = now
+                buyer.status_changed_by = context.user_id
         buyer.last_activity_at = now
         self.audit.record(
             db,
@@ -543,6 +559,8 @@ class BuyerService:
     def _check_status(self, buyer: DealBuyer, status: BuyerStatus, nda: BuyerNda | None) -> None:
         if status in (BuyerStatus.LONG_LIST, BuyerStatus.DECLINED):
             return
+        if status == BuyerStatus.CLIENT_APPROVED:
+            raise ValidationError("Client approved follows from the client's approval: record it in Approval", field="status")
         if status == BuyerStatus.NDA_SIGNED:
             raise ValidationError("NDA signed follows from the NDA's signed date: log it on the NDA", field="status")
         if buyer.approval != Approval.APPROVED.value:

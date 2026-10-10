@@ -1290,5 +1290,9 @@
  "{0}: invoice the success fee": {
   "fr": "{0} : facturer la commission de succès",
   "nl": "{0}: succesfee factureren"
+ },
+ "Client approved follows from the client's approval: record it in Approval": {
+  "fr": "Approuvé par le client découle de l'approbation du client : indiquez-la dans Approbation",
+  "nl": "Goedgekeurd door klant volgt uit de goedkeuring van de klant: noteer die bij Goedkeuring"
  }
 }

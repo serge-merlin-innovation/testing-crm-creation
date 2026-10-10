@@ -305,9 +305,9 @@ async def test_buy03_c1_status_change_stores_date_and_user_and_funnel_updates(wo
     after = await buyers(world, mandate_id)
     row = after["buyers"][0]
 
-    assert before["long_list"] == 1
+    assert before["client_approved"] == 1
     assert before["contacted"] == 0
-    assert after["funnel"]["long_list"] == 0
+    assert after["funnel"]["client_approved"] == 0
     assert after["funnel"]["contacted"] == 1
     assert row["status_changed_at"].startswith("2026-10-10")
     assert row["status_changed_by_name"] == "anna"
@@ -540,3 +540,62 @@ async def test_merging_a_buyer_company_moves_its_profile_and_deal_buyer_rows(wor
     assert [row["company_id"] for row in (await buyers(world, mandate_id))["buyers"]] == [survivor]
     assert view["has_profile"] is True
     assert view["sector_ids"] == [world.sector_id]
+
+
+# Epic 7 header
+
+
+SPEC_STATUSES = [
+    "long_list",
+    "client_approved",
+    "contacted",
+    "teaser_sent",
+    "nda_sent",
+    "nda_signed",
+    "im_sent",
+    "indicative_offer",
+    "data_room_access",
+    "binding_offer",
+    "preferred_bidder",
+    "declined",
+]
+
+
+async def test_epic7_buyer_statuses_are_the_twelve_from_the_spec(world):
+    from src.modules.buyer.schemas import BuyerStatus
+
+    mandate_id = await deal(world)
+    await listed(world, mandate_id)
+
+    assert [status.value for status in BuyerStatus] == SPEC_STATUSES
+    assert list((await buyers(world, mandate_id))["funnel"]) == SPEC_STATUSES
+
+
+async def test_epic7_client_approval_moves_the_buyer_to_client_approved(world):
+    mandate_id = await deal(world)
+    [buyer_id] = await listed(world, mandate_id)
+
+    await approve(world, mandate_id, buyer_id)
+
+    assert (await buyers(world, mandate_id))["buyers"][0]["status"] == "client_approved"
+
+
+async def test_epic7_data_room_access_and_preferred_bidder_need_a_signed_nda(world):
+    mandate_id = await deal(world)
+    [buyer_id] = await listed(world, mandate_id)
+    await approve(world, mandate_id, buyer_id)
+
+    blocked = await set_status(world, mandate_id, [buyer_id], "data_room_access")
+    await send(
+        world.analyst,
+        "PUT",
+        f"/api/v1/mandates/{mandate_id}/buyers/{buyer_id}/nda",
+        {"sent_date": "2026-10-01", "signed_date": "2026-10-05"},
+    )
+    room = await set_status(world, mandate_id, [buyer_id], "data_room_access")
+    preferred = await set_status(world, mandate_id, [buyer_id], "preferred_bidder")
+
+    assert blocked.status_code == 422
+    assert room.status_code == 200, room.text
+    assert preferred.status_code == 200, preferred.text
+    assert (await buyers(world, mandate_id))["funnel"]["preferred_bidder"] == 1
