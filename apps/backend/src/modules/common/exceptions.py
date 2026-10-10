@@ -132,3 +132,7 @@ class TaskNotFoundError(ResourceNotFoundError):
 
 class InvoiceNotFoundError(ResourceNotFoundError):
     pass
+
+
+class OpportunityNotFoundError(ResourceNotFoundError):
+    """Also raised for an opportunity hidden from the caller, so a 404 never confirms it."""

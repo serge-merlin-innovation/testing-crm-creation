@@ -20,6 +20,7 @@ from ..modules.compliance.service import install as install_compliance
 from ..modules.fee.service import on_closed_won as raise_invoice_task
 from ..modules.mandate.jobs import register_jobs as register_deal_jobs
 from ..modules.mandate.pipeline import on_closed_won
+from ..modules.origination.jobs import register_jobs as register_origination_jobs
 from ..modules.picklist.service import seed_default_picklists
 from ..modules.role.authorization import require_permission
 from ..modules.role.permissions import Permission
@@ -32,6 +33,7 @@ register_deal_jobs()
 on_closed_won(raise_invoice_task)
 register_compliance_jobs()
 install_compliance()
+register_origination_jobs()
 set_bearer_resolver(resolve_bearer)
 
 

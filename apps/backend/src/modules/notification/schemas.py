@@ -19,6 +19,7 @@ class EventKind(StrEnum):
     TASK_OVERDUE_DIGEST = "task.overdue_digest"
     MILESTONE_DUE = "milestone.due"
     CONFLICT_REVIEW_OVERDUE = "conflict.review_overdue"
+    OPPORTUNITY_INVITED = "opportunity.invited"
 
 
 DEFAULT_CHANNEL = Channel.BOTH

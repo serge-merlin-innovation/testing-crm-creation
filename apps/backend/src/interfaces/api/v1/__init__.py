@@ -21,6 +21,7 @@ from ....modules.fee.routes import router as fees_router
 from ....modules.mandate.routes import criteria_router
 from ....modules.mandate.routes import router as mandates_router
 from ....modules.notification.routes import router as notifications_router
+from ....modules.origination.routes import router as origination_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.role.routes import router as roles_router
 from ....modules.security.routes import router as security_router
@@ -42,6 +43,7 @@ router.include_router(fees_router, prefix="/fees")
 router.include_router(compliance_router, prefix="/mandates")
 router.include_router(conflict_reviews_router, prefix="/conflict-reviews")
 router.include_router(criteria_router, prefix="/stage-criteria")
+router.include_router(origination_router, prefix="/origination")
 router.include_router(notifications_router, prefix="/notifications")
 router.include_router(activities_router, prefix="/activities")
 router.include_router(notes_router, prefix="/notes")

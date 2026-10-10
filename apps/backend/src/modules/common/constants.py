@@ -25,6 +25,7 @@ from .exceptions import (
     MandateExistsError,
     MilestoneNotFoundError,
     OneRolePerUserError,
+    OpportunityNotFoundError,
     PermissionDeniedError,
     PicklistValueExistsError,
     PicklistValueInUseError,
@@ -85,6 +86,7 @@ EXCEPTION_MAPPING: dict[type[DomainError], Callable[[str], HTTPException]] = {
     DealLinkNotFoundError: lambda message: NotFoundException(detail="Link not found."),
     ActivityNotFoundError: lambda message: NotFoundException(detail="Activity not found."),
     TaskNotFoundError: lambda message: NotFoundException(detail="Task not found."),
+    OpportunityNotFoundError: lambda message: NotFoundException(detail="Opportunity not found."),
     InvoiceNotFoundError: lambda message: NotFoundException(detail="Invoice not found."),
     RestoreWindowClosedError: lambda message: HTTPException(
         status_code=409, detail="This activity was deleted more than 30 days ago and can no longer be restored."
