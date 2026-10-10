@@ -6,8 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import CompanyNotFoundError, ContactNotFoundError
 from ..company.models import Company
-from .models import Contact, Employment
-from .schemas import ContactCreate, ContactRead, ContactUpdate, EmploymentRead
+from ..user.models import User
+from .models import Contact, Employment, RelationshipHolder
+from .schemas import ContactCreate, ContactRead, ContactUpdate, EmploymentRead, HolderRead
 
 CONTACT_FIELDS = (
     "first_name",
@@ -66,7 +67,72 @@ class ContactService:
             history=history,
             warnings=["duplicate_email"] if duplicates else [],
             duplicate_contact_ids=duplicates or [],
+            relationship_holders=(await self.holders(db, [contact.id]))[contact.id],
         ).model_dump(mode="json")
+
+    async def holders(self, db: AsyncSession, contact_ids: list[int]) -> dict[int, list[HolderRead]]:
+        """Strongest relationship first."""
+        grouped: dict[int, list[HolderRead]] = {contact_id: [] for contact_id in contact_ids}
+        if contact_ids:
+            rows = await db.execute(
+                select(RelationshipHolder, User.name)
+                .join(User, User.id == RelationshipHolder.user_id)
+                .where(RelationshipHolder.contact_id.in_(contact_ids))
+                .order_by(RelationshipHolder.strength.desc(), User.name)
+            )
+            for holder, name in rows.tuples():
+                grouped[holder.contact_id].append(HolderRead(user_id=holder.user_id, name=name, strength=holder.strength))
+        return grouped
+
+    async def set_holder(
+        self, db: AsyncSession, contact_id: int, user_id: int, strength: int, context: AuditContext
+    ) -> dict[str, Any]:
+        contact = await self.get(db, contact_id)
+        holder = (
+            await db.execute(
+                select(RelationshipHolder).where(
+                    RelationshipHolder.contact_id == contact_id, RelationshipHolder.user_id == user_id
+                )
+            )
+        ).scalar_one_or_none()
+        old = {"strength": holder.strength} if holder else None
+        if holder is None:
+            db.add(RelationshipHolder(contact_id=contact_id, user_id=user_id, strength=strength))
+        else:
+            holder.strength = strength
+        self.audit.record(
+            db,
+            context,
+            "contact.relationship_set",
+            record_type="contact",
+            record_id=contact_id,
+            old_values=old,
+            new_values={"user_id": user_id, "strength": strength},
+        )
+        await db.commit()
+        return await self.read(db, contact)
+
+    async def remove_holder(self, db: AsyncSession, contact_id: int, user_id: int, context: AuditContext) -> dict[str, Any]:
+        contact = await self.get(db, contact_id)
+        holder = (
+            await db.execute(
+                select(RelationshipHolder).where(
+                    RelationshipHolder.contact_id == contact_id, RelationshipHolder.user_id == user_id
+                )
+            )
+        ).scalar_one_or_none()
+        if holder is not None:
+            await db.delete(holder)
+            self.audit.record(
+                db,
+                context,
+                "contact.relationship_removed",
+                record_type="contact",
+                record_id=contact_id,
+                old_values={"user_id": user_id, "strength": holder.strength},
+            )
+            await db.commit()
+        return await self.read(db, contact)
 
     async def create(self, db: AsyncSession, values: ContactCreate, context: AuditContext) -> dict[str, Any]:
         if values.company_id is not None:
