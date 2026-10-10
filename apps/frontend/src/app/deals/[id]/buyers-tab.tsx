@@ -315,7 +315,7 @@ export function BuyersTab({ mandate, messages }: { mandate: Mandate; messages: M
       </div>
       {buyers.length === 0 ? <p>{messages["buyers.empty"]}</p> : null}
       {buyers.length > 0 ? (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0}>
           <Table aria-label={messages["buyers.title"]}>
             <TableHeader>
               <TableRow>

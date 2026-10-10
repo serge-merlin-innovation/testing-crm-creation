@@ -10,6 +10,7 @@ var postgresAdministratorLogin = '${replace(resourceNameStem, '-', '')}admin'
 var postgresDatabaseName = 'db-${resourceNameStem}'
 var postgresAdministratorPasswordSecretName = 'postgres-administrator-password'
 var backendSecretKeySecretName = 'backend-secret-key'
+var backendTotpEncryptionKeySecretName = 'backend-totp-encryption-key'
 var containerRegistryPasswordSecretName = 'ghcr-token'
 
 param name = 'ca-${resourceNameStem}-backend'
@@ -87,6 +88,10 @@ param secretEnvironmentVariables = [
     name: 'SECRET_KEY'
     secretName: 'secret-key'
   }
+  {
+    name: 'TOTP_ENCRYPTION_KEY'
+    secretName: 'totp-encryption-key'
+  }
 ]
 param secretEnvironmentVariableValue1 = az.getSecret(
   subscriptionId,
@@ -99,6 +104,12 @@ param secretEnvironmentVariableValue2 = az.getSecret(
   resourceGroupName,
   keyVaultName,
   backendSecretKeySecretName
+)
+param secretEnvironmentVariableValue3 = az.getSecret(
+  subscriptionId,
+  resourceGroupName,
+  keyVaultName,
+  backendTotpEncryptionKeySecretName
 )
 param registryServer = 'ghcr.io'
 param registryUsername = toLower(readEnvironmentVariable('GITHUB_REPOSITORY_OWNER'))

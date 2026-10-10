@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Integer, Stri
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ...infrastructure.database.session import Base
+from .secret_box import EncryptedString
 
 
 class UserSecurity(Base):
@@ -12,7 +13,7 @@ class UserSecurity(Base):
     __tablename__ = "user_security"
 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), primary_key=True, index=True, init=True)
-    totp_secret: Mapped[str | None] = mapped_column(String(64), default=None)
+    totp_secret: Mapped[str | None] = mapped_column(EncryptedString(), default=None)
     totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)

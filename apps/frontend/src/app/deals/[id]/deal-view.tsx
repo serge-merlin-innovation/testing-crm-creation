@@ -207,7 +207,7 @@ function TeamTab({ mandateId, messages }: { mandateId: number; messages: Message
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" tabIndex={0}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -285,7 +285,7 @@ function TeamTab({ mandateId, messages }: { mandateId: number; messages: Message
       ) : null}
 
       <h3>{messages["deals.wallCrossings"]}</h3>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" tabIndex={0}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -315,7 +315,7 @@ function HistoryTab({ mandateId, version, messages }: { mandateId: number; versi
   const history = useApiData<HistoryEntry[]>(`/api/v1/mandates/${mandateId}/history?v=${version}`);
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" tabIndex={0}>
       <Table>
         <TableHeader>
           <TableRow>

@@ -35,6 +35,33 @@ test.describe("an analyst", () => {
     await expect(page.getByRole("cell", { name: `Ines Maes${RUN}` })).toBeVisible();
   });
 
+  // Decision 49 follow-up: language and marketing opt-out are set from the forms, not only the API.
+  test("records a contact's language and opt-out and a company's language", async ({ page }) => {
+    await page.goto("/contacts");
+    await page.getByLabel("First name").fill("Odile");
+    await page.getByLabel("Last name").fill(`Optout${RUN}`);
+    await page.getByLabel("Source").fill("E2E");
+    await page.getByLabel("Language").click();
+    await page.getByRole("option", { name: "French" }).click();
+    await page.getByLabel("No marketing mailings (opt-out)").check();
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("status")).toHaveText("Contact created.");
+    const contacts = await (await page.request.get(`/api/v1/contacts/?q=Optout${RUN}`)).json();
+    expect(contacts[0]).toMatchObject({ language: "fr", marketing_opt_out: true });
+
+    await page.goto("/companies");
+    await page.getByLabel("Name").fill(`Lingua Partners ${RUN}`);
+    await page.getByLabel("Country").click();
+    await page.getByRole("option", { name: "Netherlands" }).click();
+    await page.getByLabel("VAT or registry number").fill(`LG-${RUN}`);
+    await page.getByLabel("Language").click();
+    await page.getByRole("option", { name: "Dutch" }).click();
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("status")).toHaveText("Company created.");
+    const companies = await (await page.request.get(`/api/v1/companies/?q=Lingua Partners ${RUN}`)).json();
+    expect(companies[0]).toMatchObject({ language: "nl" });
+  });
+
   test("is not offered the picklists page", async ({ page }) => {
     await page.goto("/overview");
     await expect(page.getByRole("link", { name: "Picklists" })).toHaveCount(0);

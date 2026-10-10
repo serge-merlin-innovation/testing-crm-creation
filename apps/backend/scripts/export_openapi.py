@@ -5,11 +5,14 @@ file differs from what the app serves.
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 
 backend_dir = Path(__file__).parent.parent
 sys.path.append(str(backend_dir))
+# The contract test runs with the hooks mounted (tests/conftest.py); render the same app.
+os.environ.setdefault("TEST_HOOKS_ENABLED", "true")
 
 from src.infrastructure.logging import get_logger  # noqa: E402
 from src.interfaces.main import app  # noqa: E402

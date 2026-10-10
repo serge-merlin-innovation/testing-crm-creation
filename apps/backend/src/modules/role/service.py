@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import PermissionDeniedError, RoleNotFoundError
+from ..common.spreadsheet import safe_row
 from .models import Role
 from .permissions import DEFAULT_ROLES, Permission, RoleName
 from .schemas import MatrixColumn, MatrixRow, PermissionMatrix, RolePermissionsUpdate, RoleRead
@@ -88,9 +89,9 @@ class RoleService:
         matrix = await self.matrix(db)
         buffer = io.StringIO()
         writer = csv.writer(buffer)
-        writer.writerow(["Permission", *[column.name for column in matrix.columns]])
+        writer.writerow(safe_row(["Permission", *[column.name for column in matrix.columns]]))
         for row in matrix.rows:
-            writer.writerow([row.permission, *["x" if granted else "" for granted in row.granted]])
+            writer.writerow(safe_row([row.permission, *["x" if granted else "" for granted in row.granted]]))
         self.audit.record(db, context, "export", record_type="permission_matrix", new_values={"format": "csv"})
         await db.commit()
         return buffer.getvalue()

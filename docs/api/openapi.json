@@ -2982,6 +2982,18 @@
             "title": "By Stage And Type",
             "type": "array"
           },
+          "other_teams_weighted_fees": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Other Teams Weighted Fees"
+          },
           "total_mandates": {
             "title": "Total Mandates",
             "type": "integer"
@@ -5012,6 +5024,18 @@
             ],
             "title": "Date"
           },
+          "dkim": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dkim"
+          },
           "message_id": {
             "anyOf": [
               {
@@ -5028,6 +5052,18 @@
             "maxLength": 500,
             "title": "Sender",
             "type": "string"
+          },
+          "spf": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spf"
           },
           "subject": {
             "default": "",
@@ -15561,8 +15597,10 @@
                 "bcc": [],
                 "cc": [],
                 "date": "2026-10-10T09:00:00Z",
+                "dkim": "text",
                 "message_id": "text",
                 "sender": "sender",
+                "spf": "text",
                 "subject": "",
                 "text": "",
                 "to": []
@@ -22723,7 +22761,7 @@
     },
     "/api/v1/reports/dashboard": {
       "get": {
-        "description": "Counts running deals firm-wide. Deals the caller is not staffed on count only inside a cell with at least 3 of them, so no figure reveals one deal. Fee figures need `fees.read`.",
+        "description": "Counts running deals firm-wide. Deals the caller is not staffed on count only in the firm-wide totals (`total_mandates`, `other_teams_weighted_fees`), and only once there are at least 3 of them; cells and quarters hold the caller's own deals. Fee figures need `fees.read`.",
         "operationId": "dashboard_api_v1_reports_dashboard_get",
         "responses": {
           "200": {
@@ -22737,6 +22775,7 @@
                       "type": "type"
                     }
                   ],
+                  "other_teams_weighted_fees": "text",
                   "total_mandates": 1,
                   "weighted_fees_by_quarter": [
                     {

@@ -151,7 +151,7 @@ export function PrivacyView({ messages, isCompliance }: { messages: Messages; is
               </Button>
             </form>
             {alerts}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" tabIndex={0}>
               <Table>
                 <TableHeader>
                   <TableRow>

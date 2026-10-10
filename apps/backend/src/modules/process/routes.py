@@ -5,6 +5,7 @@ from fastapi import APIRouter, Response
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
+from ..common.downloads import attachment_header
 from ..mandate.policy import EditGrant, ExportGrant, ReadGrant
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
@@ -33,7 +34,7 @@ TemplateManagerDep = Annotated[dict[str, Any], require_permission(Permission.SET
 
 
 def _pdf(content: bytes, filename: str) -> Response:
-    return Response(content, media_type=PDF, headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+    return Response(content, media_type=PDF, headers={"Content-Disposition": attachment_header(filename)})
 
 
 @router.get(

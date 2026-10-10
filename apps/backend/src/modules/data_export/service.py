@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import PermissionDeniedError, ResourceNotFoundError
+from ..common.spreadsheet import safe_row
 from ..contact.models import Contact
 from ..notification.schemas import EventKind
 from ..notification.service import Message, NotificationService
@@ -77,10 +78,10 @@ class DataExportService:
         contacts = (await db.execute(_matching(values).order_by(Contact.last_name, Contact.first_name, Contact.id))).scalars()
         buffer = io.StringIO()
         writer = csv.writer(buffer)
-        writer.writerow(COLUMNS)
+        writer.writerow(safe_row(COLUMNS))
         written = 0
         for contact in contacts:
-            writer.writerow([getattr(contact, column) for column in COLUMNS])
+            writer.writerow(safe_row([getattr(contact, column) for column in COLUMNS]))
             written += 1
         self.audit.record(
             db,

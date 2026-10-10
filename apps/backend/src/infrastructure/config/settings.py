@@ -107,6 +107,9 @@ class APIDocSettings(BaseSettings):
 
 class AuthSettings(BaseSettings):
     SECRET_KEY: str = config("SECRET_KEY", default="insecure-secret-key-change-this")
+    # Encrypts TOTP secrets at rest. Changing it makes every enrolled authenticator unreadable, so
+    # all users must re-enrol. Empty = derived from SECRET_KEY (refused in production).
+    TOTP_ENCRYPTION_KEY: str = config("TOTP_ENCRYPTION_KEY", default="")
 
     SESSION_TIMEOUT_MINUTES: int = config("SESSION_TIMEOUT_MINUTES", default=30, cast=int)
     SESSION_CLEANUP_INTERVAL_MINUTES: int = config("SESSION_CLEANUP_INTERVAL_MINUTES", default=15, cast=int)
@@ -122,6 +125,10 @@ class AuthSettings(BaseSettings):
 
     # Scheduled-job runner (reminders, expiries, digests, retention). Off in tests, which use the
     # test-only "run jobs now" hook instead.
+    # Mounts /api/v1/test-hooks (clock, job runner, captured emails) without authentication.
+    # Only for local runs, pytest and Playwright; refused on staging and production.
+    TEST_HOOKS_ENABLED: bool = config("TEST_HOOKS_ENABLED", default=False, cast=bool)
+
     SCHEDULED_JOBS_ENABLED: bool = config("SCHEDULED_JOBS_ENABLED", default=True, cast=bool)
     SCHEDULED_JOBS_TICK_SECONDS: int = config("SCHEDULED_JOBS_TICK_SECONDS", default=60, cast=int)
 

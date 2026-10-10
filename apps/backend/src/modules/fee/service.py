@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import DealForbiddenError, InvoiceNotFoundError, ValidationError
+from ..common.spreadsheet import safe_dict
 from ..mandate.models import DealLink, Mandate
 from ..mandate.pipeline import ENGAGEMENT_LETTER_LABEL
 from ..mandate.policy import CLOSER_ROLES, DealGrant, DealPolicy
@@ -247,7 +248,7 @@ class FeeService:
         writer = csv.DictWriter(buffer, fieldnames=EXPORT_COLUMNS, extrasaction="ignore")
         writer.writeheader()
         for row in rows:
-            writer.writerow({**row, "success_fee_kind": SuccessFeeKind(row["success_fee_kind"]).value})
+            writer.writerow(safe_dict({**row, "success_fee_kind": SuccessFeeKind(row["success_fee_kind"]).value}))
         self.audit.record(
             db, context, "export", record_type="fee_terms", new_values={"kind": "fees", "filter": filters, "rows": len(rows)}
         )

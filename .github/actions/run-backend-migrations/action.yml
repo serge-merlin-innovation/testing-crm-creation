@@ -51,6 +51,7 @@ runs:
         postgres_password_secret_name="$(jq -er '.parameters.administratorLoginPassword.reference.secretName | strings | select(length > 0)' "$COMPILED_POSTGRES_SERVER_PARAMETERS_FILE")"
         backend_postgres_password_secret_name="$(jq -er '.parameters.secretEnvironmentVariableValue1.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
         backend_secret_key_name="$(jq -er '.parameters.secretEnvironmentVariableValue2.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        backend_totp_key_name="$(jq -er '.parameters.secretEnvironmentVariableValue3.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
 
         backend_environment_variable() {
           local environment_variable_name="$1"
@@ -114,12 +115,19 @@ runs:
           --query value \
           --output tsv \
           --only-show-errors)"
-        if [[ -z "$postgres_password" || -z "$backend_secret_key" ]]; then
+        backend_totp_key="$(az keyvault secret show \
+          --vault-name "$key_vault_name" \
+          --name "$backend_totp_key_name" \
+          --query value \
+          --output tsv \
+          --only-show-errors)"
+        if [[ -z "$postgres_password" || -z "$backend_secret_key" || -z "$backend_totp_key" ]]; then
           echo "Migration secrets resolved to empty values." >&2
           exit 1
         fi
         echo "::add-mask::$postgres_password"
         echo "::add-mask::$backend_secret_key"
+        echo "::add-mask::$backend_totp_key"
 
         reported_runner_ip="$(curl --fail --silent --show-error --retry 3 --max-time 15 https://api4.ipify.org)"
         runner_ip="$(python3 -c 'import ipaddress, sys; print(ipaddress.IPv4Address(sys.argv[1]))' "$reported_runner_ip")"
@@ -194,6 +202,7 @@ runs:
         export POSTGRES_SYNC_PREFIX="$postgres_sync_prefix"
         export POSTGRES_ASYNC_PREFIX="$postgres_async_prefix"
         export SECRET_KEY="$backend_secret_key"
+        export TOTP_ENCRYPTION_KEY="$backend_totp_key"
         # The application composes this URL without percent-encoding its parts, so a password containing
         # @ : / or # would break it. Building it here keeps migrations correct regardless.
         DATABASE_URL="$(python3 -c 'import os; from urllib.parse import quote; print(os.environ["POSTGRES_ASYNC_PREFIX"] + quote(os.environ["POSTGRES_USER"], safe="") + ":" + quote(os.environ["POSTGRES_PASSWORD"], safe="") + "@" + os.environ["POSTGRES_SERVER"] + ":" + os.environ["POSTGRES_PORT"] + "/" + quote(os.environ["POSTGRES_DB"], safe=""))')"

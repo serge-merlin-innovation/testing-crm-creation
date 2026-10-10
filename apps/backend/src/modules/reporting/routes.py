@@ -39,8 +39,9 @@ async def home(db: AsyncSessionDep, service: ReportingServiceDep, user: CurrentU
     response_model_exclude_unset=True,
     summary="Firm pipeline: mandates by stage and type, weighted expected fees by quarter",
     description=(
-        "Counts running deals firm-wide. Deals the caller is not staffed on count only inside a cell with at "
-        "least 3 of them, so no figure reveals one deal. Fee figures need `fees.read`."
+        "Counts running deals firm-wide. Deals the caller is not staffed on count only in the firm-wide totals "
+        "(`total_mandates`, `other_teams_weighted_fees`), and only once there are at least 3 of them; cells and "
+        "quarters hold the caller's own deals. Fee figures need `fees.read`."
     ),
 )
 async def dashboard(db: AsyncSessionDep, service: ReportingServiceDep, user: DashboardDep, clock: ClockDep) -> dict[str, Any]:

@@ -55,7 +55,17 @@ async def address_of(actor):
 
 
 async def inbound(world, **email):
-    payload = {"subject": "Hello", "text": "Body", "to": [], "cc": [], "bcc": [], "attachments": [], **email}
+    payload = {
+        "subject": "Hello",
+        "text": "Body",
+        "to": [],
+        "cc": [],
+        "bcc": [],
+        "attachments": [],
+        "spf": "pass",
+        "dkim": "pass",
+        **email,
+    }
     return await world.anon.post("/api/v1/email-logging/inbound", json=payload, headers={"X-Inbound-Secret": SECRET})
 
 
@@ -110,6 +120,22 @@ async def test_email_from_an_address_not_linked_to_a_crm_user_is_rejected(world)
     assert response.status_code == 403
     assert await timeline(world.partner, "contact", world.contact_id) == []
     assert (await world.db.execute(select(UnmatchedEmail))).first() is None
+
+
+# Security review S13: a forged From is refused unless the provider verified SPF and DKIM.
+@pytest.mark.parametrize(("spf", "dkim"), [("fail", "pass"), ("pass", "fail"), ("softfail", "none"), (None, None)])
+async def test_email_without_passing_spf_and_dkim_is_rejected(world, spf, dkim):
+    address = await address_of(world.partner)
+    response = await inbound(world, sender="paula@firm.be", to=["jan@acme.be"], bcc=[address], spf=spf, dkim=dkim)
+    assert response.status_code == 403
+    assert await timeline(world.partner, "contact", world.contact_id) == []
+
+
+async def test_logging_address_token_has_128_bits(world):
+    address = await address_of(world.partner)
+    token = address.split("@")[0].removeprefix("log-")
+    assert len(token) == 32
+    int(token, 16)
 
 
 async def test_inbound_webhook_needs_the_provider_secret(world):

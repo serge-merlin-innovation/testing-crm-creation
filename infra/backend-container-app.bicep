@@ -22,8 +22,8 @@ param environmentVariables array = []
 
 // Ordered descriptors shaped as { name: <environment variable>, secretName: <Container App secret> }.
 // Key Vault references cannot be nested in an object in .bicepparam, so their values use direct,
-// secure parameter slots below. The descriptor at index 0 maps to value 1, and index 1 to value 2.
-@maxLength(2)
+// secure parameter slots below. The descriptor at index 0 maps to value 1, and index 1 to value 2, index 2 to value 3.
+@maxLength(3)
 param secretEnvironmentVariables array = []
 
 @secure()
@@ -31,6 +31,9 @@ param secretEnvironmentVariableValue1 string = ''
 
 @secure()
 param secretEnvironmentVariableValue2 string = ''
+
+@secure()
+param secretEnvironmentVariableValue3 string = ''
 
 param registryServer string
 
@@ -73,6 +76,7 @@ var registryPasswordSecretName = 'registry-password'
 var secretEnvironmentVariableValues = [
   secretEnvironmentVariableValue1
   secretEnvironmentVariableValue2
+  secretEnvironmentVariableValue3
 ]
 var containerAppSecrets = [for (secretEnvironmentVariable, index) in secretEnvironmentVariables: {
   name: secretEnvironmentVariable.secretName

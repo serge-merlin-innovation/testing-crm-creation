@@ -20,6 +20,7 @@ from ..common.exceptions import (
     TeamMemberNotFoundError,
     ValidationError,
 )
+from ..common.spreadsheet import safe_row
 from ..company.models import Company
 from ..company.service import normalize_name
 from ..notification.service import Message, NotificationService
@@ -445,13 +446,13 @@ class MandateService:
         team = await self.team(db, grant, now)
         buffer = io.StringIO()
         writer = csv.writer(buffer)
-        writer.writerow(["field", "value"])
+        writer.writerow(safe_row(["field", "value"]))
         for field in ("code_name", "type", "stage", "lead_partner_name", "client_name", "target_name", "estimated_ev"):
-            writer.writerow([field, deal[field] if deal[field] is not None else ""])
-        writer.writerow([])
-        writer.writerow(["team_member", "role", "expires_at"])
+            writer.writerow(safe_row([field, deal[field] if deal[field] is not None else ""]))
+        writer.writerow(safe_row([]))
+        writer.writerow(safe_row(["team_member", "role", "expires_at"]))
         for member in team["members"]:
-            writer.writerow([member["name"], member["role"], member["expires_at"] or ""])
+            writer.writerow(safe_row([member["name"], member["role"], member["expires_at"] or ""]))
         self.audit.record(
             db, context, "export", record_type="mandate", record_id=grant.mandate.id, new_values={"format": "csv"}
         )

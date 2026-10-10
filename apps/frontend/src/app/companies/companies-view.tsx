@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fieldErrors, readDetail } from "@/lib/deals";
-import type { MessageKey } from "@/lib/i18n/messages";
+import type { Language, MessageKey } from "@/lib/i18n/messages";
+import { companyPayload, RECORD_LANGUAGES } from "@/lib/records";
 import { sendJson, useApiData } from "@/lib/use-api";
 import { InvestorProfilePanel } from "./investor-profile";
 
@@ -30,6 +31,7 @@ export function CompaniesView({ messages }: { messages: Messages }) {
   const [type, setType] = useState("target");
   const [countryId, setCountryId] = useState("");
   const [number, setNumber] = useState("");
+  const [recordLanguage, setRecordLanguage] = useState<Language>("en");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
   const [duplicates, setDuplicates] = useState<{ list: Duplicate[]; canConfirm: boolean } | null>(null);
@@ -41,13 +43,7 @@ export function CompaniesView({ messages }: { messages: Messages }) {
     event?.preventDefault();
     setErrors({});
     setNotice("");
-    const payload: Record<string, unknown> = {
-      name: name || null,
-      type,
-      country_id: Number(countryId),
-      ignore_similar: ignoreSimilar,
-    };
-    payload[belgian ? "enterprise_number" : "vat_or_registry_number"] = number || null;
+    const payload = companyPayload({ name, type, countryId, number, belgian, language: recordLanguage }, ignoreSimilar);
     const result = await sendJson("/api/v1/companies/", "POST", payload);
     if (result.status === 201) {
       setDuplicates(null);
@@ -96,7 +92,7 @@ export function CompaniesView({ messages }: { messages: Messages }) {
               <AlertDescription>{messages["common.loadFailed"]}</AlertDescription>
             </Alert>
           ) : null}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -185,6 +181,21 @@ export function CompaniesView({ messages }: { messages: Messages }) {
                 </FieldLabel>
                 <Input id="company-number" value={number} onChange={(event) => setNumber(event.target.value)} />
                 <FieldError>{errors.enterprise_number ?? errors.vat_or_registry_number}</FieldError>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-language">{messages["records.language"]}</FieldLabel>
+                <Select value={recordLanguage} onValueChange={(value) => setRecordLanguage(value as Language)}>
+                  <SelectTrigger id="company-language">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RECORD_LANGUAGES.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {messages[`records.language.${value}`]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
               {errors.form ? (
                 <Alert variant="destructive">

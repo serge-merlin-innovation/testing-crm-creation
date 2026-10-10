@@ -751,6 +751,10 @@
   "fr": "L'expéditeur n'est pas un utilisateur du CRM",
   "nl": "Afzender is geen CRM-gebruiker"
  },
+ "Sender not authenticated by SPF and DKIM": {
+  "fr": "Expéditeur non authentifié par SPF et DKIM",
+  "nl": "Afzender niet geauthenticeerd door SPF en DKIM"
+ },
  "Set both dates or neither": {
   "fr": "Indiquez les deux dates ou aucune",
   "nl": "Vul beide datums in of geen"
@@ -774,6 +778,10 @@
  "Something went wrong. Please try again.": {
   "fr": "Une erreur s'est produite. Veuillez réessayer.",
   "nl": "Er ging iets mis. Probeer het opnieuw."
+ },
+ "TOTP secret cannot be decrypted with TOTP_ENCRYPTION_KEY": {
+  "fr": "Le secret TOTP ne peut pas être déchiffré avec TOTP_ENCRYPTION_KEY",
+  "nl": "Het TOTP-geheim kan niet worden ontsleuteld met TOTP_ENCRYPTION_KEY"
  },
  "Task not found.": {
   "fr": "Tâche introuvable.",

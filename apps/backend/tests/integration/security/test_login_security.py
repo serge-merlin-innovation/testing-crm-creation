@@ -1,9 +1,10 @@
+import hashlib
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from fastapi import APIRouter
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
@@ -14,6 +15,7 @@ from src.modules.audit.models import AuditEntry
 from src.modules.role.permissions import RoleName
 from src.modules.security import service as security_service
 from src.modules.security.dependencies import StepUpUserDep
+from src.modules.security.secret_box import open_secret
 from src.modules.security.totp import totp_code
 from tests.integration.foundation.helpers import PASSWORD, TOTP_SECRETS, current_code, login, make_user, start_login
 
@@ -338,3 +340,39 @@ async def test_step_up_requires_a_fresh_code(client, seeded_db, clock):
     finally:
         app.router.routes[:] = original_routes
         app.openapi_schema = None
+
+
+# Spec (AUTH-02, "secrets encrypted at rest"): the TOTP secret is never stored in plaintext.
+async def test_totp_secret_is_encrypted_at_rest(client, seeded_db, clock, mailbox):
+    ana = await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
+    await login(client, "ana@firm.be")
+    plain = TOTP_SECRETS["ana@firm.be"]
+
+    stored = (
+        await seeded_db.execute(text("SELECT totp_secret FROM user_security WHERE user_id = :id"), {"id": ana["id"]})
+    ).scalar_one()
+
+    assert stored
+    assert plain not in stored
+    assert open_secret(stored) == plain
+
+
+# AUTH-02 c2: recovery codes carry at least 50 bits and are stored keyed, not as a bare SHA-256.
+async def test_recovery_codes_are_long_and_stored_keyed(client, seeded_db, clock, mailbox):
+    ana = await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
+    body = await start_login(client, "ana@firm.be")
+    codes = (await submit_code(client, body["challenge"], current_code("ana@firm.be"))).json()["recovery_codes"]
+
+    alphabet = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567")
+    for code in codes:
+        symbols = code.replace("-", "")
+        assert set(symbols) <= alphabet
+        assert len(symbols) * 5 >= 50
+
+    stored = set(
+        (await seeded_db.execute(text("SELECT code_hash FROM recovery_codes WHERE user_id = :id"), {"id": ana["id"]})).scalars()
+    )
+    assert not stored & {hashlib.sha256(code.encode()).hexdigest() for code in codes}
+
+    again = await start_login(second_client(client), "ana@firm.be")
+    assert (await submit_code(client, again["challenge"], codes[1].lower().replace("-", " "))).status_code == 200

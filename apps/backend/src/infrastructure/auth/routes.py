@@ -4,7 +4,6 @@ from crudauth import Principal
 from crudauth.exceptions import UnauthorizedException
 from fastapi import APIRouter, Depends, Request, Response
 
-from ...modules.audit.service import AuditService
 from ...modules.user.crud import crud_users
 from ...modules.user.schemas import UserRead
 from ..dependencies import AsyncSessionDep
@@ -15,8 +14,6 @@ from .setup import auth as crud_auth
 logger = get_logger()
 
 router = APIRouter(tags=["Authentication"])
-
-audit = AuditService()
 
 
 @router.post(

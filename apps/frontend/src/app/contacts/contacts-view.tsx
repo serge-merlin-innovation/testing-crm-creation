@@ -4,12 +4,14 @@ import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fieldErrors, readDetail } from "@/lib/deals";
 import type { Language, MessageKey } from "@/lib/i18n/messages";
+import { contactPayload, RECORD_LANGUAGES } from "@/lib/records";
 import { sendJson, useApiData } from "@/lib/use-api";
 import { WhoKnows } from "./who-knows";
 
@@ -35,6 +37,8 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
   const companies = useApiData<Company[]>("/api/v1/companies/?limit=200");
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone: "", source: "", function: "" });
   const [companyId, setCompanyId] = useState(NO_COMPANY);
+  const [recordLanguage, setRecordLanguage] = useState<Language>("en");
+  const [optOut, setOptOut] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
   const [selected, setSelected] = useState<Contact | null>(null);
@@ -49,15 +53,15 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
     event.preventDefault();
     setErrors({});
     setNotice("");
-    const result = await sendJson("/api/v1/contacts/", "POST", {
-      first_name: form.first_name,
-      last_name: form.last_name,
-      email: form.email || null,
-      phone: form.phone || null,
-      source: form.source,
-      function: form.function || null,
-      company_id: companyId === NO_COMPANY ? null : Number(companyId),
-    });
+    const result = await sendJson(
+      "/api/v1/contacts/",
+      "POST",
+      contactPayload(form, {
+        companyId: companyId === NO_COMPANY ? null : Number(companyId),
+        language: recordLanguage,
+        marketingOptOut: optOut,
+      }),
+    );
     if (result.status === 201) {
       const warnings = (result.body as { warnings?: string[] }).warnings ?? [];
       setNotice(
@@ -66,6 +70,7 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
           : messages["contacts.created"],
       );
       setForm({ first_name: "", last_name: "", email: "", phone: "", source: "", function: "" });
+      setOptOut(false);
       await contacts.reload();
       return;
     }
@@ -113,7 +118,7 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
               <AlertDescription>{messages["common.loadFailed"]}</AlertDescription>
             </Alert>
           ) : null}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -194,6 +199,29 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
                 </Select>
               </Field>
               {textField("function", "contacts.function")}
+              <Field>
+                <FieldLabel htmlFor="contact-language">{messages["records.language"]}</FieldLabel>
+                <Select value={recordLanguage} onValueChange={(value) => setRecordLanguage(value as Language)}>
+                  <SelectTrigger id="contact-language">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RECORD_LANGUAGES.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {messages[`records.language.${value}`]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field orientation="horizontal">
+                <Checkbox
+                  id="contact-opt-out"
+                  checked={optOut}
+                  onCheckedChange={(checked) => setOptOut(checked === true)}
+                />
+                <FieldLabel htmlFor="contact-opt-out">{messages["contacts.marketingOptOut"]}</FieldLabel>
+              </Field>
               {errors.form ? (
                 <Alert variant="destructive">
                   <AlertDescription>{errors.form}</AlertDescription>

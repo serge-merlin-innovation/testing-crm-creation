@@ -1,8 +1,9 @@
 """Home page, firm dashboard, fee forecast and win/loss report (REP-01..04).
 
 The wall (AUTHZ-02 c4): a deal the viewer cannot read never appears by id, code name, client or
-fee in any payload here. The firm dashboard may count such deals, but only inside a cell holding at
-least HIDDEN_CELL_MINIMUM of them, so no total moves by one hidden deal.
+fee in any payload here. The firm dashboard counts such deals only in its firm-wide totals, and only
+once there are at least HIDDEN_CELL_MINIMUM of them: no stage, type or quarter cell ever holds one,
+so comparing dashboards over time cannot show a hidden deal moving between cells.
 """
 
 import io
@@ -17,6 +18,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..audit.service import AuditContext, AuditService
+from ..common.spreadsheet import safe_row
 from ..fee.models import FeeTerms, Invoice
 from ..fee.schemas import FeeTermsValues, InvoiceType, LehmanTier, SuccessFeeKind
 from ..fee.service import net_fee
@@ -259,26 +261,26 @@ class ReportingService:
         cells: dict[tuple[str, str], list[_Deal]] = defaultdict(list)
         for deal in deals:
             cells[(deal.mandate.stage, deal.mandate.type)].append(deal)
-        counted: list[_Deal] = []
+        seen = [deal for deal in deals if deal.mandate.id in visible]
+        hidden = _anonymous([deal for deal in deals if deal.mandate.id not in visible])
         by_stage_and_type = []
         for stage in DealStage:
             for (cell_stage, cell_type), members in sorted(cells.items()):
                 if cell_stage != stage:
                     continue
-                shown = _shown(members, visible)
-                counted += shown
+                shown = [deal for deal in members if deal.mandate.id in visible]
                 if shown:
                     by_stage_and_type.append({"stage": stage, "type": cell_type, "count": len(shown)})
-        result: dict[str, Any] = {"total_mandates": len(counted), "by_stage_and_type": by_stage_and_type}
+        result: dict[str, Any] = {"total_mandates": len(seen) + len(hidden), "by_stage_and_type": by_stage_and_type}
 
         if has_permission(user, Permission.FEES_READ):
             quarters: dict[str, list[_Deal]] = defaultdict(list)
-            for deal in deals:
+            for deal in seen:
                 if deal.terms is not None:
                     quarters[quarter_of(deal.closing)].append(deal)
             fees = []
             for quarter in sorted(quarters, key=lambda q: (q == "unscheduled", q)):
-                shown = _shown(quarters[quarter], visible)
+                shown = quarters[quarter]
                 if shown:
                     fees.append(
                         {
@@ -289,6 +291,10 @@ class ReportingService:
                         }
                     )
             result["weighted_fees_by_quarter"] = fees
+            hidden_fees = _anonymous([deal for deal in hidden if deal.terms is not None])
+            result["other_teams_weighted_fees"] = (
+                _money(sum((d.expected_fee * d.probability / 100 for d in hidden_fees), Decimal("0"))) if hidden_fees else None
+            )
         return result
 
     # REP-03: fee forecast
@@ -348,17 +354,21 @@ class ReportingService:
         sheet = book.active
         assert sheet is not None
         sheet.title = "Fee forecast"
-        sheet.append(["Month", "Retainers (EUR)", "Success fees (EUR)", "Forecast (EUR)", "Invoiced (EUR)", "Paid (EUR)"])
+        sheet.append(
+            safe_row(["Month", "Retainers (EUR)", "Success fees (EUR)", "Forecast (EUR)", "Invoiced (EUR)", "Paid (EUR)"])
+        )
         for row in forecast["months"]:
             sheet.append(
-                [
-                    row["month"],
-                    float(row["retainers"]),
-                    float(row["success_fees"]),
-                    float(row["forecast_total"]),
-                    float(row["actual_invoiced"]),
-                    float(row["actual_paid"]),
-                ]
+                safe_row(
+                    [
+                        row["month"],
+                        float(row["retainers"]),
+                        float(row["success_fees"]),
+                        float(row["forecast_total"]),
+                        float(row["actual_invoiced"]),
+                        float(row["actual_paid"]),
+                    ]
+                )
             )
         self.audit.record(
             db, context, "export", record_type="fee_terms", new_values={"kind": "fee_forecast", "rows": len(forecast["months"])}
@@ -431,11 +441,9 @@ class ReportingService:
         }
 
 
-def _shown(members: list[_Deal], visible: set[int]) -> list[_Deal]:
-    """The visible deals of a cell, plus its hidden ones only when there are enough to stay anonymous."""
-    seen = [deal for deal in members if deal.mandate.id in visible]
-    hidden = [deal for deal in members if deal.mandate.id not in visible]
-    return seen + hidden if len(hidden) >= HIDDEN_CELL_MINIMUM else seen
+def _anonymous(hidden: list[_Deal]) -> list[_Deal]:
+    """Hidden deals, only when there are enough of them that no single one can be singled out."""
+    return hidden if len(hidden) >= HIDDEN_CELL_MINIMUM else []
 
 
 def or_none_expiry(column: Any, now: datetime) -> Any:

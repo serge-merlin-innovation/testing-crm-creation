@@ -64,12 +64,14 @@ class EmailLoggingService:
     async def address_for(self, db: AsyncSession, user: dict[str, Any], now: datetime) -> str:
         row = (await db.execute(select(LoggingAddress).where(LoggingAddress.user_id == user["id"]))).scalar_one_or_none()
         if row is None:
-            row = LoggingAddress(user_id=user["id"], token=f"log-{secrets.token_hex(8)}", created_at=now)
+            row = LoggingAddress(user_id=user["id"], token=f"log-{secrets.token_hex(16)}", created_at=now)
             db.add(row)
             await db.commit()
         return self.address(row.token)
 
     async def _sender(self, db: AsyncSession, email: InboundEmail) -> dict[str, Any]:
+        if (email.spf or "").lower() != "pass" or (email.dkim or "").lower() != "pass":
+            raise UnknownSenderError("Sender not authenticated by SPF and DKIM")
         sender = addresses([email.sender])
         if not sender:
             raise UnknownSenderError("No sender address")

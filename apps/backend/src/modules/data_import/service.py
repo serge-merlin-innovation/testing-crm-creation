@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...infrastructure.clock import FrozenClock
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import ImportNotFoundError, ValidationError
+from ..common.spreadsheet import safe_row
 from ..company.enterprise_number import normalize_enterprise_number
 from ..company.models import Company
 from ..company.schemas import CompanyType
@@ -428,10 +429,10 @@ class ImportService:
             raise ValidationError("The import has not finished", field="import_id")
         workbook = Workbook(write_only=True)
         sheet = workbook.create_sheet("Errors")
-        sheet.append(["Row", *record.headers, "Errors"])
+        sheet.append(safe_row(["Row", *record.headers, "Errors"]))
         for result in record.results:
             if result["status"] == RowStatus.ERROR.value:
-                sheet.append([result["row"], *record.rows[result["row"] - 2], "; ".join(result["errors"])])
+                sheet.append(safe_row([result["row"], *record.rows[result["row"] - 2], "; ".join(result["errors"])]))
         buffer = io.BytesIO()
         workbook.save(buffer)
         return buffer.getvalue()

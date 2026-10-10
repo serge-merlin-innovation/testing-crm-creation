@@ -32,6 +32,25 @@ def _digest(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()
 
 
+RECOVERY_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+RECOVERY_CODE_LENGTH = 12
+
+
+def _new_recovery_code() -> str:
+    symbols = "".join(secrets.choice(RECOVERY_ALPHABET) for _ in range(RECOVERY_CODE_LENGTH))
+    return "-".join(symbols[index : index + 4] for index in range(0, RECOVERY_CODE_LENGTH, 4))
+
+
+def _normalise_recovery_code(code: str) -> str:
+    return "".join(character for character in code.upper() if character.isalnum())
+
+
+def _recovery_hash(code: str) -> str:
+    return hmac.new(
+        settings.SECRET_KEY.encode(), f"recovery:{_normalise_recovery_code(code)}".encode(), hashlib.sha256
+    ).hexdigest()
+
+
 def _sign(payload: str) -> str:
     return hmac.new(settings.SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
 
@@ -184,7 +203,7 @@ class SecurityService:
             await db.execute(
                 select(RecoveryCode).where(
                     RecoveryCode.user_id == state.user_id,
-                    RecoveryCode.code_hash == _digest(code.strip().upper()),
+                    RecoveryCode.code_hash == _recovery_hash(code),
                     RecoveryCode.used_at.is_(None),
                 )
             )
@@ -196,9 +215,9 @@ class SecurityService:
 
     async def issue_recovery_codes(self, db: AsyncSession, user_id: int) -> list[str]:
         await db.execute(delete(RecoveryCode).where(RecoveryCode.user_id == user_id))
-        codes = [f"{secrets.token_hex(2)}-{secrets.token_hex(2)}".upper() for _ in range(RECOVERY_CODE_COUNT)]
+        codes = [_new_recovery_code() for _ in range(RECOVERY_CODE_COUNT)]
         for code in codes:
-            db.add(RecoveryCode(user_id=user_id, code_hash=_digest(code)))
+            db.add(RecoveryCode(user_id=user_id, code_hash=_recovery_hash(code)))
         return codes
 
     async def trust_device(self, db: AsyncSession, user_id: int, now: datetime) -> str:
