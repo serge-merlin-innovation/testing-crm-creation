@@ -516,3 +516,27 @@ async def test_con01_c5_do_not_contact_blocks_buyer_outreach(world):
     assert added.status_code == 422
     assert "Do not contact" in added.text
     assert (await buyers(world, mandate_id))["buyers"] == []
+
+
+# Merge (CON-04) carries the buyer slice along.
+
+
+async def test_merging_a_buyer_company_moves_its_profile_and_deal_buyer_rows(world):
+    survivor = await company(world, "Northstar Capital")
+    duplicate = await company(world, "Northstar Capital Partners")
+    await profile(world, duplicate)
+    mandate_id = await deal(world)
+    await add(world, mandate_id, [duplicate])
+
+    response = await send(
+        world.partner,
+        "POST",
+        "/api/v1/merges/",
+        {"record_type": "company", "survivor_id": survivor, "duplicate_id": duplicate},
+    )
+    view = (await get(world.partner, f"/api/v1/companies/{survivor}/investor-profile")).json()
+
+    assert response.status_code == 201, response.text
+    assert [row["company_id"] for row in (await buyers(world, mandate_id))["buyers"]] == [survivor]
+    assert view["has_profile"] is True
+    assert view["sector_ids"] == [world.sector_id]

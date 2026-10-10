@@ -10,13 +10,19 @@ export type NavigationItem = {
 
 const PRIMARY_NAVIGATION: NavigationItem[] = [
   { label: "nav.overview", href: "/overview" },
+  { label: "nav.search", href: "/search" },
   { label: "nav.deals", href: "/deals", requires: "deals.read_staffed" },
+  { label: "nav.fees", href: "/fees" },
   { label: "nav.companies", href: "/companies" },
   { label: "nav.contacts", href: "/contacts" },
   { label: "nav.analytics", href: "/analytics" },
   { label: "nav.users", href: "/users" },
   { label: "nav.permissions", href: "/permissions" },
   { label: "nav.picklists", href: "/picklists" },
+  { label: "nav.merge", href: "/merge" },
+  { label: "nav.imports", href: "/imports" },
+  { label: "nav.privacy", href: "/privacy", requires: "privacy.manage" },
+  { label: "nav.exports", href: "/exports" },
   { label: "nav.stageCriteria", href: "/stage-criteria" },
   { label: "nav.conflictReviews", href: "/conflict-reviews" },
 ];

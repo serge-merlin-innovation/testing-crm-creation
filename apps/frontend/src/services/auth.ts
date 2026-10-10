@@ -63,7 +63,7 @@ async function postLoginStep(path: string, init: RequestInit): Promise<LoginStep
 
   if (!response.ok) {
     throw new AuthenticationError(
-      await refusalDetail(response, "Check your details and try again."),
+      await passwordRefusal(response, "Check your details and try again."),
     );
   }
 
@@ -114,4 +114,69 @@ export async function logout(): Promise<void> {
   }
 
   clearApiCsrfToken();
+}
+
+export type Invitation = { email: string; firstName: string | null };
+
+/** A 410 is the backend's own "expired or already used" sentence, shown as is. */
+export async function readInvitation(token: string): Promise<Invitation> {
+  let response: Response;
+  try {
+    response = await apiFetch(`/api/v1/auth/invitations?token=${encodeURIComponent(token)}`, { bounce: false });
+  } catch {
+    throw new AuthenticationError("We could not reach the backend.");
+  }
+  if (!response.ok) {
+    throw new AuthenticationError(await refusalDetail(response, "This invitation link is not valid."));
+  }
+  const payload: unknown = await response.json().catch(() => null);
+  return { email: readString(payload, "email") ?? "", firstName: readString(payload, "first_name") ?? null };
+}
+
+/** Sets the password, then hands back the enrolment step that the login form finishes. */
+export function acceptInvitation(token: string, password: string): Promise<LoginStep> {
+  return postLoginStep("/api/v1/auth/invitations/accept", {
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, password }),
+  });
+}
+
+async function postAccountForm(path: string, body: unknown, fallback: string): Promise<void> {
+  let response: Response;
+  try {
+    response = await apiFetch(path, {
+      method: "POST",
+      csrf: false,
+      bounce: false,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new AuthenticationError("We could not reach the backend.");
+  }
+  if (!response.ok) {
+    throw new AuthenticationError(await passwordRefusal(response, fallback));
+  }
+}
+
+/** A policy refusal arrives as `errors[{field: "password", message}]`; other refusals as `detail`. */
+async function passwordRefusal(response: Response, fallback: string): Promise<string> {
+  if (response.status >= 500) {
+    return SERVER_ERROR;
+  }
+  const payload: unknown = await response.json().catch(() => null);
+  const errors = typeof payload === "object" && payload !== null ? (payload as { errors?: unknown }).errors : null;
+  if (Array.isArray(errors)) {
+    const message = errors.map((error) => readString(error, "message")).find((text) => text);
+    if (message) return message;
+  }
+  return readString(payload, "detail") ?? fallback;
+}
+
+export function requestPasswordReset(email: string): Promise<void> {
+  return postAccountForm("/api/v1/auth/password/forgot", { email }, "We could not send the link.");
+}
+
+export function resetPassword(token: string, password: string): Promise<void> {
+  return postAccountForm("/api/v1/auth/password/reset", { token, password }, "We could not change the password.");
 }

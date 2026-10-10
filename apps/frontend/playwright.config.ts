@@ -49,6 +49,9 @@ export default defineConfig({
         // configuration varies proves nothing. CSRF on is what exercises apiFetch's mint-and-retry.
         CSRF_ENABLED: "true",
         SESSION_SECURE_COOKIES: "false",
+        // The feed URL is built from APP_URL; the inbound-mail webhook needs a secret to accept anything.
+        APP_URL: FRONTEND_URL,
+        INBOUND_EMAIL_SECRET: "e2e-inbound-secret",
       },
     },
     {

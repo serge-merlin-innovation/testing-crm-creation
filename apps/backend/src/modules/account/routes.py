@@ -37,7 +37,7 @@ policy_router = APIRouter(tags=["Authentication"])
 
 UserManagerDep = Annotated[dict[str, Any], require_permission(Permission.USERS_MANAGE)]
 SettingsManagerDep = Annotated[dict[str, Any], require_permission(Permission.SETTINGS_MANAGE)]
-Status = Annotated[str | None, Query(pattern="^(invited|active)$")]
+Status = Annotated[str | None, Query(pattern="^(invited|active|inactive)$")]
 
 FORGOT_MESSAGE = "If an account exists for this email, we sent a link to reset the password. It is valid for 30 minutes."
 REFUSED = {

@@ -59,22 +59,6 @@ async def update_user(
 
 
 @router.delete(
-    "/{user_id}",
-    summary="Deactivate a user (Admin)",
-    responses={403: {"description": "Requires users.manage, or this is the last Admin"}},
-)
-async def delete_user(
-    user_id: int,
-    db: AsyncSessionDep,
-    user_service: UserServiceDep,
-    context: AuditContextDep,
-    _: UserManagerDep,
-) -> dict[str, str]:
-    await user_service.delete(user_id, db, context)
-    return {"message": "User account deactivated"}
-
-
-@router.delete(
     "/{user_id}/personal-data",
     summary="Anonymise a user's personal data (Admin)",
     responses={403: {"description": "Requires users.manage, or this is the last Admin"}},

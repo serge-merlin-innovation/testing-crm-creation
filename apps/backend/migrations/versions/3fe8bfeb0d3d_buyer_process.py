@@ -1,7 +1,7 @@
 """buyer process: investor profiles, client exclusions, deal buyers, NDAs (ticket #13)
 
 Revision ID: 3fe8bfeb0d3d
-Revises: 4969f590271f
+Revises: b3f5916e42d1
 Create Date: 2026-10-10 10:40:53.098908
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "3fe8bfeb0d3d"
-down_revision: str | Sequence[str] | None = "4969f590271f"
+down_revision: str | Sequence[str] | None = "b3f5916e42d1"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

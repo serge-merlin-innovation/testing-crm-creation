@@ -27,6 +27,13 @@ const admin: Viewer = {
 };
 
 describe("audienceFor", () => {
+  // AUTH-08/AUTH-10: the emailed links open before the person can sign in.
+  it("opens the invitation and reset pages to anonymous visitors", () => {
+    for (const path of ["/accept-invitation", "/reset-password"]) {
+      expect(satisfiesAudience(audienceFor(path), anonymous)).toBe(true);
+    }
+  });
+
   it("reads a listed page straight off the manifest", () => {
     expect(audienceFor("/users")).toEqual({ kind: "permission", permission: "users.manage" });
     expect(audienceFor("/permissions")).toEqual({ kind: "permission", permission: "roles.manage" });

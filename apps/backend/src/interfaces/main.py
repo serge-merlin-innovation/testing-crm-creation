@@ -18,8 +18,12 @@ from ..modules.api_access.dependencies import resolve_bearer
 from ..modules.buyer.jobs import register_jobs as register_buyer_jobs
 from ..modules.compliance.jobs import register_jobs as register_compliance_jobs
 from ..modules.compliance.service import install as install_compliance
+from ..modules.data_import.jobs import register_jobs as register_import_jobs
+from ..modules.fee.service import on_closed_won as raise_invoice_task
 from ..modules.mandate.jobs import register_jobs as register_deal_jobs
+from ..modules.mandate.pipeline import on_closed_won
 from ..modules.picklist.service import seed_default_picklists
+from ..modules.privacy.jobs import register_jobs as register_privacy_jobs
 from ..modules.role.authorization import require_permission
 from ..modules.role.permissions import Permission
 from ..modules.role.service import seed_default_roles
@@ -27,7 +31,10 @@ from ..modules.task.jobs import register_jobs as register_task_jobs
 
 settings = get_settings()
 register_task_jobs()
+register_import_jobs()
+register_privacy_jobs()
 register_deal_jobs()
+on_closed_won(raise_invoice_task)
 register_compliance_jobs()
 register_buyer_jobs()
 install_compliance()
