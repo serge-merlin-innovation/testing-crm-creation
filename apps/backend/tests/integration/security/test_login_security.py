@@ -244,7 +244,7 @@ async def test_trusted_device_skips_code_for_thirty_days_unless_admin_disables(c
     assert (await start_login(client, "ana@firm.be"))["step"] == "code"
 
 
-# AUTH-02 c5: admin resets 2FA, the user re-enrols at next login, the reset is audited.
+# AUTH-02 c6: admin resets 2FA, the user re-enrols at next login, the reset is audited.
 async def test_admin_2fa_reset_forces_re_enrolment_and_is_audited(client, seeded_db, clock, mailbox):
     await make_user(seeded_db, "admin@firm.be", RoleName.ADMIN)
     ana = await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
