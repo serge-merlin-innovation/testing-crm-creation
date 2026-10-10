@@ -49,7 +49,6 @@ async def test_seeding_twice_keeps_admin_edits(fresh_db: AsyncSession, startup_a
     assert partner.permissions == ["dashboard.firm"]
 
 
-# Login is by email; there is no username field anywhere.
 async def test_login_is_by_email(client: AsyncClient, seeded_db: AsyncSession):
     await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
 
