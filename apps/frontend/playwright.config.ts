@@ -1,10 +1,15 @@
-import { defineConfig, devices, type ReporterDescription } from "@playwright/test";
+import {
+  defineConfig,
+  devices,
+  type ReporterDescription,
+} from "@playwright/test";
 
 // Dedicated ports, and servers are never reused: on the default ports Playwright will happily
 // adopt whatever already answers — a stale build, or another project's app entirely — and the
 // suite then passes or fails against code nobody is looking at.
-const FRONTEND_PORT = "3100";
-const BACKEND_PORT = "8100";
+// Overridable so parallel worktrees can each run their own suite.
+const FRONTEND_PORT = process.env.E2E_FRONTEND_PORT ?? "3100";
+const BACKEND_PORT = process.env.E2E_BACKEND_PORT ?? "8100";
 const FRONTEND_URL = `http://localhost:${FRONTEND_PORT}`;
 const BACKEND_URL = `http://localhost:${BACKEND_PORT}`;
 
@@ -18,7 +23,12 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: [
-    ...(process.env.CI ? ([["list"], ["html", { open: "never" }]] satisfies ReporterDescription[]) : [["list"] as const]),
+    ...(process.env.CI
+      ? ([
+          ["list"],
+          ["html", { open: "never" }],
+        ] satisfies ReporterDescription[])
+      : [["list"] as const]),
     ["../../scripts/check-failures/playwright-reporter.mjs"],
   ],
   use: {
