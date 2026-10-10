@@ -15,6 +15,7 @@ from ..common.exceptions import ContactNotFoundError, DomainError, PermissionDen
 from ..contact.models import Contact
 from ..mandate.models import Mandate
 from ..mandate.policy import DealAction, DealPolicy
+from ..role.authorization import has_record_access
 from ..user.crud import crud_users
 from ..user.models import User
 from ..user.schemas import UserRead
@@ -78,6 +79,8 @@ class EmailLoggingService:
             user = await crud_users.get(db=db, id=raw, schema_to_select=UserRead) if raw is not None else None
         if user is None:
             raise UnknownSenderError("Sender is not a CRM user")
+        if not has_record_access(user):
+            raise UnknownSenderError("Sender's role does not log records")
         recipients = addresses(email.to + email.cc + email.bcc)
         domain = "@" + settings.INBOUND_EMAIL_DOMAIN.lower()
         tokens = [address.removesuffix(domain) for address in recipients if address.endswith(domain)]

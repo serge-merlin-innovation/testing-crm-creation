@@ -4,6 +4,7 @@ from fastapi import APIRouter, Response
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
+from ..role.authorization import RequireRecordAccess
 from .dependencies import CalendarFeedServiceDep
 from .schemas import CalendarFeedRead
 
@@ -16,6 +17,7 @@ def _read(service: Any, feed: Any) -> dict[str, Any]:
 
 @router.get(
     "/",
+    dependencies=[RequireRecordAccess],
     response_model=CalendarFeedRead,
     summary="My private iCal feed URL",
     description="Subscribe to it in any calendar app: my meetings, open tasks and my deals' milestones.",
@@ -28,6 +30,7 @@ async def my_feed(
 
 @router.post(
     "/regenerate",
+    dependencies=[RequireRecordAccess],
     response_model=CalendarFeedRead,
     summary="Replace my feed URL; the old one stops working at once",
 )

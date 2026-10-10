@@ -169,7 +169,9 @@ async def add_buyers(
     description="Buyer, type, rationale and contact. Internal notes are never exported.",
     responses={**HIDDEN, 200: {"content": {XLSX: {}}}},
 )
-async def export_buyers(grant: ExportGrant, db: AsyncSessionDep, service: BuyerServiceDep, context: AuditContextDep) -> Response:
+async def export_buyers(
+    grant: ExportGrant, db: AsyncSessionDep, service: BuyerServiceDep, context: AuditContextDep
+) -> Response:
     content = await service.export(db, grant, context)
     return Response(
         content,

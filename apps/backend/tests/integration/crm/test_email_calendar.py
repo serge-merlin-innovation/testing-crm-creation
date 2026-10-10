@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
 from src.infrastructure.config.settings import settings
-from src.modules.email_logging.models import LoggedEmail, UnmatchedEmail
+from src.modules.email_logging.models import LoggedEmail, LoggingAddress, UnmatchedEmail
 from src.modules.role.permissions import RoleName
 from tests.integration.crm.deal_helpers import build_world, create_mandate
 
@@ -350,3 +350,25 @@ async def test_regenerating_the_feed_url_kills_the_old_one(world):
 
 async def test_a_guessed_feed_token_is_not_found(world):
     assert (await world.anon.get("/api/v1/calendar-feed/ics/not-a-token.ics")).status_code == 404
+
+
+# Review S3 (ROLE-01 c3): Read-only gets no logging address or feed, and a stale address logs nothing.
+async def test_read_only_cannot_log_email_or_hold_a_feed(world):
+    viewer = await world.actor("rita", RoleName.READ_ONLY)
+    for method, path in (
+        ("GET", "/api/v1/email-logging/address"),
+        ("GET", "/api/v1/email-logging/unmatched"),
+        ("DELETE", "/api/v1/email-logging/unmatched/1"),
+        ("POST", "/api/v1/email-logging/unmatched/1/link"),
+        ("GET", "/api/v1/calendar-feed/"),
+        ("POST", "/api/v1/calendar-feed/regenerate"),
+    ):
+        response = await viewer.client.request(method, path, json={"links": []}, headers=viewer.headers)
+        assert response.status_code == 403, (path, response.text)
+
+    world.db.add(LoggingAddress(user_id=viewer.id, token="log-stale", created_at=NOW))
+    await world.db.commit()
+    stale = f"log-stale@{settings.INBOUND_EMAIL_DOMAIN}"
+    response = await inbound(world, sender=viewer.email, to=["jan@acme.be"], bcc=[stale])
+    assert response.status_code == 403, response.text
+    assert await timeline(world.partner, "contact", world.contact_id) == []
