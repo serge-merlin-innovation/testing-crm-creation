@@ -11,6 +11,7 @@ export type NavigationItem = {
 const PRIMARY_NAVIGATION: NavigationItem[] = [
   { label: "nav.overview", href: "/overview" },
   { label: "nav.deals", href: "/deals", requires: "deals.read_staffed" },
+  { label: "nav.origination", href: "/origination", requires: "deals.read_staffed" },
   { label: "nav.fees", href: "/fees" },
   { label: "nav.companies", href: "/companies" },
   { label: "nav.contacts", href: "/contacts" },

@@ -320,6 +320,27 @@ class OriginationService:
         await db.commit()
         await self.notifications.flush_emails()
 
+    async def candidates(self, db: AsyncSession, opportunity: Opportunity) -> list[dict[str, Any]]:
+        """Colleagues who can be invited: active, with a role that reads staffed deals."""
+        invited = select(OpportunityMember.user_id).where(OpportunityMember.opportunity_id == opportunity.id)
+        users = (
+            await db.execute(
+                select(User)
+                .where(
+                    User.is_deleted.is_(False),
+                    User.role_id.is_not(None),
+                    User.id != opportunity.owner_id,
+                    User.id.not_in(invited),
+                )
+                .order_by(User.name)
+            )
+        ).scalars()
+        return [
+            {"user_id": user.id, "name": _user_name(user), "role_name": user.role_name}
+            for user in users
+            if Permission.DEALS_READ_STAFFED.value in (user.permissions or [])
+        ]
+
     async def remove_member(self, db: AsyncSession, opportunity: Opportunity, user_id: int, context: AuditContext) -> None:
         member = (
             await db.execute(

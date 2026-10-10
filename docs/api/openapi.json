@@ -11869,6 +11869,62 @@
         ]
       }
     },
+    "/api/v1/origination/opportunities/{opportunity_id}/candidates": {
+      "get": {
+        "operationId": "list_candidates_api_v1_origination_opportunities__opportunity_id__candidates_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "name": "name",
+                    "role_name": "text",
+                    "user_id": 1
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemberRead"
+                  },
+                  "title": "Response List Candidates Api V1 Origination Opportunities  Opportunity Id  Candidates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Colleagues the owner can invite",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
     "/api/v1/origination/opportunities/{opportunity_id}/credentials": {
       "post": {
         "operationId": "add_credential_api_v1_origination_opportunities__opportunity_id__credentials_post",

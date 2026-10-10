@@ -17,6 +17,7 @@ from .schemas import (
     LinkCreate,
     LinkRead,
     MemberCreate,
+    MemberRead,
     OpportunityCreate,
     OpportunityListItem,
     OpportunityRead,
@@ -227,6 +228,18 @@ async def add_member(
     except ResourceExistsError as error:
         raise HTTPException(status_code=409, detail="This colleague already sees the opportunity.") from error
     return await service.read(db, user, opportunity)
+
+
+@router.get(
+    "/opportunities/{opportunity_id}/candidates",
+    response_model=list[MemberRead],
+    summary="Colleagues the owner can invite",
+    responses=HIDDEN,
+)
+async def list_candidates(
+    opportunity_id: int, db: AsyncSessionDep, service: OriginationServiceDep, user: CurrentUserDep
+) -> list[dict[str, Any]]:
+    return await service.candidates(db, await service.owned(db, user, opportunity_id))
 
 
 @router.delete(

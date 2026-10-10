@@ -37,7 +37,12 @@ describe("getPrimaryNavigation", () => {
   });
 
   it("gives an analyst deals, companies and contacts but no administration", () => {
-    expect(hrefs(getPrimaryNavigation(analyst))).toEqual(["/overview", "/deals", "/companies", "/contacts"]);
+    expect(hrefs(getPrimaryNavigation(analyst))).toEqual(["/overview", "/deals", "/origination", "/companies", "/contacts"]);
+  });
+
+  // ORI-01 c3: origination follows the deal wall, so roles without deals.read_staffed get no link.
+  it("hides origination from an admin", () => {
+    expect(hrefs(getPrimaryNavigation(admin))).not.toContain("/origination");
   });
 
   // ROLE-01 c2: an Admin has no deal permission, so no Deals link.

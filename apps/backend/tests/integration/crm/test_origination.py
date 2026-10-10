@@ -115,6 +115,9 @@ async def test_opportunity_is_visible_only_to_owner_and_invited_colleagues(world
     for stranger in (world.outsider, world.colleague, world.compliance, world.admin):
         assert (await get(stranger, path)).status_code == 404
         assert (await get(stranger, f"{BASE}/opportunities")).json() == []
+    candidates = {row["user_id"] for row in (await get(world.partner, f"{path}/candidates")).json()}
+    assert world.colleague.id in candidates
+    assert world.admin.id not in candidates
     await invite(world, created["id"], world.colleague)
     assert (await get(world.colleague, path)).status_code == 200
     assert [row["id"] for row in (await get(world.colleague, f"{BASE}/opportunities")).json()] == [created["id"]]
