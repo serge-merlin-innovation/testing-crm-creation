@@ -274,7 +274,12 @@ async def test_audit_entries_carry_user_time_ip_record_and_values(client: AsyncC
     csrf = await login(client, "admin@firm.be")
     created = await client.post(
         "/api/v1/users/",
-        json={"name": "New Hire", "email": "hire@firm.be", "password": "Str0ng!pass"},
+        json={
+            "first_name": "New",
+            "last_name": "Hire",
+            "email": "hire@firm.be",
+            "role_id": await role_id(seeded_db, RoleName.PARTNER),
+        },
         headers=csrf,
     )
     assert created.status_code == 201, created.text

@@ -1,6 +1,5 @@
 from typing import Any
 
-from crudauth import get_password_hash
 from fastcrud.types import GetMultiResponseDict
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +18,7 @@ from ..role.models import Role
 from ..role.permissions import Permission, RoleName
 from .crud import crud_users
 from .models import User
-from .schemas import UserAnonymize, UserCreate, UserCreateInternal, UserRead, UserRoleUpdate, UserUpdate
+from .schemas import UserAnonymize, UserRead, UserRoleUpdate, UserUpdate
 
 AUDITED_PROFILE_FIELDS = ("name", "email", "profile_image_url")
 
@@ -27,25 +26,6 @@ AUDITED_PROFILE_FIELDS = ("name", "email", "profile_image_url")
 class UserService:
     def __init__(self, audit: AuditService | None = None) -> None:
         self.audit = audit or AuditService()
-
-    async def create(self, user: UserCreate, db: AsyncSession, context: AuditContext) -> dict[str, Any]:
-        if await crud_users.exists(db=db, email=user.email):
-            raise UserExistsError("Email already registered")
-
-        internal = UserCreateInternal(name=user.name, email=user.email, hashed_password=get_password_hash(user.password))
-        created = User(**internal.model_dump())
-        db.add(created)
-        await db.flush()
-        self.audit.record(
-            db,
-            context,
-            "user.created",
-            record_type="user",
-            record_id=created.id,
-            new_values={"name": created.name, "email": created.email},
-        )
-        await db.commit()
-        return await self.get_by_id(created.id, db)
 
     async def get_paginated(self, db: AsyncSession, skip: int = 0, limit: int = 100) -> GetMultiResponseDict:
         return await crud_users.get_multi(db=db, offset=skip, limit=limit, schema_to_select=UserRead, is_deleted=False)

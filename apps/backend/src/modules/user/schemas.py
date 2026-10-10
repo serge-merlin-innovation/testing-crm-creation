@@ -5,12 +5,6 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from ..common.schemas import PersistentDeletion, TimestampSchema
 
-PASSWORD_FIELD = Field(
-    min_length=8,
-    description="At least 8 characters.",
-    examples=["Str1ngst!"],
-)
-
 
 class UserBase(BaseModel):
     name: Annotated[str, Field(min_length=2, max_length=100, examples=["Ann Peeters"])]
@@ -37,16 +31,22 @@ class UserRead(BaseModel):
     role_name: str | None = None
     permissions: list[str] | None = None
     email_verified: bool = False
+    first_name: str | None = None
+    last_name: str | None = None
+    title: str | None = None
+    status: str = "active"
 
 
-class UserCreate(UserBase):
-    password: Annotated[str, PASSWORD_FIELD]
+class UserCreate(BaseModel):
+    """An admin creates the account as Invited; the person sets their own password from the invitation."""
 
     model_config = ConfigDict(extra="forbid")
 
-
-class UserCreateInternal(UserBase):
-    hashed_password: str
+    first_name: Annotated[str, Field(min_length=1, max_length=50, examples=["Ann"])]
+    last_name: Annotated[str, Field(min_length=1, max_length=50, examples=["Peeters"])]
+    email: Annotated[EmailStr, Field(examples=["ann.peeters@firm.be"])]
+    title: Annotated[str | None, Field(max_length=100, examples=["Associate"])] = None
+    role_id: int
 
 
 class UserUpdate(BaseModel):

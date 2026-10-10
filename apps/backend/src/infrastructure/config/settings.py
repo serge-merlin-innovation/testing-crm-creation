@@ -138,6 +138,7 @@ class AppSettings(BaseSettings):
     CONTACT_NAME: str = config("CONTACT_NAME", default="Support")
     CONTACT_EMAIL: str = config("CONTACT_EMAIL", default="support@example.com")
     LICENSE_NAME: str = config("LICENSE_NAME", default="All rights reserved.")
+    APP_URL: str = config("APP_URL", default="http://localhost:3000")
 
 
 class FirstAdminSettings(BaseSettings):

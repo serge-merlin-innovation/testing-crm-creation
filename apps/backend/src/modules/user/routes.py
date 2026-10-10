@@ -1,52 +1,17 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Query
-from fastcrud import PaginatedListResponse, compute_offset, paginated_response
+from fastapi import APIRouter
 
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
 from .dependencies import UserServiceDep
-from .schemas import UserCreate, UserRead, UserRoleUpdate, UserUpdate
+from .schemas import UserRead, UserRoleUpdate, UserUpdate
 
 router = APIRouter(tags=["Users"])
 
 UserManagerDep = Annotated[dict[str, Any], require_permission(Permission.USERS_MANAGE)]
-
-
-@router.post(
-    "/",
-    status_code=201,
-    response_model=UserRead,
-    summary="Create a user (Admin)",
-    responses={403: {"description": "Requires users.manage"}, 409: {"description": "Email already exists"}},
-)
-async def create_user(
-    user: UserCreate,
-    db: AsyncSessionDep,
-    user_service: UserServiceDep,
-    context: AuditContextDep,
-    _: UserManagerDep,
-) -> dict[str, Any]:
-    return await user_service.create(user, db, context)
-
-
-@router.get(
-    "/",
-    response_model=PaginatedListResponse[UserRead],
-    summary="List users (Admin)",
-    responses={401: {"description": "Not authenticated"}, 403: {"description": "Requires users.manage"}},
-)
-async def get_users(
-    db: AsyncSessionDep,
-    user_service: UserServiceDep,
-    _: UserManagerDep,
-    page: Annotated[int, Query(ge=1)] = 1,
-    items_per_page: Annotated[int, Query(ge=1, le=100)] = 10,
-) -> dict[str, Any]:
-    users = await user_service.get_paginated(skip=compute_offset(page, items_per_page), limit=items_per_page, db=db)
-    return paginated_response(crud_data=users, page=page, items_per_page=items_per_page)
 
 
 @router.get(

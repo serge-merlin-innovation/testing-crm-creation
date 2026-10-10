@@ -1,10 +1,13 @@
 import base64
 import hashlib
 import hmac
+import io
 import secrets
 import struct
 from datetime import datetime
 from urllib.parse import quote
+
+import segno
 
 STEP_SECONDS = 30
 DIGITS = 6
@@ -38,3 +41,9 @@ def verify_totp(secret: str, code: str, at: datetime) -> bool:
 
 def provisioning_uri(secret: str, account: str) -> str:
     return f"otpauth://totp/{quote(ISSUER)}:{quote(account)}?secret={secret}&issuer={quote(ISSUER)}&digits={DIGITS}&period={STEP_SECONDS}"
+
+
+def qr_svg(uri: str) -> str:
+    buffer = io.BytesIO()
+    segno.make(uri, error="m").save(buffer, kind="svg", scale=4, xmldecl=False)
+    return buffer.getvalue().decode()
