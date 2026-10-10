@@ -111,8 +111,13 @@ async def test_nor_over_the_public_api(world):
 
 
 async def test_the_calendar_feed_of_an_unstaffed_user_omits_the_deal(world):
-    for actor in world.unstaffed.values():
-        feed = (await actor.client.get("/api/v1/calendar-feed/")).json()
+    for key, actor in world.unstaffed.items():
+        response = await actor.client.get("/api/v1/calendar-feed/")
+        if key == "read_only":
+            # Read-only has no record access, so no feed at all (ROLE-01 c3).
+            assert response.status_code == 403
+            continue
+        feed = response.json()
         ics = await actor.client.get("/api/v1/calendar-feed/ics/" + feed["url"].rsplit("/", 1)[-1])
         assert ics.status_code == 200
         assert CLIENT_NAME not in ics.text

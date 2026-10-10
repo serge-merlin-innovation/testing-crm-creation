@@ -440,7 +440,16 @@ async def test_feed_drops_a_deal_hidden_by_conflict_review(world):
 # (no CSRF header) is still accepted.
 async def test_inbound_webhook_ignores_a_session_cookie(world):
     address = await address_of(world.partner)
-    payload = {"subject": "Hello", "text": "Body", "to": ["jan@acme.be"], "cc": [], "bcc": [address], "attachments": []}
+    payload = {
+        "subject": "Hello",
+        "text": "Body",
+        "to": ["jan@acme.be"],
+        "cc": [],
+        "bcc": [address],
+        "attachments": [],
+        "spf": "pass",
+        "dkim": "pass",
+    }
     response = await world.partner.client.post(
         "/api/v1/email-logging/inbound", json={"sender": world.partner.email, **payload}, headers={"X-Inbound-Secret": SECRET}
     )
