@@ -1,3 +1,4 @@
+import hashlib
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
@@ -354,3 +355,24 @@ async def test_totp_secret_is_encrypted_at_rest(client, seeded_db, clock, mailbo
     assert stored
     assert plain not in stored
     assert open_secret(stored) == plain
+
+
+# AUTH-02 c2: recovery codes carry at least 50 bits and are stored keyed, not as a bare SHA-256.
+async def test_recovery_codes_are_long_and_stored_keyed(client, seeded_db, clock, mailbox):
+    ana = await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
+    body = await start_login(client, "ana@firm.be")
+    codes = (await submit_code(client, body["challenge"], current_code("ana@firm.be"))).json()["recovery_codes"]
+
+    alphabet = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ234567")
+    for code in codes:
+        symbols = code.replace("-", "")
+        assert set(symbols) <= alphabet
+        assert len(symbols) * 5 >= 50
+
+    stored = set(
+        (await seeded_db.execute(text("SELECT code_hash FROM recovery_codes WHERE user_id = :id"), {"id": ana["id"]})).scalars()
+    )
+    assert not stored & {hashlib.sha256(code.encode()).hexdigest() for code in codes}
+
+    again = await start_login(second_client(client), "ana@firm.be")
+    assert (await submit_code(client, again["challenge"], codes[1].lower().replace("-", " "))).status_code == 200
