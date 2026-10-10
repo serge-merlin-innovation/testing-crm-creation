@@ -12,7 +12,7 @@ name: Infra
 # that let it deploy models and publish agent versions.
 #
 # POSTGRES_ADMIN_PASSWORD, GHCR_TOKEN, BACKEND_SECRET_KEY and TOTP_ENCRYPTION_KEY are optional GitHub bootstrap
-# secrets when the matching values already exist in Key Vault; a new vault requires all three.
+# secrets when the matching values already exist in Key Vault; a new vault requires all four.
 # Their values are never stored in the checked-in Bicep parameter files.
 on:
   workflow_dispatch:
