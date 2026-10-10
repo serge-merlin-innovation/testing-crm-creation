@@ -2330,6 +2330,19 @@
         "title": "ConflictStatus",
         "type": "string"
       },
+      "ConflictWarning": {
+        "properties": {
+          "conflict_warning": {
+            "title": "Conflict Warning",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "conflict_warning"
+        ],
+        "title": "ConflictWarning",
+        "type": "object"
+      },
       "ConflictingDeal": {
         "properties": {
           "code_name": {
@@ -2883,6 +2896,74 @@
         "title": "CounterpartyRead",
         "type": "object"
       },
+      "CredentialCreate": {
+        "properties": {
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mandate_id"
+        ],
+        "title": "CredentialCreate",
+        "type": "object"
+      },
+      "CredentialRead": {
+        "properties": {
+          "closing_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Date"
+          },
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "ev": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Final EV in EUR thousands",
+            "title": "Ev"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "sector_id": {
+            "title": "Sector Id",
+            "type": "integer"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code_name",
+          "type",
+          "sector_id",
+          "ev",
+          "closing_date"
+        ],
+        "title": "CredentialRead",
+        "type": "object"
+      },
       "CriterionKind": {
         "enum": [
           "field",
@@ -3029,6 +3110,102 @@
         ],
         "title": "DealStage",
         "type": "string"
+      },
+      "DealTaskRead": {
+        "properties": {
+          "assignee_id": {
+            "title": "Assignee Id",
+            "type": "integer"
+          },
+          "assignee_name": {
+            "title": "Assignee Name",
+            "type": "string"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "integer"
+          },
+          "due_date": {
+            "format": "date",
+            "title": "Due Date",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mandate_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mandate Id"
+          },
+          "overdue": {
+            "title": "Overdue",
+            "type": "boolean"
+          },
+          "record_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Id"
+          },
+          "record_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecordType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recurrence": {
+            "$ref": "#/components/schemas/Recurrence"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "assignee_id",
+          "created_by",
+          "due_date",
+          "recurrence",
+          "record_type",
+          "record_id",
+          "mandate_id",
+          "completed_at",
+          "overdue",
+          "assignee_name"
+        ],
+        "title": "DealTaskRead",
+        "type": "object"
       },
       "Decision": {
         "enum": [
@@ -3217,7 +3394,8 @@
           "access.break_glass",
           "access.review_overdue",
           "buyer.idle",
-          "buyer.nda_pending"
+          "buyer.nda_pending",
+          "opportunity.invited"
         ],
         "title": "EventKind",
         "type": "string"
@@ -5209,6 +5387,67 @@
         "title": "LetterSent",
         "type": "object"
       },
+      "LinkCreate": {
+        "properties": {
+          "label": {
+            "examples": [
+              "Pitch deck"
+            ],
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "examples": [
+              "https://files.example.com/pitch.pptx"
+            ],
+            "maxLength": 2000,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "url"
+        ],
+        "title": "LinkCreate",
+        "type": "object"
+      },
+      "LinkRead": {
+        "properties": {
+          "added_at": {
+            "format": "date-time",
+            "title": "Added At",
+            "type": "string"
+          },
+          "added_by": {
+            "title": "Added By",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "url",
+          "added_by",
+          "added_at"
+        ],
+        "title": "LinkRead",
+        "type": "object"
+      },
       "LoggingAddressRead": {
         "properties": {
           "address": {
@@ -5254,6 +5493,16 @@
         ],
         "title": "LoginCompleted",
         "type": "object"
+      },
+      "LostReason": {
+        "enum": [
+          "fee",
+          "competitor",
+          "timing",
+          "client_decided_not_to_sell"
+        ],
+        "title": "LostReason",
+        "type": "string"
       },
       "MandateClose": {
         "properties": {
@@ -5858,6 +6107,49 @@
           "granted"
         ],
         "title": "MatrixRow",
+        "type": "object"
+      },
+      "MemberCreate": {
+        "properties": {
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id"
+        ],
+        "title": "MemberCreate",
+        "type": "object"
+      },
+      "MemberRead": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Name"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "role_name"
+        ],
+        "title": "MemberRead",
         "type": "object"
       },
       "MergeRead": {
@@ -7029,6 +7321,405 @@
         ],
         "title": "OfferRound",
         "type": "string"
+      },
+      "OpportunityCreate": {
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "estimated_ev": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,19}0*$)\\d{0,16}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "description": "EUR thousands",
+            "title": "Estimated Ev"
+          },
+          "probability": {
+            "description": "Percent",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Probability",
+            "type": "integer"
+          },
+          "sector_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector Id"
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/Trigger"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MandateType"
+          }
+        },
+        "required": [
+          "company_id",
+          "type",
+          "trigger",
+          "estimated_ev",
+          "probability"
+        ],
+        "title": "OpportunityCreate",
+        "type": "object"
+      },
+      "OpportunityListItem": {
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "company_name": {
+            "title": "Company Name",
+            "type": "string"
+          },
+          "competitor_advisor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competitor Advisor"
+          },
+          "conflict_warning": {
+            "description": "The company or its group is on an active mandate",
+            "title": "Conflict Warning",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "estimated_ev": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Estimated Ev",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_owner": {
+            "title": "Is Owner",
+            "type": "boolean"
+          },
+          "lost_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LostReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mandate_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mandate Id"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "integer"
+          },
+          "owner_name": {
+            "title": "Owner Name",
+            "type": "string"
+          },
+          "probability": {
+            "title": "Probability",
+            "type": "integer"
+          },
+          "revisit_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revisit Date"
+          },
+          "sector_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector Id"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/OpportunityStage"
+          },
+          "stage_changed_at": {
+            "format": "date-time",
+            "title": "Stage Changed At",
+            "type": "string"
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/Trigger"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MandateType"
+          }
+        },
+        "required": [
+          "id",
+          "company_id",
+          "company_name",
+          "owner_id",
+          "owner_name",
+          "type",
+          "trigger",
+          "estimated_ev",
+          "probability",
+          "sector_id",
+          "stage",
+          "stage_changed_at",
+          "created_at",
+          "lost_reason",
+          "competitor_advisor",
+          "revisit_date",
+          "mandate_id",
+          "conflict_warning",
+          "is_owner"
+        ],
+        "title": "OpportunityListItem",
+        "type": "object"
+      },
+      "OpportunityRead": {
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "company_name": {
+            "title": "Company Name",
+            "type": "string"
+          },
+          "competitor_advisor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competitor Advisor"
+          },
+          "conflict_warning": {
+            "description": "The company or its group is on an active mandate",
+            "title": "Conflict Warning",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "credentials": {
+            "items": {
+              "$ref": "#/components/schemas/CredentialRead"
+            },
+            "title": "Credentials",
+            "type": "array"
+          },
+          "estimated_ev": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Estimated Ev",
+            "type": "string"
+          },
+          "fee_draft": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Present only with fees.read",
+            "title": "Fee Draft"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_owner": {
+            "title": "Is Owner",
+            "type": "boolean"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/LinkRead"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "lost_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LostReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mandate_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mandate Id"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/MemberRead"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "integer"
+          },
+          "owner_name": {
+            "title": "Owner Name",
+            "type": "string"
+          },
+          "probability": {
+            "title": "Probability",
+            "type": "integer"
+          },
+          "revisit_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revisit Date"
+          },
+          "sector_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sector Id"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/OpportunityStage"
+          },
+          "stage_changed_at": {
+            "format": "date-time",
+            "title": "Stage Changed At",
+            "type": "string"
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/Trigger"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MandateType"
+          }
+        },
+        "required": [
+          "id",
+          "company_id",
+          "company_name",
+          "owner_id",
+          "owner_name",
+          "type",
+          "trigger",
+          "estimated_ev",
+          "probability",
+          "sector_id",
+          "stage",
+          "stage_changed_at",
+          "created_at",
+          "lost_reason",
+          "competitor_advisor",
+          "revisit_date",
+          "mandate_id",
+          "conflict_warning",
+          "is_owner",
+          "members",
+          "links",
+          "credentials"
+        ],
+        "title": "OpportunityRead",
+        "type": "object"
+      },
+      "OpportunityStage": {
+        "enum": [
+          "lead",
+          "contacted",
+          "meeting_held",
+          "pitch",
+          "engagement_letter_sent",
+          "won",
+          "lost",
+          "on_hold"
+        ],
+        "title": "OpportunityStage",
+        "type": "string"
+      },
+      "OriginationSettingsValues": {
+        "properties": {
+          "dormant_days": {
+            "maximum": 3650.0,
+            "minimum": 7.0,
+            "title": "Dormant Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dormant_days"
+        ],
+        "title": "OriginationSettingsValues",
+        "type": "object"
       },
       "Outcome": {
         "enum": [
@@ -8563,6 +9254,52 @@
         "title": "ShareUpdate",
         "type": "object"
       },
+      "StageChange": {
+        "properties": {
+          "competitor_advisor": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Competitor Advisor"
+          },
+          "lost_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LostReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revisit_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revisit Date"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/OpportunityStage"
+          }
+        },
+        "required": [
+          "stage"
+        ],
+        "title": "StageChange",
+        "type": "object"
+      },
       "StageCriterionCreate": {
         "properties": {
           "kind": {
@@ -9185,6 +9922,16 @@
         },
         "title": "TravelUpdate",
         "type": "object"
+      },
+      "Trigger": {
+        "enum": [
+          "succession",
+          "growth",
+          "carve_out",
+          "distress"
+        ],
+        "title": "Trigger",
+        "type": "string"
       },
       "Unfreeze": {
         "properties": {
@@ -9896,6 +10643,69 @@
         ],
         "title": "WarningReason",
         "type": "string"
+      },
+      "WinRead": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/OpportunityStage"
+          }
+        },
+        "required": [
+          "id",
+          "stage",
+          "mandate_id"
+        ],
+        "title": "WinRead",
+        "type": "object"
+      },
+      "WinRequest": {
+        "properties": {
+          "code_name": {
+            "examples": [
+              "Falcon"
+            ],
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Code Name",
+            "type": "string"
+          },
+          "sector_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to the opportunity's sector",
+            "title": "Sector Id"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id"
+          }
+        },
+        "required": [
+          "code_name"
+        ],
+        "title": "WinRequest",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -18037,6 +18847,7 @@
                 "example": [
                   {
                     "assignee_id": 1,
+                    "assignee_name": "assignee_name",
                     "completed_at": "2026-10-10T09:00:00Z",
                     "created_by": 1,
                     "due_date": "2026-10-10",
@@ -18051,7 +18862,7 @@
                 ],
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/TaskRead"
+                    "$ref": "#/components/schemas/DealTaskRead"
                   },
                   "title": "Response Deal Tasks Api V1 Mandates  Mandate Id  Tasks Get",
                   "type": "array"
@@ -18862,6 +19673,1218 @@
         "summary": "OAuth 2.0 token endpoint (client credentials grant)",
         "tags": [
           "API access"
+        ]
+      }
+    },
+    "/api/v1/origination/conflict-warning": {
+      "get": {
+        "operationId": "conflict_warning_api_v1_origination_conflict_warning_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "title": "Company Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "conflict_warning": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictWarning"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Whether a company is on an active mandate (no deal is named)",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/credentials": {
+      "get": {
+        "description": "`ev_min` and `ev_max` filter the final EV in EUR thousands. Code names only.",
+        "operationId": "search_credentials_api_v1_origination_credentials_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sector_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sector Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ev_min",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ev Min"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ev_max",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ev Max"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "closing_date": "2026-10-10",
+                    "code_name": "code_name",
+                    "ev": "text",
+                    "id": 1,
+                    "sector_id": 1,
+                    "type": "type"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CredentialRead"
+                  },
+                  "title": "Response Search Credentials Api V1 Origination Credentials Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search credentials: closed deals with a tombstone allowed",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities": {
+      "get": {
+        "operationId": "list_opportunities_api_v1_origination_opportunities_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "stage",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/OpportunityStage"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stage"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "company_id": 1,
+                    "company_name": "company_name",
+                    "competitor_advisor": "text",
+                    "conflict_warning": true,
+                    "created_at": "2026-10-10T09:00:00Z",
+                    "estimated_ev": "estimated_ev",
+                    "id": 1,
+                    "is_owner": true,
+                    "lost_reason": "fee",
+                    "mandate_id": 1,
+                    "owner_id": 1,
+                    "owner_name": "owner_name",
+                    "probability": 1,
+                    "revisit_date": "2026-10-10",
+                    "sector_id": 1,
+                    "stage": "lead",
+                    "stage_changed_at": "2026-10-10T09:00:00Z",
+                    "trigger": "succession",
+                    "type": "sell_side"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OpportunityListItem"
+                  },
+                  "title": "Response List Opportunities Api V1 Origination Opportunities Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The origination pipeline: opportunities I own or was invited to",
+        "tags": [
+          "Origination"
+        ]
+      },
+      "post": {
+        "description": "`conflict_warning` is true when the company or its group is on an active mandate.",
+        "operationId": "create_opportunity_api_v1_origination_opportunities_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "company_id": 1,
+                "estimated_ev": 25000.0,
+                "probability": 1,
+                "sector_id": 1,
+                "trigger": "succession",
+                "type": "sell_side"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/OpportunityCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "company_id": 1,
+                  "company_name": "company_name",
+                  "competitor_advisor": "text",
+                  "conflict_warning": true,
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "credentials": [
+                    {
+                      "closing_date": "2026-10-10",
+                      "code_name": "code_name",
+                      "ev": "text",
+                      "id": 1,
+                      "sector_id": 1,
+                      "type": "type"
+                    }
+                  ],
+                  "estimated_ev": "estimated_ev",
+                  "fee_draft": {},
+                  "id": 1,
+                  "is_owner": true,
+                  "links": [
+                    {
+                      "added_at": "2026-10-10T09:00:00Z",
+                      "added_by": 1,
+                      "id": 1,
+                      "label": "label",
+                      "url": "url"
+                    }
+                  ],
+                  "lost_reason": "fee",
+                  "mandate_id": 1,
+                  "members": [
+                    {
+                      "name": "name",
+                      "role_name": "text",
+                      "user_id": 1
+                    }
+                  ],
+                  "owner_id": 1,
+                  "owner_name": "owner_name",
+                  "probability": 1,
+                  "revisit_date": "2026-10-10",
+                  "sector_id": 1,
+                  "stage": "lead",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
+                  "trigger": "succession",
+                  "type": "sell_side"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OpportunityRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Log an opportunity (partners)",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}": {
+      "get": {
+        "operationId": "get_opportunity_api_v1_origination_opportunities__opportunity_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "company_id": 1,
+                  "company_name": "company_name",
+                  "competitor_advisor": "text",
+                  "conflict_warning": true,
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "credentials": [
+                    {
+                      "closing_date": "2026-10-10",
+                      "code_name": "code_name",
+                      "ev": "text",
+                      "id": 1,
+                      "sector_id": 1,
+                      "type": "type"
+                    }
+                  ],
+                  "estimated_ev": "estimated_ev",
+                  "fee_draft": {},
+                  "id": 1,
+                  "is_owner": true,
+                  "links": [
+                    {
+                      "added_at": "2026-10-10T09:00:00Z",
+                      "added_by": 1,
+                      "id": 1,
+                      "label": "label",
+                      "url": "url"
+                    }
+                  ],
+                  "lost_reason": "fee",
+                  "mandate_id": 1,
+                  "members": [
+                    {
+                      "name": "name",
+                      "role_name": "text",
+                      "user_id": 1
+                    }
+                  ],
+                  "owner_id": 1,
+                  "owner_name": "owner_name",
+                  "probability": 1,
+                  "revisit_date": "2026-10-10",
+                  "sector_id": 1,
+                  "stage": "lead",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
+                  "trigger": "succession",
+                  "type": "sell_side"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OpportunityRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "An opportunity",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}/candidates": {
+      "get": {
+        "operationId": "list_candidates_api_v1_origination_opportunities__opportunity_id__candidates_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "name": "name",
+                    "role_name": "text",
+                    "user_id": 1
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MemberRead"
+                  },
+                  "title": "Response List Candidates Api V1 Origination Opportunities  Opportunity Id  Candidates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Colleagues the owner can invite",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}/credentials": {
+      "post": {
+        "operationId": "add_credential_api_v1_origination_opportunities__opportunity_id__credentials_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "mandate_id": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/CredentialCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "closing_date": "2026-10-10",
+                  "code_name": "code_name",
+                  "ev": "text",
+                  "id": 1,
+                  "sector_id": 1,
+                  "type": "type"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/CredentialRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cite a past deal as a credential (closed, tombstone allowed)",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}/credentials/{credential_id}": {
+      "delete": {
+        "operationId": "remove_credential_api_v1_origination_opportunities__opportunity_id__credentials__credential_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "schema": {
+              "title": "Credential Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove a credential (`credential_id` is the cited deal's id)",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}/fee-draft": {
+      "put": {
+        "operationId": "put_fee_draft_api_v1_origination_opportunities__opportunity_id__fee_draft_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "amended_letter_url": "text",
+                "change_reason": "text",
+                "lehman_tiers": [
+                  {
+                    "percent": 25000.0,
+                    "up_to": 25000.0
+                  }
+                ],
+                "minimum_fee": "0",
+                "retainer_monthly": "0",
+                "retainers_creditable": false,
+                "success_fee_fixed": 25000.0,
+                "success_fee_kind": "percent",
+                "success_fee_percent": 25000.0
+              },
+              "schema": {
+                "$ref": "#/components/schemas/FeeTermsValues"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {},
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Put Fee Draft Api V1 Origination Opportunities  Opportunity Id  Fee Draft Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set the fee draft copied to the mandate on Won (fees.read)",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}/links": {
+      "post": {
+        "operationId": "add_link_api_v1_origination_opportunities__opportunity_id__links_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "label": "Pitch deck",
+                "url": "https://files.example.com/pitch.pptx"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/LinkCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "added_at": "2026-10-10T09:00:00Z",
+                  "added_by": 1,
+                  "id": 1,
+                  "label": "label",
+                  "url": "url"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/LinkRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Link a pitch deck or document (https only)",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}/links/{link_id}": {
+      "delete": {
+        "operationId": "remove_link_api_v1_origination_opportunities__opportunity_id__links__link_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "link_id",
+            "required": true,
+            "schema": {
+              "title": "Link Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove a link",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}/members": {
+      "post": {
+        "operationId": "add_member_api_v1_origination_opportunities__opportunity_id__members_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "user_id": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MemberCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "company_id": 1,
+                  "company_name": "company_name",
+                  "competitor_advisor": "text",
+                  "conflict_warning": true,
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "credentials": [
+                    {
+                      "closing_date": "2026-10-10",
+                      "code_name": "code_name",
+                      "ev": "text",
+                      "id": 1,
+                      "sector_id": 1,
+                      "type": "type"
+                    }
+                  ],
+                  "estimated_ev": "estimated_ev",
+                  "fee_draft": {},
+                  "id": 1,
+                  "is_owner": true,
+                  "links": [
+                    {
+                      "added_at": "2026-10-10T09:00:00Z",
+                      "added_by": 1,
+                      "id": 1,
+                      "label": "label",
+                      "url": "url"
+                    }
+                  ],
+                  "lost_reason": "fee",
+                  "mandate_id": 1,
+                  "members": [
+                    {
+                      "name": "name",
+                      "role_name": "text",
+                      "user_id": 1
+                    }
+                  ],
+                  "owner_id": 1,
+                  "owner_name": "owner_name",
+                  "probability": 1,
+                  "revisit_date": "2026-10-10",
+                  "sector_id": 1,
+                  "stage": "lead",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
+                  "trigger": "succession",
+                  "type": "sell_side"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OpportunityRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Invite a colleague (owner)",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}/members/{user_id}": {
+      "delete": {
+        "operationId": "remove_member_api_v1_origination_opportunities__opportunity_id__members__user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove an invitee (owner)",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}/stage": {
+      "post": {
+        "description": "Lost needs `lost_reason` (`competitor_advisor` optional); On hold needs `revisit_date`. Won: /win.",
+        "operationId": "move_opportunity_api_v1_origination_opportunities__opportunity_id__stage_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "competitor_advisor": "text",
+                "lost_reason": "fee",
+                "revisit_date": "2026-10-10",
+                "stage": "lead"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/StageChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "company_id": 1,
+                  "company_name": "company_name",
+                  "competitor_advisor": "text",
+                  "conflict_warning": true,
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "credentials": [
+                    {
+                      "closing_date": "2026-10-10",
+                      "code_name": "code_name",
+                      "ev": "text",
+                      "id": 1,
+                      "sector_id": 1,
+                      "type": "type"
+                    }
+                  ],
+                  "estimated_ev": "estimated_ev",
+                  "fee_draft": {},
+                  "id": 1,
+                  "is_owner": true,
+                  "links": [
+                    {
+                      "added_at": "2026-10-10T09:00:00Z",
+                      "added_by": 1,
+                      "id": 1,
+                      "label": "label",
+                      "url": "url"
+                    }
+                  ],
+                  "lost_reason": "fee",
+                  "mandate_id": 1,
+                  "members": [
+                    {
+                      "name": "name",
+                      "role_name": "text",
+                      "user_id": 1
+                    }
+                  ],
+                  "owner_id": 1,
+                  "owner_name": "owner_name",
+                  "probability": 1,
+                  "revisit_date": "2026-10-10",
+                  "sector_id": 1,
+                  "stage": "lead",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
+                  "trigger": "succession",
+                  "type": "sell_side"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OpportunityRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Move an opportunity",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/opportunities/{opportunity_id}/win": {
+      "post": {
+        "description": "Company, invited team and fee draft are copied; the mandate goes through the conflict check.",
+        "operationId": "win_opportunity_api_v1_origination_opportunities__opportunity_id__win_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "opportunity_id",
+            "required": true,
+            "schema": {
+              "title": "Opportunity Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "code_name": "Falcon",
+                "sector_id": 1,
+                "target_id": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/WinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": 1,
+                  "mandate_id": 1,
+                  "stage": "lead"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/WinRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not the owner nor invited (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Won: create the mandate (owner)",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/settings": {
+      "get": {
+        "operationId": "get_settings_api_v1_origination_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "dormant_days": 7.0
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OriginationSettingsValues"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Dormant-prospect threshold",
+        "tags": [
+          "Origination"
+        ]
+      },
+      "put": {
+        "operationId": "put_settings_api_v1_origination_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "dormant_days": 7.0
+              },
+              "schema": {
+                "$ref": "#/components/schemas/OriginationSettingsValues"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "dormant_days": 7.0
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OriginationSettingsValues"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change the dormant-prospect threshold (Admin)",
+        "tags": [
+          "Origination"
+        ]
+      }
+    },
+    "/api/v1/origination/stages": {
+      "get": {
+        "operationId": "list_stages_api_v1_origination_stages_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  "lead"
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OpportunityStage"
+                  },
+                  "title": "Response List Stages Api V1 Origination Stages Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "The origination stages, in order",
+        "tags": [
+          "Origination"
         ]
       }
     },

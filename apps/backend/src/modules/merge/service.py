@@ -24,6 +24,7 @@ from ..contact.models import Contact, Employment, RelationshipHolder
 from ..contact.service import CONTACT_FIELDS
 from ..mandate.models import Mandate
 from ..mandate.policy import DealPolicy
+from ..origination.models import Opportunity
 from ..privacy.models import LegalHold, RetentionReview
 from ..process.models import GeneratedDocument
 from ..role.authorization import has_permission
@@ -108,6 +109,7 @@ REFERENCES: dict[MergeableType, list[Reference]] = {
         Reference("client_exclusions", ClientExclusion.__table__, "client_id", None, ("company_id",)),  # type: ignore[arg-type]
         Reference("client_exclusions.excluded", ClientExclusion.__table__, "company_id", None, ("client_id",)),  # type: ignore[arg-type]
         Reference("deal_buyers", DealBuyer.__table__, "company_id", None, ("mandate_id",)),  # type: ignore[arg-type]
+        Reference("opportunities", Opportunity.__table__, "company_id"),  # type: ignore[arg-type]
         *_polymorphic("company"),
     ],
 }

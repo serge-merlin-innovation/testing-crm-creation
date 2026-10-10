@@ -29,6 +29,7 @@ class EventKind(StrEnum):
     ACCESS_REVIEW_OVERDUE = "access.review_overdue"
     BUYER_IDLE = "buyer.idle"
     NDA_PENDING = "buyer.nda_pending"
+    OPPORTUNITY_INVITED = "opportunity.invited"
 
 
 DEFAULT_CHANNEL = Channel.BOTH

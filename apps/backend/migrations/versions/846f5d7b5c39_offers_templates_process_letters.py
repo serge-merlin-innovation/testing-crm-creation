@@ -1,7 +1,7 @@
 """offers, bid deadlines, document templates, generated letters and reports (ticket #14)
 
 Revision ID: 846f5d7b5c39
-Revises: 7494bc3ff192
+Revises: b32b7af0bfc9
 Create Date: 2026-10-10 13:57:16.387698
 
 """
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "846f5d7b5c39"
-down_revision: Union[str, Sequence[str], None] = "7494bc3ff192"
+down_revision: Union[str, Sequence[str], None] = "b32b7af0bfc9"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

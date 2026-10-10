@@ -34,6 +34,7 @@ from ....modules.mandate.routes import router as mandates_router
 from ....modules.merge.routes import router as merges_router
 from ....modules.notification.routes import router as notifications_router
 from ....modules.offboarding.routes import router as offboarding_router
+from ....modules.origination.routes import router as origination_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.privacy.routes import router as privacy_router
 from ....modules.process.routes import router as process_router
@@ -66,6 +67,7 @@ router.include_router(buyer_companies_router, prefix="/companies")
 router.include_router(buyer_contacts_router, prefix="/contacts")
 router.include_router(conflict_reviews_router, prefix="/conflict-reviews")
 router.include_router(criteria_router, prefix="/stage-criteria")
+router.include_router(origination_router, prefix="/origination")
 router.include_router(notifications_router, prefix="/notifications")
 router.include_router(activities_router, prefix="/activities")
 router.include_router(notes_router, prefix="/notes")
