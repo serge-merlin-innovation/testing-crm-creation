@@ -1,7 +1,7 @@
 """wall crossing requests delegation break glass access reviews
 
 Revision ID: 7494bc3ff192
-Revises: 4969f590271f
+Revises: 3fe8bfeb0d3d
 Create Date: 2026-10-10 11:14:18.881739
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "7494bc3ff192"
-down_revision: str | Sequence[str] | None = "4969f590271f"
+down_revision: str | Sequence[str] | None = "3fe8bfeb0d3d"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

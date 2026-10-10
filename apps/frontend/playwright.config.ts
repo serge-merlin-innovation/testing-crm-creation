@@ -49,6 +49,12 @@ export default defineConfig({
         // configuration varies proves nothing. CSRF on is what exercises apiFetch's mint-and-retry.
         CSRF_ENABLED: "true",
         SESSION_SECURE_COOKIES: "false",
+        // The feed URL is built from APP_URL; the inbound-mail webhook needs a secret to accept anything.
+        APP_URL: FRONTEND_URL,
+        INBOUND_EMAIL_SECRET: "e2e-inbound-secret",
+        // Every spec's beforeAll opens its own admin API session; at the default cap of 5 the oldest
+        // one evicted is the banked admin storage state that later specs browse with.
+        MAX_SESSIONS_PER_USER: "50",
       },
     },
     {

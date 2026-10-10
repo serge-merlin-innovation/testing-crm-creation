@@ -139,6 +139,10 @@ class AppSettings(BaseSettings):
     CONTACT_EMAIL: str = config("CONTACT_EMAIL", default="support@example.com")
     LICENSE_NAME: str = config("LICENSE_NAME", default="All rights reserved.")
     APP_URL: str = config("APP_URL", default="http://localhost:3000")
+    # Users BCC or forward mail to <token>@INBOUND_EMAIL_DOMAIN; the provider's inbound-parse webhook
+    # must send INBOUND_EMAIL_SECRET. Empty secret = every inbound call is refused.
+    INBOUND_EMAIL_DOMAIN: str = config("INBOUND_EMAIL_DOMAIN", default="log.crm.localhost")
+    INBOUND_EMAIL_SECRET: str = config("INBOUND_EMAIL_SECRET", default="")
 
 
 class FirstAdminSettings(BaseSettings):

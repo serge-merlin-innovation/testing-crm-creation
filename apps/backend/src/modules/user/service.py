@@ -21,6 +21,14 @@ from .models import User
 from .schemas import UserAnonymize, UserRead, UserRoleUpdate, UserUpdate
 
 AUDITED_PROFILE_FIELDS = ("name", "email", "profile_image_url")
+INACTIVE_SUFFIX = " (inactive)"
+
+
+def display_name(name: str | None, is_deleted: bool | None) -> str | None:
+    """A deactivated person stays in every history, marked so nobody mistakes them for a current colleague."""
+    if name is None:
+        return None
+    return f"{name}{INACTIVE_SUFFIX}" if is_deleted else name
 
 
 class UserService:
@@ -86,22 +94,6 @@ class UserService:
             return
         if await self.count_active_admins(db) <= 1:
             raise LastAdminError("Cannot remove the last Admin")
-
-    async def delete(self, user_id: int, db: AsyncSession, context: AuditContext) -> None:
-        existing = await self.get_by_id(user_id, db)
-        await self.verify_admin_removal_allowed(existing, db)
-
-        await crud_users.delete(db=db, id=user_id, commit=False)
-        self.audit.record(
-            db,
-            context,
-            "user.deleted",
-            record_type="user",
-            record_id=user_id,
-            old_values={"is_deleted": False},
-            new_values={"is_deleted": True},
-        )
-        await db.commit()
 
     async def anonymize_user(self, user_id: int, db: AsyncSession, context: AuditContext) -> None:
         existing = await self.get_by_id(user_id, db, include_deleted=True)

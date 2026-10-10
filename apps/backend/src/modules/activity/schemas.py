@@ -54,6 +54,7 @@ class ActivityRead(BaseModel):
     participants: list[str]
     note: str
     author_id: int
+    author_name: str | None = None
     created_at: datetime
     links: list[RecordRef]
     # Set only when the activity was changed more than 7 days after it was logged.
@@ -84,6 +85,7 @@ class NoteRead(BaseModel):
     body: str
     visibility: NoteVisibility
     author_id: int
+    author_name: str | None = None
     created_at: datetime
     mandate_id: int | None
 

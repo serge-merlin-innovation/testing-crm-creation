@@ -92,3 +92,14 @@ class ContactRead(BaseModel):
     history: list[EmploymentRead]
     warnings: list[str] = Field(default_factory=list)
     duplicate_contact_ids: list[int] = Field(default_factory=list)
+    relationship_holders: list["HolderRead"] = Field(default_factory=list)
+
+
+class HolderRead(BaseModel):
+    user_id: int
+    name: str
+    strength: Annotated[int, Field(ge=1, le=3)]
+
+
+class HolderSet(BaseModel):
+    strength: Annotated[int, Field(ge=1, le=3, description="1 acquainted, 2 good, 3 close")]

@@ -27,18 +27,31 @@ describe("getPrimaryNavigation", () => {
   it("offers an admin user and permission administration", () => {
     expect(hrefs(getPrimaryNavigation(admin))).toEqual([
       "/overview",
+      "/search",
       "/companies",
       "/contacts",
       "/users",
       "/permissions",
       "/picklists",
+      "/merge",
+      "/imports",
+      "/exports",
       "/stage-criteria",
       "/access",
     ]);
   });
 
   it("gives an analyst deals, companies and contacts but no administration", () => {
-    expect(hrefs(getPrimaryNavigation(analyst))).toEqual(["/overview", "/deals", "/companies", "/contacts", "/access"]);
+    expect(hrefs(getPrimaryNavigation(analyst))).toEqual([
+      "/overview",
+      "/search",
+      "/deals",
+      "/companies",
+      "/contacts",
+      "/merge",
+      "/exports",
+      "/access",
+    ]);
   });
 
   // ROLE-01 c2: an Admin has no deal permission, so no Deals link.
@@ -47,7 +60,23 @@ describe("getPrimaryNavigation", () => {
   });
 
   it("offers read-only only the dashboards", () => {
-    expect(hrefs(getPrimaryNavigation(readOnly))).toEqual(["/overview", "/companies", "/contacts", "/analytics", "/access"]);
+    expect(hrefs(getPrimaryNavigation(readOnly))).toEqual([
+      "/overview",
+      "/search",
+      "/companies",
+      "/contacts",
+      "/analytics",
+      "/merge",
+      "/exports",
+      "/access",
+    ]);
+  });
+
+  // GDPR-02: person export and erasure belong to compliance.
+  it("offers privacy requests only to compliance", () => {
+    const compliance: Viewer = { isAuthenticated: true, roleName: "Compliance / Back-office", permissions: ["privacy.manage"] };
+    expect(hrefs(getPrimaryNavigation(compliance))).toContain("/privacy");
+    expect(hrefs(getPrimaryNavigation(analyst))).not.toContain("/privacy");
   });
 });
 

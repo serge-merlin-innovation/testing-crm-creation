@@ -20,10 +20,14 @@ from .exceptions import (
     DealNotFoundError,
     DomainError,
     GroupLoopError,
+    ImportNotFoundError,
     InsufficientCreditsError,
+    InvoiceNotFoundError,
     LastAdminError,
     LastLeadPartnerError,
     MandateExistsError,
+    MergeBlockedError,
+    MergeNotFoundError,
     MilestoneNotFoundError,
     OneRolePerUserError,
     PermissionDeniedError,
@@ -39,6 +43,7 @@ from .exceptions import (
     TaskNotFoundError,
     TeamMemberExistsError,
     TeamMemberNotFoundError,
+    UndoWindowClosedError,
     UserExistsError,
     UserNotFoundError,
     ValidationError,
@@ -88,6 +93,15 @@ EXCEPTION_MAPPING: dict[type[DomainError], Callable[[str], HTTPException]] = {
     TaskNotFoundError: lambda message: NotFoundException(detail="Task not found."),
     AccessRequestNotFoundError: lambda message: NotFoundException(detail="Access request not found."),
     AccessReviewNotFoundError: lambda message: NotFoundException(detail="Access review not found."),
+    MergeBlockedError: lambda message: ForbiddenException(
+        detail="One of these records is on a deal you cannot access. Ask Compliance to merge them."
+    ),
+    MergeNotFoundError: lambda message: NotFoundException(detail="Merge not found."),
+    UndoWindowClosedError: lambda message: HTTPException(
+        status_code=409, detail="This merge was done more than 30 days ago, or was already undone."
+    ),
+    ImportNotFoundError: lambda message: NotFoundException(detail="Import not found."),
+    InvoiceNotFoundError: lambda message: NotFoundException(detail="Invoice not found."),
     RestoreWindowClosedError: lambda message: HTTPException(
         status_code=409, detail="This activity was deleted more than 30 days ago and can no longer be restored."
     ),

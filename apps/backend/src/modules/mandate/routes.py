@@ -6,11 +6,11 @@ from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
 from ..common.exceptions import LastLeadPartnerError, MandateExistsError, TeamMemberExistsError
-from ..role.authorization import require_permission
+from ..role.authorization import has_permission, require_permission
 from ..role.permissions import Permission
 from .dependencies import MandateServiceDep, PipelineServiceDep
 from .pipeline import StageBlockedError, StaleVersion
-from .policy import EditGrant, ExportGrant, ReadGrant, ReopenGrant, TeamGrant
+from .policy import EditGrant, ExportGrant, ReadGrant, ReopenGrant, SummaryGrant, TeamGrant
 from .schemas import (
     DealFilters,
     DealLinkCreate,
@@ -72,6 +72,18 @@ async def list_lead_partners(db: AsyncSessionDep, service: MandateServiceDep, _:
     return await service.lead_partners(db)
 
 
+@router.get(
+    "/filters",
+    summary="The deal filters offered to me",
+    description="Fee filters appear only for roles that see fee fields (AUTHZ-06); they apply on GET /fees/.",
+)
+async def offered_filters(user: CurrentUserDep) -> dict[str, list[str]]:
+    filters = ["q", "partner_id", "type", "sector_id", "stage"]
+    if has_permission(user, Permission.FEES_READ):
+        filters.append("min_expected_fee")
+    return {"filters": filters}
+
+
 @router.post(
     "/",
     status_code=201,
@@ -94,6 +106,17 @@ async def create_mandate(
 
 @router.get("/{mandate_id}", response_model=MandateRead, summary="One deal", responses=HIDDEN)
 async def get_mandate(grant: ReadGrant, db: AsyncSessionDep, service: MandateServiceDep) -> dict[str, Any]:
+    return await service.read(db, grant.mandate, grant)
+
+
+@router.get(
+    "/{mandate_id}/summary",
+    response_model=MandateRead,
+    summary="Read-only deal summary (team, or back-office on any deal)",
+    description="Compliance / back-office read it on deals they are not staffed on (ROLE-01). Never editable here.",
+    responses=HIDDEN,
+)
+async def get_mandate_summary(grant: SummaryGrant, db: AsyncSessionDep, service: MandateServiceDep) -> dict[str, Any]:
     return await service.read(db, grant.mandate, grant)
 
 

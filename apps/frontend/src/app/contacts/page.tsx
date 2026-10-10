@@ -9,7 +9,7 @@ export default async function ContactsPage() {
   return (
     <SignedInShell>
       <main className="flex flex-col gap-4 p-6">
-        <ContactsView messages={MESSAGES[language]} />
+        <ContactsView messages={MESSAGES[language]} language={language} />
       </main>
     </SignedInShell>
   );

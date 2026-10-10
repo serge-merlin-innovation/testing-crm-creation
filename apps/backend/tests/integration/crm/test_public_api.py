@@ -12,7 +12,7 @@ from src.interfaces.main import app
 from src.modules.api_access.rate_limit import limiter
 from src.modules.audit.models import AuditEntry
 from src.modules.role.permissions import RoleName
-from tests.integration.crm.deal_helpers import build_world, create_mandate
+from tests.integration.crm.deal_helpers import build_world, create_mandate, seed_buyers
 from tests.integration.crm.test_deal_access_matrix import ENDPOINTS, FORBIDDEN, HIDDEN, OK
 
 pytestmark = pytest.mark.asyncio
@@ -211,13 +211,25 @@ async def test_deal_access_matrix_holds_over_api_tokens(world, endpoint):
         json={"name": "Teaser", "planned_date": "2026-11-01"},
         headers=world.partner.headers,
     )
+    back_office = await world.actor("bo", RoleName.COMPLIANCE)
+    invoice = await back_office.client.post(
+        f"/api/v1/mandates/{mandate['id']}/invoices",
+        json={"type": "retainer", "amount": "5000", "sent_date": "2026-09-01"},
+        headers=back_office.headers,
+    )
     version = (await world.partner.client.get(f"/api/v1/mandates/{mandate['id']}", headers=world.partner.headers)).json()[
         "version"
     ]
+    buyers = await seed_buyers(world, world.partner, mandate["id"])
     path = endpoint.path.format(
-        mandate_id=mandate["id"], user_id=world.analyst.id, link_id=link.json()["id"], milestone_id=milestone.json()["id"]
+        mandate_id=mandate["id"],
+        user_id=world.analyst.id,
+        link_id=link.json()["id"],
+        milestone_id=milestone.json()["id"],
+        buyer_id=buyers["buyer_id"],
+        invoice_id=invoice.json()["id"],
     )
-    context = {"version": lambda: version, "spare_user_id": spare.id, "company_id": world.client_id}
+    context = {"version": lambda: version, "spare_user_id": spare.id, "company_id": world.client_id, **buyers}
 
     for persona, actor in (("other_partner", world.outsider), ("member", world.analyst)):
         token = await issue_token(actor, f"{persona}-{endpoint.method}")
