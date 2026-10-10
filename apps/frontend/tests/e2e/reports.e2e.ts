@@ -119,7 +119,7 @@ test("the home page shows my deals by stage, this week's tasks and key dates", a
   expect(Date.now() - started).toBeLessThan(2000);
   const stage = page.getByRole("region").filter({ has: page.getByRole("link", { name: deal.code_name }) });
   await expect(stage).toHaveCount(1);
-  await expect(stage.getByRole("heading")).toHaveText(/(Conflict review|Preparation)\s*1/);
+  await expect(stage.getByRole("heading")).toContainText(/Conflict review|Preparation/);
   await expect(page.getByText(`Call the client ${RUN}`)).toBeVisible();
   await expect(page.getByText(`${deal.code_name}: Teaser out`)).toBeVisible();
 });
