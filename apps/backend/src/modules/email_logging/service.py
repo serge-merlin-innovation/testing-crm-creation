@@ -170,7 +170,7 @@ class EmailLoggingService:
             self.audit.record(
                 db,
                 context,
-                "email.unmatched",
+                "unmatched_email.created",
                 record_type="unmatched_email",
                 record_id=unmatched.id,
                 new_values={"subject": subject, "correspondents": correspondents},

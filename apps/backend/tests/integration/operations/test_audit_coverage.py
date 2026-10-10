@@ -163,7 +163,7 @@ async def test_the_inbound_mail_webhook_needs_no_session_and_is_audited_as_the_s
         },
     )
     assert response.status_code == 202, response.text
-    rows = await world.db.execute(select(AuditEntry.user_id).where(AuditEntry.action == "email.unmatched"))
+    rows = await world.db.execute(select(AuditEntry.user_id).where(AuditEntry.action == "unmatched_email.created"))
     assert [user_id for (user_id,) in rows] == [world.partner.id]
 
 
@@ -211,4 +211,9 @@ async def test_restore_feed_regeneration_and_unmatched_mail_are_audited(world, c
     assert linked.status_code < 300, linked.text
     discarded = await partner.client.delete(f"/api/v1/email-logging/unmatched/{unmatched[1]['id']}", headers=partner.headers)
     assert discarded.status_code < 300, discarded.text
-    assert (await actions(world.db, "unmatched_email"))[-2:] == ["unmatched_email.linked", "unmatched_email.discarded"]
+    assert await actions(world.db, "unmatched_email") == [
+        "unmatched_email.created",
+        "unmatched_email.created",
+        "unmatched_email.linked",
+        "unmatched_email.discarded",
+    ]
