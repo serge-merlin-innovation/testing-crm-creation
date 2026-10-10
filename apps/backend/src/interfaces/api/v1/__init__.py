@@ -9,6 +9,8 @@ from ....modules.account.routes import users_router as account_users_router
 from ....modules.audit.routes import router as audit_router
 from ....modules.company.routes import router as companies_router
 from ....modules.contact.routes import router as contacts_router
+from ....modules.mandate.routes import router as mandates_router
+from ....modules.notification.routes import router as notifications_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.role.routes import router as roles_router
 from ....modules.security.routes import router as security_router
@@ -22,6 +24,8 @@ router.include_router(audit_router, prefix="/audit")
 router.include_router(companies_router, prefix="/companies")
 router.include_router(contacts_router, prefix="/contacts")
 router.include_router(picklists_router, prefix="/picklists")
+router.include_router(mandates_router, prefix="/mandates")
+router.include_router(notifications_router, prefix="/notifications")
 router.include_router(auth_router, prefix="/auth")
 router.include_router(account_auth_router, prefix="/auth")
 router.include_router(security_router)

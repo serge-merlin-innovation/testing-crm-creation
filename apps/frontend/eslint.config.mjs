@@ -14,6 +14,7 @@ const BACKEND_CALL_SITES = [
   "src/services/api.ts",
   "src/lib/backend-relay.ts",
   "src/lib/session-identity.ts",
+  "src/lib/server-fetch.ts",
 ];
 
 /** `process.env` is read through a `lib/` accessor, never inline in a component or service. */

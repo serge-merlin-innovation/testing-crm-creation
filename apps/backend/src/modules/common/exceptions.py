@@ -68,3 +68,31 @@ class ContactNotFoundError(ResourceNotFoundError):
 
 class GroupLoopError(ValidationError):
     pass
+
+
+class DealNotFoundError(ResourceNotFoundError):
+    """Also raised for a deal that exists but is hidden from the caller, so a 404 never confirms it."""
+
+
+class DealForbiddenError(PermissionDeniedError):
+    pass
+
+
+class MandateExistsError(ResourceExistsError):
+    pass
+
+
+class LastLeadPartnerError(ResourceExistsError):
+    pass
+
+
+class TeamMemberNotFoundError(ResourceNotFoundError):
+    pass
+
+
+class TeamMemberExistsError(ResourceExistsError):
+    pass
+
+
+class DealLinkNotFoundError(ResourceNotFoundError):
+    pass
