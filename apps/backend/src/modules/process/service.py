@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...infrastructure.i18n.formatters import format_date
 from ..activity.models import Activity, ActivityLink
 from ..activity.schemas import ActivityType, RecordType
 from ..audit.service import AuditContext, AuditService, audit_export
@@ -484,7 +485,7 @@ class ProcessService:
                 "buyer_name": company.name,
                 "code_name": mandate.code_name,
                 "stage": mandate.stage,
-                "date": now.date().isoformat(),
+                "date": format_date(now, contact.language),
             }
             subject, body = render(template.subject, fields), render(template.body, fields)
             document = GeneratedDocument(
@@ -591,19 +592,18 @@ class ProcessService:
         for milestone in milestones:
             if milestone.actual_date is not None:
                 timeline.append(
-                    f"{milestone.name}: {words['planned']} {milestone.planned_date.isoformat()}, "
-                    f"{words['actual']} {milestone.actual_date.isoformat()}"
+                    f"{milestone.name}: {words['planned']} {format_date(milestone.planned_date, language)}, "
+                    f"{words['actual']} {format_date(milestone.actual_date, language)}"
                 )
             else:
                 late = f" ({words['late']})" if milestone.planned_date < today else ""
-                timeline.append(
-                    f"{milestone.name}: {words['planned']} {milestone.planned_date.isoformat()}, {words['open']}{late}"
-                )
-                next_steps.append(f"{milestone.planned_date.isoformat()}: {milestone.name}")
+                planned = format_date(milestone.planned_date, language)
+                timeline.append(f"{milestone.name}: {words['planned']} {planned}, {words['open']}{late}")
+                next_steps.append(f"{format_date(milestone.planned_date, language)}: {milestone.name}")
         fields = {
             "code_name": mandate.code_name,
             "stage": mandate.stage,
-            "date": today.isoformat(),
+            "date": format_date(today, language),
             "funnel": self.funnel_text(await self.funnel(db, grant), language),
             "timeline": "\n".join(timeline) or words["none"],
             "next_steps": "\n".join(next_steps) or words["none"],

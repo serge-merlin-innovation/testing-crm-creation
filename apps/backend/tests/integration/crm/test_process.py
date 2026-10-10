@@ -492,8 +492,9 @@ async def test_rep05_c1_the_report_has_funnel_timeline_and_next_steps_and_no_not
     text = pdf_text(response.content)
     assert "Process funnel" in text
     assert "Approached: 1" in text
-    assert "Teaser: planned 2026-09-15, actual 2026-09-20" in text
-    assert "2026-11-15: Binding offers" in text
+    assert "Teaser: planned 15/09/2026, actual 20/09/2026" in text
+    assert "15/11/2026: Binding offers" in text
+    assert "2026-09-15" not in text
     for leaked in ("Secret view", "Internal gossip", "12345", "42.5", "Northstar", "fee"):
         assert leaked not in text
 

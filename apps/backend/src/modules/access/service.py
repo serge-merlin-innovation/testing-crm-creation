@@ -11,6 +11,7 @@ from typing import Any
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...infrastructure.i18n.formatters import format_date
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import (
     AccessRequestNotFoundError,
@@ -430,7 +431,7 @@ class AccessService:
             request.expires_at = expires_at
             request.decision_reason = values.reason.strip() if values.reason and values.reason.strip() else None
             title = f"Access to {mandate.code_name} approved"
-            body = f"You can work on {mandate.code_name} until {expires_at.date().isoformat()}."
+            body = f"You can work on {mandate.code_name} until {format_date(expires_at)}."
             message = Message(
                 user_id=requester.id,
                 email=requester.email,
@@ -637,7 +638,7 @@ class AccessService:
                     email=partner.email,
                     kind=EventKind.TASK_ASSIGNED.value,
                     title=f"Confirm the {mandate.code_name} team for {quarter}",
-                    body=f"Confirm or remove each person staffed on {mandate.code_name} by {due.date().isoformat()}.",
+                    body=f"Confirm or remove each person staffed on {mandate.code_name} by {format_date(due)}.",
                     link="/access",
                     mandate_id=mandate.id,
                 ),

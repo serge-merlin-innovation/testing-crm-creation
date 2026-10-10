@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...infrastructure.i18n.formatters import format_date
 from ..activity.models import Activity, ActivityLink
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import (
@@ -643,7 +644,7 @@ class OriginationService:
                 email=owner.email,
                 kind=EventKind.TASK_ASSIGNED.value,
                 title=title,
-                body=f"{title}, due {due.isoformat()}.",
+                body=f"{title}, due {format_date(due)}.",
                 link=f"/origination/{opportunity.id}",
             ),
             now,

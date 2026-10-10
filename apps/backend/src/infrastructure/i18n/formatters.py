@@ -5,7 +5,8 @@ from zoneinfo import ZoneInfo
 BELGIAN_TIME_ZONE = ZoneInfo("Europe/Brussels")
 
 
-def format_date(value: date) -> str:
+def format_date(value: date, language: str = "en") -> str:
+    """NFR-04 c4: DD/MM/YYYY in EN, FR and NL alike; a datetime is shown on its Brussels date."""
     if isinstance(value, datetime):
         value = value.astimezone(BELGIAN_TIME_ZONE) if value.tzinfo else value
     return value.strftime("%d/%m/%Y")

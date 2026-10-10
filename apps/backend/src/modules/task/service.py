@@ -5,6 +5,7 @@ from typing import Any
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...infrastructure.i18n.formatters import format_date
 from ..activity.schemas import RecordRef, RecordType
 from ..activity.service import require_record
 from ..audit.service import AuditContext, AuditService
@@ -109,7 +110,7 @@ class TaskService:
         return read(task, now.date())
 
     async def _assigned_message(self, db: AsyncSession, task: Task, assignee: User) -> Message:
-        due = task.due_date.isoformat()
+        due = format_date(task.due_date)
         if task.mandate_id is not None:
             # Deal messages name the code name only: the task title is free text and may name the client.
             code_name = (await db.execute(select(Mandate.code_name).where(Mandate.id == task.mandate_id))).scalar_one()
@@ -203,7 +204,7 @@ class TaskService:
             if assignee is None or assignee.is_deleted:
                 continue
             lines = [
-                f"- {code_names[t.mandate_id] + ' task' if t.mandate_id else t.title}, due {t.due_date.isoformat()}"
+                f"- {code_names[t.mandate_id] + ' task' if t.mandate_id else t.title}, due {format_date(t.due_date)}"
                 for t in tasks
             ]
             await self.notifications.add(
