@@ -22,6 +22,11 @@ class ProductionSecurityValidator:
                 "TEST_HOOKS_ENABLED is true on a deployed environment. The hooks freeze the clock and read "
                 "captured emails without authentication; they are for local runs and tests only."
             )
+        if deployed and not self.settings.BREACH_CHECK_ENABLED:
+            raise ProductionSecurityError(
+                "BREACH_CHECK_ENABLED is false on a deployed environment. New passwords must be checked "
+                "against known breaches (AUTH-12); the switch is for offline e2e runs only."
+            )
 
     def validate_production_security(self) -> None:
         self.validate_test_hooks()

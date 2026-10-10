@@ -8,6 +8,7 @@ from sqlalchemy import text
 
 from ..infrastructure.app_factory import create_application, lifespan_factory
 from ..infrastructure.auth.dependencies import set_bearer_resolver
+from ..infrastructure.breach import StaticBreachList, set_breach_checker
 from ..infrastructure.clock import get_clock
 from ..infrastructure.config.settings import get_settings
 from ..infrastructure.database import session as database_session
@@ -49,6 +50,8 @@ install_compliance()
 register_origination_jobs()
 register_operations_jobs()
 set_bearer_resolver(resolve_bearer)
+if not settings.BREACH_CHECK_ENABLED:
+    set_breach_checker(StaticBreachList(set()))
 
 
 @asynccontextmanager

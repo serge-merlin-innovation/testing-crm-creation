@@ -207,7 +207,15 @@ test("offers, comparison, a process letter, the funnel and the client report fro
     await page.getByLabel("EV (EUR m)").fill(ev);
     await page.getByLabel("Equity value (EUR m)").fill("30");
     await page.getByLabel("Conditions").fill("Confirmatory DD");
+    // A save clears the EV field when it lands: typing the next offer before then loses its EV.
+    const saved = page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().endsWith(`/mandates/${seeded.mandateId}/offers`),
+    );
     await page.getByRole("button", { name: "Save offer" }).click();
+    expect((await saved).status()).toBe(201);
+    await expect(page.getByLabel("EV (EUR m)")).toHaveValue("");
   };
   await record(seeded.unsignedName, "35");
   await record(seeded.signedName, "40");

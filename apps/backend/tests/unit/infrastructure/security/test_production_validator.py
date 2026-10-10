@@ -17,6 +17,7 @@ class TestProductionSecurityValidator:
             "SECRET_KEY": "xF9mWqP3nL7vBfKsRt8HjZ2CyE5QaM6NuV4DgX1SpY7LwB9KzT3RhI0UoJ5PcA2MvS8",
             "TOTP_ENCRYPTION_KEY": "Qz7vR2nK9pW4sL8mX3cB6tY1hF5jD0gA",
             "TEST_HOOKS_ENABLED": False,
+            "BREACH_CHECK_ENABLED": True,
             "POSTGRES_PASSWORD": "secure_db_password",
             "CORS_ENABLED": True,
             "CORS_ORIGINS": "https://example.com",

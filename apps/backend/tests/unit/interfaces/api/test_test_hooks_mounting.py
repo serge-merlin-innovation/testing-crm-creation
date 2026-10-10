@@ -42,6 +42,13 @@ def test_hooks_are_off_unless_explicitly_enabled():
 
 @pytest.mark.parametrize("environment", [EnvironmentOption.PRODUCTION, EnvironmentOption.STAGING])
 def test_validator_refuses_hooks_on_a_deployed_environment(environment):
-    settings = type("S", (), {"ENVIRONMENT": environment, "TEST_HOOKS_ENABLED": True})()
+    settings = type("S", (), {"ENVIRONMENT": environment, "TEST_HOOKS_ENABLED": True, "BREACH_CHECK_ENABLED": True})()
     with pytest.raises(ProductionSecurityError, match="TEST_HOOKS_ENABLED"):
+        ProductionSecurityValidator(settings).validate_test_hooks()  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("environment", [EnvironmentOption.PRODUCTION, EnvironmentOption.STAGING])
+def test_validator_refuses_a_disabled_breach_check_on_a_deployed_environment(environment):
+    settings = type("S", (), {"ENVIRONMENT": environment, "TEST_HOOKS_ENABLED": False, "BREACH_CHECK_ENABLED": False})()
+    with pytest.raises(ProductionSecurityError, match="BREACH_CHECK_ENABLED"):
         ProductionSecurityValidator(settings).validate_test_hooks()  # type: ignore[arg-type]
