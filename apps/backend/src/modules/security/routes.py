@@ -8,6 +8,7 @@ from crudauth.transports.session.useragent import parse_user_agent
 from fastapi import APIRouter, Form, Request, Response
 from sqlalchemy import func, select
 
+from ...infrastructure.auth.clocked_sessions import get_session_clock
 from ...infrastructure.auth.http_exceptions import HTTPException
 from ...infrastructure.auth.setup import auth as crud_auth
 from ...infrastructure.clock import ClockDep
@@ -17,6 +18,7 @@ from ..audit.dependencies import AuditContextDep
 from ..audit.service import AuditContext
 from ..role.authorization import has_permission, require_permission
 from ..role.permissions import Permission
+from ..session.dependencies import get_session_service
 from ..user.models import User
 from .dependencies import SecurityServiceDep
 from .schemas import (
@@ -53,8 +55,11 @@ async def _open_session(
 ) -> str:
     device_info = parse_user_agent(request.headers.get("user-agent", "")).model_dump()
     await service.complete_login(db, user, context, device_info)
+    limits = await get_session_service().metadata_for_new_session(
+        db, request.headers.get("user-agent", ""), get_session_clock().now()
+    )
     session_id, csrf_token = await crud_auth.sessions.create_session(
-        request, user_id=user.id, metadata={"login_type": "password+totp"}
+        request, user_id=user.id, metadata={"login_type": "password+totp", **limits}
     )
     await db.commit()
     crud_auth.sessions.set_session_cookies(response, session_id, csrf_token)

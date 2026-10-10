@@ -11,6 +11,7 @@ from ....modules.notification.routes import router as notifications_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.role.routes import router as roles_router
 from ....modules.security.routes import router as security_router
+from ....modules.session.routes import router as session_router
 from ....modules.user.routes import router as users_router
 
 router = APIRouter(prefix="/v1")
@@ -24,6 +25,7 @@ router.include_router(mandates_router, prefix="/mandates")
 router.include_router(notifications_router, prefix="/notifications")
 router.include_router(auth_router, prefix="/auth")
 router.include_router(security_router)
+router.include_router(session_router)
 
 if settings.ENVIRONMENT not in (EnvironmentOption.PRODUCTION, EnvironmentOption.STAGING):
     router.include_router(testing_router, prefix="/test-hooks")

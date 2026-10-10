@@ -57,6 +57,12 @@ function refuse(request: NextRequest) {
   return NextResponse.redirect(new URL(DEFAULT_AUTHENTICATED_PATH, request.url));
 }
 
+/** A signed-in page must not live in the browser cache, or Back after Log out would show it again. */
+function uncached(response: NextResponse) {
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const audience = audienceFor(request.nextUrl.pathname);
 
@@ -64,6 +70,11 @@ export async function proxy(request: NextRequest) {
   if (audience.kind === "public") {
     return allow(request, null);
   }
+
+  return uncached(await gate(request, audience));
+}
+
+async function gate(request: NextRequest, audience: ReturnType<typeof audienceFor>) {
 
   // Tier 2. Presence only — an expired cookie looks exactly like a live one from here.
   const sessionId = request.cookies.get(SESSION_COOKIE)?.value;

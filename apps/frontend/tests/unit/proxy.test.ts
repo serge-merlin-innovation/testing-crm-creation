@@ -262,3 +262,22 @@ describe("the forwarded identity", () => {
     );
   });
 });
+
+describe("signed-in pages are never cached (AUTH-04 c2)", () => {
+  it("marks a gated page no-store so Back after Log out asks the server again", async () => {
+    vi.stubGlobal("fetch", backendAnswering({ roleName: "Partner", permissions: [] }));
+
+    const response = await proxy(signedIn("/overview"));
+
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+
+  it("sends a revoked session's Back navigation to login instead of the page", async () => {
+    vi.stubGlobal("fetch", backendAnswering(401));
+
+    const response = await proxy(signedIn("/overview"));
+
+    expect(getRedirectUrl(response)).toContain("/login");
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+});
