@@ -668,3 +668,18 @@ async def test_con01_c5_do_not_contact_contact_cannot_be_set_on_a_listed_buyer(w
     assert patched.status_code == 422
     assert "Do not contact" in patched.text
     assert (await buyers(world, mandate_id))["buyers"][0]["contact_id"] is None
+
+
+async def test_co04_c2_linking_a_portfolio_company_never_drops_its_existing_parent(world):
+    fund = await company(world, "Northstar Capital")
+    holding = await company(world, "Bakery Holding", "target")
+    portfolio = await company(world, "Bakery Group", "target", parent_id=holding)
+
+    refused = await send(world.partner, "POST", f"/api/v1/companies/{fund}/portfolio", {"company_id": portfolio})
+    again = await send(world.partner, "POST", f"/api/v1/companies/{holding}/portfolio", {"company_id": portfolio})
+    detail = (await get(world.partner, f"/api/v1/companies/{portfolio}")).json()
+
+    assert refused.status_code == 422
+    assert "Bakery Holding" in refused.text
+    assert again.status_code == 200, again.text
+    assert detail["parent_id"] == holding

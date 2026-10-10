@@ -216,6 +216,12 @@ class InvestorProfileService:
         if await _is_ancestor(db, portfolio_id, fund_id):
             raise ValidationError("This link would create a loop in the group", field="company_id")
         old_parent = portfolio.parent_id
+        if old_parent is not None and old_parent != fund_id:
+            current = await self._company(db, old_parent)
+            raise ValidationError(
+                f"{portfolio.name} already belongs to the group of {current.name}: change its parent on the company first",
+                field="company_id",
+            )
         portfolio.parent_id = fund_id
         self.audit.record(
             db,
