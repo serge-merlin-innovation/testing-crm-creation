@@ -49,11 +49,12 @@ class Endpoint:
 
 
 def hidden_from_unstaffed(**staffed: Any) -> dict[str, Any]:
-    return {**{persona: HIDDEN for persona in UNSTAFFED}, **staffed}
+    # Read-only is refused on every deal route before the deal is even looked up (ROLE-01 c3).
+    return {**{persona: HIDDEN for persona in UNSTAFFED}, "read_only": FORBIDDEN, **staffed}
 
 
 ENDPOINTS: list[Endpoint] = [
-    Endpoint("GET", "/api/v1/mandates/", {persona: OK for persona in PERSONAS}, collection=True),
+    Endpoint("GET", "/api/v1/mandates/", {**{persona: OK for persona in PERSONAS}, "read_only": FORBIDDEN}, collection=True),
     Endpoint("GET", "/api/v1/notifications/", {persona: OK for persona in PERSONAS}, collection=True),
     Endpoint("GET", "/api/v1/mandates/{mandate_id}", hidden_from_unstaffed(member=OK, lead=OK)),
     Endpoint(
@@ -140,6 +141,14 @@ ENDPOINTS: list[Endpoint] = [
         "/api/v1/mandates/{mandate_id}/invoices/{invoice_id}",
         hidden_from_unstaffed(member=FORBIDDEN, lead=FORBIDDEN, compliance=OK),
         body=lambda ctx: {"paid_date": "2026-10-05"},
+    ),
+    # Close probability and date (REP-02): the team reads it and edits it.
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/forecast", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint(
+        "PUT",
+        "/api/v1/mandates/{mandate_id}/forecast",
+        hidden_from_unstaffed(member=OK, lead=OK),
+        body=lambda ctx: {"probability": 40, "expected_closing_date": "2027-01-15"},
     ),
     Endpoint("GET", "/api/v1/mandates/{mandate_id}/counterparties", hidden_from_unstaffed(member=OK, lead=OK)),
     Endpoint(
