@@ -11,12 +11,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { fieldErrors, readDetail } from "@/lib/deals";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { sendJson, useApiData } from "@/lib/use-api";
+import { InvestorProfilePanel } from "./investor-profile";
 
 type Messages = Record<MessageKey, string>;
 type Company = { id: number; name: string; type: string; country_id: number; enterprise_number: string | null };
 type Option = { id: number; label: string; code: string };
 type Duplicate = { id: number; name: string; reason: string };
 
+const BUYER_TYPES = new Set(["strategic_buyer", "financial_investor"]);
 const COMPANY_TYPES = ["target", "strategic_buyer", "financial_investor", "lender", "advisor", "other"];
 
 export function CompaniesView({ messages }: { messages: Messages }) {
@@ -31,6 +33,7 @@ export function CompaniesView({ messages }: { messages: Messages }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
   const [duplicates, setDuplicates] = useState<{ list: Duplicate[]; canConfirm: boolean } | null>(null);
+  const [profileFor, setProfileFor] = useState<number | null>(null);
 
   const belgian = countries.data?.find((country) => String(country.id) === countryId)?.code === "BE";
 
@@ -100,6 +103,7 @@ export function CompaniesView({ messages }: { messages: Messages }) {
                   <TableHead>{messages["common.name"]}</TableHead>
                   <TableHead>{messages["companies.type"]}</TableHead>
                   <TableHead>{messages["companies.enterpriseNumber"]}</TableHead>
+                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -108,12 +112,25 @@ export function CompaniesView({ messages }: { messages: Messages }) {
                     <TableCell>{company.name}</TableCell>
                     <TableCell>{company.type}</TableCell>
                     <TableCell>{company.enterprise_number ?? ""}</TableCell>
+                    <TableCell>
+                      {BUYER_TYPES.has(company.type) ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setProfileFor(profileFor === company.id ? null : company.id)}
+                        >
+                          {messages["investor.open"]}
+                        </Button>
+                      ) : null}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
           {companies.data?.length === 0 ? <p>{messages["common.empty"]}</p> : null}
+          {profileFor !== null ? <InvestorProfilePanel key={profileFor} companyId={profileFor} messages={messages} /> : null}
         </CardContent>
       </Card>
 
