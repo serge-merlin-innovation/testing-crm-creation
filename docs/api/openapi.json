@@ -1,6 +1,300 @@
 {
   "components": {
     "schemas": {
+      "AccessDecision": {
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/Decision"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "AccessDecision",
+        "type": "object"
+      },
+      "AccessRequestContext": {
+        "description": "What an approver sees: the request, never the deal itself (AUTHZ-07 c4).",
+        "properties": {
+          "can_comment": {
+            "title": "Can Comment",
+            "type": "boolean"
+          },
+          "can_decide": {
+            "title": "Can Decide",
+            "type": "boolean"
+          },
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/CommentRead"
+            },
+            "title": "Comments",
+            "type": "array"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/ConflictingDeal"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decided_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By Name"
+          },
+          "decision_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Reason"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "requester_id": {
+            "title": "Requester Id",
+            "type": "integer"
+          },
+          "requester_name": {
+            "title": "Requester Name",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RequestStatus"
+          }
+        },
+        "required": [
+          "id",
+          "code_name",
+          "requester_id",
+          "requester_name",
+          "reason",
+          "status",
+          "created_at",
+          "decision_reason",
+          "decided_by_name",
+          "expires_at",
+          "conflicts",
+          "comments",
+          "can_decide",
+          "can_comment"
+        ],
+        "title": "AccessRequestContext",
+        "type": "object"
+      },
+      "AccessRequestCreate": {
+        "properties": {
+          "code_name": {
+            "examples": [
+              "Falcon"
+            ],
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Code Name",
+            "type": "string"
+          },
+          "reason": {
+            "examples": [
+              "Need sector expertise for the buyer list"
+            ],
+            "maxLength": 1000,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code_name",
+          "reason"
+        ],
+        "title": "AccessRequestCreate",
+        "type": "object"
+      },
+      "AccessRequestItem": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "requester_name": {
+            "title": "Requester Name",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RequestStatus"
+          }
+        },
+        "required": [
+          "id",
+          "code_name",
+          "requester_name",
+          "reason",
+          "status",
+          "created_at"
+        ],
+        "title": "AccessRequestItem",
+        "type": "object"
+      },
+      "AccessReviewRead": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "due_at": {
+            "format": "date-time",
+            "title": "Due At",
+            "type": "string"
+          },
+          "escalated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Escalated At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewMember"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "partner_name": {
+            "title": "Partner Name",
+            "type": "string"
+          },
+          "quarter": {
+            "title": "Quarter",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "mandate_id",
+          "code_name",
+          "quarter",
+          "partner_name",
+          "due_at",
+          "completed_at",
+          "escalated_at",
+          "members"
+        ],
+        "title": "AccessReviewRead",
+        "type": "object"
+      },
+      "AccessReviewSubmit": {
+        "properties": {
+          "remove_user_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Remove User Ids",
+            "type": "array"
+          }
+        },
+        "title": "AccessReviewSubmit",
+        "type": "object"
+      },
       "ActivityCreate": {
         "properties": {
           "links": {
@@ -792,6 +1086,51 @@
         "title": "Body_upload_import_api_v1_imports__post",
         "type": "object"
       },
+      "BreakGlassCreate": {
+        "properties": {
+          "code_name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Code Name",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code_name",
+          "reason"
+        ],
+        "title": "BreakGlassCreate",
+        "type": "object"
+      },
+      "BreakGlassRead": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mandate_id",
+          "code_name",
+          "expires_at"
+        ],
+        "title": "BreakGlassRead",
+        "type": "object"
+      },
       "BuyerGrid": {
         "properties": {
           "buyers": {
@@ -1177,6 +1516,83 @@
           }
         },
         "title": "ClockSet",
+        "type": "object"
+      },
+      "CommentCreate": {
+        "properties": {
+          "body": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Decision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "CommentCreate",
+        "type": "object"
+      },
+      "CommentRead": {
+        "properties": {
+          "author_name": {
+            "title": "Author Name",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "on_behalf_of_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On Behalf Of Name"
+          },
+          "recommendation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Decision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "author_name",
+          "on_behalf_of_name",
+          "body",
+          "recommendation",
+          "label",
+          "created_at"
+        ],
+        "title": "CommentRead",
         "type": "object"
       },
       "CompanyCreate": {
@@ -1862,6 +2278,29 @@
         "title": "ConflictStatus",
         "type": "string"
       },
+      "ConflictingDeal": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "company_name": {
+            "title": "Company Name",
+            "type": "string"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mandate_id",
+          "code_name",
+          "company_name"
+        ],
+        "title": "ConflictingDeal",
+        "type": "object"
+      },
       "ContactBuyerRole": {
         "properties": {
           "code_name": {
@@ -2518,6 +2957,14 @@
         "title": "DealStage",
         "type": "string"
       },
+      "Decision": {
+        "enum": [
+          "approve",
+          "reject"
+        ],
+        "title": "Decision",
+        "type": "string"
+      },
       "DeclineReason": {
         "enum": [
           "price",
@@ -2527,6 +2974,71 @@
         ],
         "title": "DeclineReason",
         "type": "string"
+      },
+      "DelegationCreate": {
+        "properties": {
+          "delegate_id": {
+            "title": "Delegate Id",
+            "type": "integer"
+          },
+          "ends_on": {
+            "format": "date",
+            "title": "Ends On",
+            "type": "string"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "delegate_id",
+          "starts_on",
+          "ends_on"
+        ],
+        "title": "DelegationCreate",
+        "type": "object"
+      },
+      "DelegationRead": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "delegate_id": {
+            "title": "Delegate Id",
+            "type": "integer"
+          },
+          "delegate_name": {
+            "title": "Delegate Name",
+            "type": "string"
+          },
+          "ends_on": {
+            "format": "date",
+            "title": "Ends On",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "delegate_id",
+          "delegate_name",
+          "starts_on",
+          "ends_on",
+          "active"
+        ],
+        "title": "DelegationRead",
+        "type": "object"
       },
       "EmploymentRead": {
         "properties": {
@@ -2626,6 +3138,11 @@
           "export.approval",
           "milestone.due",
           "conflict.review_overdue",
+          "access.requested",
+          "access.approved",
+          "access.rejected",
+          "access.break_glass",
+          "access.review_overdue",
           "buyer.idle",
           "buyer.nda_pending"
         ],
@@ -5290,6 +5807,64 @@
         "title": "MilestoneUpdate",
         "type": "object"
       },
+      "MyAccessRequest": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Reason"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RequestStatus"
+          }
+        },
+        "required": [
+          "id",
+          "code_name",
+          "reason",
+          "status",
+          "created_at",
+          "decision_reason",
+          "expires_at"
+        ],
+        "title": "MyAccessRequest",
+        "type": "object"
+      },
       "NdaRead": {
         "properties": {
           "agreed_date": {
@@ -6502,6 +7077,15 @@
         "title": "RegisterPrefill",
         "type": "object"
       },
+      "RequestStatus": {
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ],
+        "title": "RequestStatus",
+        "type": "string"
+      },
       "RetentionPolicyValues": {
         "additionalProperties": false,
         "properties": {
@@ -6609,6 +7193,29 @@
         ],
         "title": "ReviewDecision",
         "type": "string"
+      },
+      "ReviewMember": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "role"
+        ],
+        "title": "ReviewMember",
+        "type": "object"
       },
       "RolePermissionsUpdate": {
         "properties": {
@@ -8568,6 +9175,522 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/access-requests/": {
+      "get": {
+        "description": "Compliance sees all; a deal partner or active delegate sees the ones sent to them.",
+        "operationId": "approval_queue_api_v1_access_requests__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "code_name": "code_name",
+                    "created_at": "2026-10-10T09:00:00Z",
+                    "id": 1,
+                    "reason": "reason",
+                    "requester_name": "requester_name",
+                    "status": "pending"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccessRequestItem"
+                  },
+                  "title": "Response Approval Queue Api V1 Access Requests  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Pending requests I approve",
+        "tags": [
+          "Wall crossing"
+        ]
+      },
+      "post": {
+        "description": "The deal partner (and their delegate) can comment; compliance decides. 404 for an unknown code name.",
+        "operationId": "create_request_api_v1_access_requests__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "code_name": "Falcon",
+                "reason": "Need sector expertise for the buyer list"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/AccessRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "code_name": "code_name",
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "decision_reason": "text",
+                  "expires_at": "2026-10-10T09:00:00Z",
+                  "id": 1,
+                  "reason": "reason",
+                  "status": "pending"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MyAccessRequest"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "No open deal has this code name"
+          },
+          "409": {
+            "description": "Already staffed or asked"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask to join a deal by its code name",
+        "tags": [
+          "Wall crossing"
+        ]
+      }
+    },
+    "/api/v1/access-requests/mine": {
+      "get": {
+        "operationId": "my_requests_api_v1_access_requests_mine_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "code_name": "code_name",
+                    "created_at": "2026-10-10T09:00:00Z",
+                    "decision_reason": "text",
+                    "expires_at": "2026-10-10T09:00:00Z",
+                    "id": 1,
+                    "reason": "reason",
+                    "status": "pending"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MyAccessRequest"
+                  },
+                  "title": "Response My Requests Api V1 Access Requests Mine Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My wall-crossing requests",
+        "tags": [
+          "Wall crossing"
+        ]
+      }
+    },
+    "/api/v1/access-requests/{request_id}": {
+      "get": {
+        "description": "Never the deal itself. `conflicts` lists the requester's deals on the other side, for compliance only.",
+        "operationId": "get_request_api_v1_access_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "can_comment": true,
+                  "can_decide": true,
+                  "code_name": "code_name",
+                  "comments": [
+                    {
+                      "author_name": "author_name",
+                      "body": "body",
+                      "created_at": "2026-10-10T09:00:00Z",
+                      "label": "label",
+                      "on_behalf_of_name": "text",
+                      "recommendation": null
+                    }
+                  ],
+                  "conflicts": [
+                    {
+                      "code_name": "code_name",
+                      "company_name": "company_name",
+                      "mandate_id": 1
+                    }
+                  ],
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "decided_by_name": "text",
+                  "decision_reason": "text",
+                  "expires_at": "2026-10-10T09:00:00Z",
+                  "id": 1,
+                  "reason": "reason",
+                  "requester_id": 1,
+                  "requester_name": "requester_name",
+                  "status": "pending"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/AccessRequestContext"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not yours to see"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The approval context of one request",
+        "tags": [
+          "Wall crossing"
+        ]
+      }
+    },
+    "/api/v1/access-requests/{request_id}/comments": {
+      "post": {
+        "description": "A delegate's comment is recorded on behalf of the partner.",
+        "operationId": "comment_request_api_v1_access_requests__request_id__comments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "body": "body",
+                "recommendation": "approve"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/CommentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "can_comment": true,
+                  "can_decide": true,
+                  "code_name": "code_name",
+                  "comments": [
+                    {
+                      "author_name": "author_name",
+                      "body": "body",
+                      "created_at": "2026-10-10T09:00:00Z",
+                      "label": "label",
+                      "on_behalf_of_name": "text",
+                      "recommendation": null
+                    }
+                  ],
+                  "conflicts": [
+                    {
+                      "code_name": "code_name",
+                      "company_name": "company_name",
+                      "mandate_id": 1
+                    }
+                  ],
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "decided_by_name": "text",
+                  "decision_reason": "text",
+                  "expires_at": "2026-10-10T09:00:00Z",
+                  "id": 1,
+                  "reason": "reason",
+                  "requester_id": 1,
+                  "requester_name": "requester_name",
+                  "status": "pending"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/AccessRequestContext"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not yours to see"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Comment or recommend (deal partner, delegate, compliance)",
+        "tags": [
+          "Wall crossing"
+        ]
+      }
+    },
+    "/api/v1/access-requests/{request_id}/decision": {
+      "post": {
+        "description": "Approval staffs the requester until `expires_at` (default 30 days). Rejection needs a reason.",
+        "operationId": "decide_request_api_v1_access_requests__request_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "decision": "approve",
+                "expires_at": "2026-10-10T09:00:00Z",
+                "reason": "text"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/AccessDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "can_comment": true,
+                  "can_decide": true,
+                  "code_name": "code_name",
+                  "comments": [
+                    {
+                      "author_name": "author_name",
+                      "body": "body",
+                      "created_at": "2026-10-10T09:00:00Z",
+                      "label": "label",
+                      "on_behalf_of_name": "text",
+                      "recommendation": null
+                    }
+                  ],
+                  "conflicts": [
+                    {
+                      "code_name": "code_name",
+                      "company_name": "company_name",
+                      "mandate_id": 1
+                    }
+                  ],
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "decided_by_name": "text",
+                  "decision_reason": "text",
+                  "expires_at": "2026-10-10T09:00:00Z",
+                  "id": 1,
+                  "reason": "reason",
+                  "requester_id": 1,
+                  "requester_name": "requester_name",
+                  "status": "pending"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/AccessRequestContext"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Only compliance decides"
+          },
+          "404": {
+            "description": "Not found, or not yours to see"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve or reject (compliance)",
+        "tags": [
+          "Wall crossing"
+        ]
+      }
+    },
+    "/api/v1/access-reviews/": {
+      "get": {
+        "description": "A partner sees theirs, with the team to confirm; compliance sees every review and its escalation.",
+        "operationId": "list_reviews_api_v1_access_reviews__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "code_name": "code_name",
+                    "completed_at": "2026-10-10T09:00:00Z",
+                    "due_at": "2026-10-10T09:00:00Z",
+                    "escalated_at": "2026-10-10T09:00:00Z",
+                    "id": 1,
+                    "mandate_id": 1,
+                    "members": [
+                      {
+                        "name": "name",
+                        "role": "role",
+                        "user_id": 1
+                      }
+                    ],
+                    "partner_name": "partner_name",
+                    "quarter": "quarter"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AccessReviewRead"
+                  },
+                  "title": "Response List Reviews Api V1 Access Reviews  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Quarterly team reviews",
+        "tags": [
+          "Wall crossing"
+        ]
+      }
+    },
+    "/api/v1/access-reviews/{review_id}": {
+      "post": {
+        "operationId": "submit_review_api_v1_access_reviews__review_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "title": "Review Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "remove_user_ids": [
+                  1
+                ]
+              },
+              "schema": {
+                "$ref": "#/components/schemas/AccessReviewSubmit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "code_name": "code_name",
+                  "completed_at": "2026-10-10T09:00:00Z",
+                  "due_at": "2026-10-10T09:00:00Z",
+                  "escalated_at": "2026-10-10T09:00:00Z",
+                  "id": 1,
+                  "mandate_id": 1,
+                  "members": [
+                    {
+                      "name": "name",
+                      "role": "role",
+                      "user_id": 1
+                    }
+                  ],
+                  "partner_name": "partner_name",
+                  "quarter": "quarter"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/AccessReviewRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not yours to see"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm the team, removing the listed users",
+        "tags": [
+          "Wall crossing"
+        ]
+      }
+    },
     "/api/v1/activities/": {
       "post": {
         "description": "Shows on every linked record's timeline. Linking a deal needs edit access to it.",
@@ -9711,6 +10834,81 @@
         "summary": "Stay logged in: slide the idle window without leaving the page",
         "tags": [
           "Sessions"
+        ]
+      }
+    },
+    "/api/v1/break-glass/": {
+      "post": {
+        "description": "Needs a reason and the current 2FA code in X-Step-Up-Code. Read-only, no exports, for 4 hours. Compliance and the deal partner are notified.",
+        "operationId": "break_glass_api_v1_break_glass__post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Step-Up-Code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Step-Up-Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "code_name": "code_name",
+                "reason": "reason"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/BreakGlassCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "code_name": "code_name",
+                  "expires_at": "2026-10-10T09:00:00Z",
+                  "mandate_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BreakGlassRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Code missing or wrong"
+          },
+          "403": {
+            "description": "Admins only"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Emergency read access to a deal (Admin)",
+        "tags": [
+          "Wall crossing"
         ]
       }
     },
@@ -11699,6 +12897,132 @@
         "summary": "Add or update myself as a relationship holder",
         "tags": [
           "Contacts"
+        ]
+      }
+    },
+    "/api/v1/delegations/": {
+      "get": {
+        "operationId": "list_delegations_api_v1_delegations__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "active": true,
+                    "delegate_id": 1,
+                    "delegate_name": "delegate_name",
+                    "ends_on": "2026-10-10",
+                    "id": 1,
+                    "starts_on": "2026-10-10"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DelegationRead"
+                  },
+                  "title": "Response List Delegations Api V1 Delegations  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My current and upcoming delegations",
+        "tags": [
+          "Wall crossing"
+        ]
+      },
+      "post": {
+        "description": "Requests arriving in the range go to the delegate and to me. Both dates are inclusive.",
+        "operationId": "create_delegation_api_v1_delegations__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "delegate_id": 1,
+                "ends_on": "2026-10-10",
+                "starts_on": "2026-10-10"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/DelegationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "active": true,
+                  "delegate_id": 1,
+                  "delegate_name": "delegate_name",
+                  "ends_on": "2026-10-10",
+                  "id": 1,
+                  "starts_on": "2026-10-10"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/DelegationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delegate my approvals for a date range",
+        "tags": [
+          "Wall crossing"
+        ]
+      }
+    },
+    "/api/v1/delegations/{delegation_id}": {
+      "delete": {
+        "operationId": "delete_delegation_api_v1_delegations__delegation_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "delegation_id",
+            "required": true,
+            "schema": {
+              "title": "Delegation Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not yours to see"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "End a delegation",
+        "tags": [
+          "Wall crossing"
         ]
       }
     },
@@ -14021,6 +15345,48 @@
         "summary": "Add a counterparty",
         "tags": [
           "Compliance"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/export": {
+      "get": {
+        "description": "Deal team only: compliance reading a closed deal and break-glass access may not export (AUTHZ-08 c3).",
+        "operationId": "export_mandate_api_v1_mandates__mandate_id__export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/csv": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not on the deal team (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export the deal and its team as CSV",
+        "tags": [
+          "Mandates"
         ]
       }
     },
@@ -18054,6 +19420,22 @@
               ],
               "title": "Status"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-Step-Up-Code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Step-Up-Code"
+            }
           }
         ],
         "responses": {
@@ -18830,6 +20212,22 @@
             "schema": {
               "title": "User Id",
               "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Step-Up-Code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Step-Up-Code"
             }
           }
         ],

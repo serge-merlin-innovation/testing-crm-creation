@@ -103,7 +103,12 @@ async def get_users(
 
 @users_router.get("/export", summary="Export the filtered user list as CSV (Admin)", response_class=Response)
 async def export_users(
-    db: AsyncSessionDep, clock: ClockDep, _: UserManagerDep, role_id: int | None = None, status: Status = None
+    db: AsyncSessionDep,
+    clock: ClockDep,
+    _: UserManagerDep,
+    __: StepUpUserDep,
+    role_id: int | None = None,
+    status: Status = None,
 ) -> Response:
     rows, _total = await list_users(db, clock.now(), role_id, status)
     return Response(

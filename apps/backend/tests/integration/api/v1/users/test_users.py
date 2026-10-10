@@ -3,7 +3,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.modules.role.permissions import RoleName
-from tests.integration.foundation.helpers import login, make_user, role_id
+from tests.integration.foundation.helpers import login, make_user, role_id, step_up
 
 pytestmark = pytest.mark.asyncio
 
@@ -107,7 +107,9 @@ async def test_unknown_role_is_404(client: AsyncClient, seeded_db: AsyncSession)
     ana = await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
     csrf = await login(client, "admin@firm.be")
 
-    response = await client.patch(f"/api/v1/users/{ana['id']}/role", json={"role_id": 99999}, headers=csrf)
+    response = await client.patch(
+        f"/api/v1/users/{ana['id']}/role", json={"role_id": 99999}, headers=step_up("admin@firm.be", csrf)
+    )
 
     assert response.status_code == 404
 

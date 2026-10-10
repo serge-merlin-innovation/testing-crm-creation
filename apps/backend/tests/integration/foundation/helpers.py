@@ -61,3 +61,8 @@ async def login(client: AsyncClient, email: str, password: str = PASSWORD, trust
         assert response.status_code == 200, response.text
         body = response.json()
     return {"X-CSRF-Token": body["csrf_token"]}
+
+
+def step_up(email: str, headers: dict[str, str] | None = None) -> dict[str, str]:
+    """Headers for a sensitive action (AUTH-02 c5): the session's CSRF plus a fresh 2FA code."""
+    return {**(headers or {}), "X-Step-Up-Code": current_code(email)}

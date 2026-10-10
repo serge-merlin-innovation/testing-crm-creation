@@ -8,6 +8,8 @@ from ...infrastructure.auth.http_exceptions import (
     UnprocessableEntityException,
 )
 from .exceptions import (
+    AccessRequestNotFoundError,
+    AccessReviewNotFoundError,
     ActivityNotFoundError,
     CompanyNotFoundError,
     ContactNotFoundError,
@@ -89,6 +91,8 @@ EXCEPTION_MAPPING: dict[type[DomainError], Callable[[str], HTTPException]] = {
     DealLinkNotFoundError: lambda message: NotFoundException(detail="Link not found."),
     ActivityNotFoundError: lambda message: NotFoundException(detail="Activity not found."),
     TaskNotFoundError: lambda message: NotFoundException(detail="Task not found."),
+    AccessRequestNotFoundError: lambda message: NotFoundException(detail="Access request not found."),
+    AccessReviewNotFoundError: lambda message: NotFoundException(detail="Access review not found."),
     MergeBlockedError: lambda message: ForbiddenException(
         detail="One of these records is on a deal you cannot access. Ask Compliance to merge them."
     ),

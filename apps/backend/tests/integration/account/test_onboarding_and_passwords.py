@@ -23,6 +23,7 @@ from tests.integration.foundation.helpers import (
     make_user,
     role_id,
     secret_from_uri,
+    step_up,
 )
 
 pytestmark = pytest.mark.asyncio
@@ -483,11 +484,13 @@ async def test_admin_filters_users_by_role_and_status_and_exports_csv(client, se
     by_role = (await client.get("/api/v1/users/", params={"role_id": analyst})).json()["data"]
     invited = (await client.get("/api/v1/users/", params={"status": "invited"})).json()["data"]
     active_analysts = (await client.get("/api/v1/users/", params={"role_id": analyst, "status": "active"})).json()["data"]
-    export = await client.get("/api/v1/users/export", params={"role_id": analyst})
+    no_code = await client.get("/api/v1/users/export", params={"role_id": analyst})
+    export = await client.get("/api/v1/users/export", params={"role_id": analyst}, headers=step_up("admin@firm.be"))
 
     assert sorted(u["email"] for u in by_role) == ["ana@firm.be", "nina@firm.be"]
     assert [u["email"] for u in invited] == ["nina@firm.be"]
     assert [u["email"] for u in active_analysts] == ["ana@firm.be"]
+    assert no_code.status_code == 401
     assert export.status_code == 200
     assert export.headers["content-type"].startswith("text/csv")
     rows = list(csv.DictReader(io.StringIO(export.text)))
