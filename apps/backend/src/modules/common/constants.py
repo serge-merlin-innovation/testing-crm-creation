@@ -8,11 +8,17 @@ from ...infrastructure.auth.http_exceptions import (
     UnprocessableEntityException,
 )
 from .exceptions import (
+    CompanyNotFoundError,
+    ContactNotFoundError,
     DomainError,
+    GroupLoopError,
     InsufficientCreditsError,
     LastAdminError,
     OneRolePerUserError,
     PermissionDeniedError,
+    PicklistValueExistsError,
+    PicklistValueInUseError,
+    PicklistValueNotFoundError,
     ResourceExistsError,
     ResourceNotFoundError,
     RoleNotFoundError,
@@ -34,6 +40,14 @@ EXCEPTION_MAPPING: dict[type[DomainError], Callable[[str], HTTPException]] = {
     UserExistsError: lambda message: HTTPException(status_code=409, detail="A user with this email already exists."),
     LastAdminError: lambda message: ForbiddenException(detail="The last Admin cannot be removed."),
     OneRolePerUserError: lambda message: HTTPException(status_code=409, detail="A user can hold only one role."),
+    PicklistValueInUseError: lambda message: HTTPException(
+        status_code=409, detail="This value is in use: rename or deactivate it instead."
+    ),
+    PicklistValueExistsError: lambda message: HTTPException(status_code=409, detail="A value with this code exists."),
+    PicklistValueNotFoundError: lambda message: NotFoundException(detail="Picklist value not found."),
+    CompanyNotFoundError: lambda message: NotFoundException(detail="Company not found."),
+    ContactNotFoundError: lambda message: NotFoundException(detail="Contact not found."),
+    GroupLoopError: lambda message: UnprocessableEntityException(detail=message),
     InsufficientCreditsError: lambda message: HTTPException(status_code=402, detail=message or "Insufficient credits."),
     ResourceNotFoundError: lambda message: NotFoundException(detail="The requested resource was not found."),
     ResourceExistsError: lambda message: DuplicateValueException(detail="This resource already exists."),

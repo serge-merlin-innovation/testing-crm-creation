@@ -11,6 +11,7 @@ from ..infrastructure.database import session as database_session
 from ..infrastructure.jobs import job_runner
 from ..infrastructure.security import validate_production_security
 from ..interfaces.api import router
+from ..modules.picklist.service import seed_default_picklists
 from ..modules.role.authorization import require_permission
 from ..modules.role.permissions import Permission
 from ..modules.role.service import seed_default_roles
@@ -30,6 +31,7 @@ async def lifespan_with_security(app: FastAPI) -> AsyncGenerator[None, None]:
         sessions = database_session.local_session
         async with sessions() as db:
             await seed_default_roles(db)
+            await seed_default_picklists(db)
         if settings.SCHEDULED_JOBS_ENABLED:
             job_runner.start(sessions, get_clock(), timedelta(seconds=settings.SCHEDULED_JOBS_TICK_SECONDS))
         try:
