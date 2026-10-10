@@ -1298,5 +1298,17 @@
  "{0}: invoice the success fee": {
   "fr": "{0} : facturer la commission de succès",
   "nl": "{0}: succesfee factureren"
+ },
+ "Client approved follows from the client's approval: record it in Approval": {
+  "fr": "Approuvé par le client découle de l'approbation du client : indiquez-la dans Approbation",
+  "nl": "Goedgekeurd door klant volgt uit de goedkeuring van de klant: noteer die bij Goedkeuring"
+ },
+ "{0} already belongs to the group of {1}: change its parent on the company first": {
+  "fr": "{0} fait déjà partie du groupe de {1} : modifiez d'abord sa société mère sur la fiche société",
+  "nl": "{0} behoort al tot de groep van {1}: wijzig eerst de moedermaatschappij op de bedrijfsfiche"
+ },
+ "No filed accounts for this number": {
+  "fr": "Aucun compte déposé pour ce numéro",
+  "nl": "Geen neergelegde rekeningen voor dit nummer"
  }
 }

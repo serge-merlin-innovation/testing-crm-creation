@@ -6,11 +6,12 @@ from decimal import Decimal
 from typing import Any
 
 from openpyxl import Workbook  # type: ignore[import-untyped]
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from ...infrastructure.email import get_email_sender
+from ..activity.models import Activity, ActivityLink
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import CompanyNotFoundError, DealForbiddenError, ValidationError
 from ..common.spreadsheet import safe_row
@@ -34,7 +35,9 @@ from .schemas import (
     BuyerStatus,
     BuyerUpdate,
     NdaUpdate,
+    Stake,
     StatusChange,
+    SuggestStake,
     WarningReason,
 )
 
@@ -53,7 +56,15 @@ ACTIVE_PHASES = frozenset(
     }
 )
 # Statuses reachable only after the NDA is signed (BUY-03 c2).
-AFTER_NDA = (BuyerStatus.IM_SENT, BuyerStatus.INDICATIVE_OFFER, BuyerStatus.MANAGEMENT_MEETING, BuyerStatus.BINDING_OFFER)
+AFTER_NDA = (
+    BuyerStatus.IM_SENT,
+    BuyerStatus.INDICATIVE_OFFER,
+    BuyerStatus.DATA_ROOM_ACCESS,
+    BuyerStatus.BINDING_OFFER,
+    BuyerStatus.PREFERRED_BIDDER,
+)
+# Not yet approached: the client's approval alone moves a buyer between these two.
+NOT_APPROACHED = (BuyerStatus.LONG_LIST.value, BuyerStatus.CLIENT_APPROVED.value)
 ORDER = list(BuyerStatus)
 TYPE_LABELS = {
     "target": "Target",
@@ -78,6 +89,16 @@ async def _is_ancestor(db: AsyncSession, ancestor_id: int, company_id: int) -> b
         seen.add(current)
         current = (await db.execute(select(Company.parent_id).where(Company.id == current))).scalar_one_or_none()
     return False
+
+
+def _profile_filters(ev_ebitda: Decimal | None, stake: SuggestStake | None) -> list[Any]:
+    filters: list[Any] = []
+    if ev_ebitda is not None:
+        filters.append(or_(InvestorProfile.ev_ebitda_min.is_(None), InvestorProfile.ev_ebitda_min <= ev_ebitda))
+        filters.append(or_(InvestorProfile.ev_ebitda_max.is_(None), InvestorProfile.ev_ebitda_max >= ev_ebitda))
+    if stake is not None:
+        filters.append(InvestorProfile.stake.in_([stake.value, Stake.BOTH.value]))
+    return filters
 
 
 class InvestorProfileService:
@@ -192,6 +213,12 @@ class InvestorProfileService:
         if await _is_ancestor(db, portfolio_id, fund_id):
             raise ValidationError("This link would create a loop in the group", field="company_id")
         old_parent = portfolio.parent_id
+        if old_parent is not None and old_parent != fund_id:
+            current = await self._company(db, old_parent)
+            raise ValidationError(
+                f"{portfolio.name} already belongs to the group of {current.name}: change its parent on the company first",
+                field="company_id",
+            )
         portfolio.parent_id = fund_id
         self.audit.record(
             db,
@@ -299,7 +326,13 @@ class BuyerService:
 
     # Suggest and add (BUY-01)
 
-    async def suggestions(self, db: AsyncSession, grant: DealGrant) -> list[dict[str, Any]]:
+    async def suggestions(
+        self,
+        db: AsyncSession,
+        grant: DealGrant,
+        ev_ebitda: Decimal | None = None,
+        stake: SuggestStake | None = None,
+    ) -> list[dict[str, Any]]:
         """Companies with an investor profile, ranked by how many criteria fit the target's sector, geography and size."""
         mandate = grant.mandate
         subject = await db.get(Company, mandate.target_id or mandate.client_id)
@@ -315,6 +348,7 @@ class BuyerService:
                     InvestorProfile.criteria_updated_at.is_not(None),
                     Company.id.not_in(listed),
                     Company.id.not_in([cid for cid in (mandate.client_id, mandate.target_id) if cid is not None]),
+                    *_profile_filters(ev_ebitda, stake),
                 )
             )
         ).all()
@@ -519,11 +553,19 @@ class BuyerService:
             raise ValidationError("Give a rationale for the buyer", field="rationale")
         if "contact_id" in changes:
             await self._check_contact(db, values.contact_id)
-        if values.approval == Approval.EXCLUDED and buyer.status != BuyerStatus.LONG_LIST.value:
+        if values.approval == Approval.EXCLUDED and buyer.status not in NOT_APPROACHED:
             raise ValidationError("A buyer already approached cannot be excluded", field="approval")
         old = {field: getattr(buyer, field) for field in changes}
         for field, value in changes.items():
             setattr(buyer, field, value.strip() if field == "rationale" and value else value)
+        if "approval" in changes and buyer.status in NOT_APPROACHED:
+            approved = values.approval == Approval.APPROVED
+            status = BuyerStatus.CLIENT_APPROVED if approved else BuyerStatus.LONG_LIST
+            if buyer.status != status.value:
+                assert context.user_id is not None
+                buyer.status = status.value
+                buyer.status_changed_at = now
+                buyer.status_changed_by = context.user_id
         buyer.last_activity_at = now
         self.audit.record(
             db,
@@ -540,6 +582,8 @@ class BuyerService:
     def _check_status(self, buyer: DealBuyer, status: BuyerStatus, nda: BuyerNda | None) -> None:
         if status in (BuyerStatus.LONG_LIST, BuyerStatus.DECLINED):
             return
+        if status == BuyerStatus.CLIENT_APPROVED:
+            raise ValidationError("Client approved follows from the client's approval: record it in Approval", field="status")
         if status == BuyerStatus.NDA_SIGNED:
             raise ValidationError("NDA signed follows from the NDA's signed date: log it on the NDA", field="status")
         if buyer.approval != Approval.APPROVED.value:
@@ -677,6 +721,20 @@ def _nda(nda: BuyerNda) -> dict[str, Any]:
     }
 
 
+async def _last_logged_activity(db: AsyncSession, buyer: DealBuyer, now: datetime) -> datetime | None:
+    """The latest call, meeting or email logged on the buyer company or its contact (BUY-03 c5)."""
+    linked = (ActivityLink.record_type == "company") & (ActivityLink.record_id == buyer.company_id)
+    if buyer.contact_id is not None:
+        linked = linked | ((ActivityLink.record_type == "contact") & (ActivityLink.record_id == buyer.contact_id))
+    return (
+        await db.execute(
+            select(func.max(Activity.occurred_at))
+            .join(ActivityLink, ActivityLink.activity_id == Activity.id)
+            .where(linked, Activity.deleted_at.is_(None), Activity.occurred_at <= now)
+        )
+    ).scalar_one_or_none()
+
+
 class BuyerReminders:
     def __init__(self, notifications: NotificationService | None = None) -> None:
         self.notifications = notifications or NotificationService(get_email_sender())
@@ -693,11 +751,13 @@ class BuyerReminders:
                     DealBuyer.status != BuyerStatus.DECLINED.value,
                     DealBuyer.approval != Approval.EXCLUDED.value,
                     DealBuyer.last_activity_at <= now - BUYER_IDLE_AFTER,
-                    (DealBuyer.idle_reminded_at.is_(None)) | (DealBuyer.idle_reminded_at < DealBuyer.last_activity_at),
                 )
             )
         ).all()
         for buyer, mandate, owner in idle:
+            last = max(buyer.last_activity_at, await _last_logged_activity(db, buyer, now) or buyer.last_activity_at)
+            if last > now - BUYER_IDLE_AFTER or (buyer.idle_reminded_at is not None and buyer.idle_reminded_at >= last):
+                continue
             await self._remind(
                 db,
                 owner,

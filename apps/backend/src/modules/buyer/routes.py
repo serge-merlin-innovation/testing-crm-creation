@@ -1,6 +1,7 @@
-from typing import Any
+from decimal import Decimal
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Query, Response
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
@@ -22,6 +23,7 @@ from .schemas import (
     NdaUpdate,
     StatusChange,
     Suggestion,
+    SuggestStake,
 )
 
 # Under /mandates: the deal's buyer list.
@@ -142,11 +144,20 @@ async def get_buyers(grant: ReadGrant, db: AsyncSessionDep, service: BuyerServic
     "/{mandate_id}/buyers/suggestions",
     response_model=list[Suggestion],
     summary="Suggest buyers",
-    description="Investor profiles ranked by fit with the target's sector, geography and size (BUY-01).",
+    description="Investor profiles ranked by fit with the target's sector, geography and size (BUY-01), "
+    "optionally filtered by EV/EBITDA multiple and majority/minority stake (CO-04 c1).",
     responses=HIDDEN,
 )
-async def get_suggestions(grant: ReadGrant, db: AsyncSessionDep, service: BuyerServiceDep) -> list[dict[str, Any]]:
-    return await service.suggestions(db, grant)
+async def get_suggestions(
+    grant: ReadGrant,
+    db: AsyncSessionDep,
+    service: BuyerServiceDep,
+    ev_ebitda: Annotated[
+        Decimal | None, Query(ge=0, description="Only profiles whose EV/EBITDA range includes this multiple")
+    ] = None,
+    stake: Annotated[SuggestStake | None, Query(description="Only profiles that take this stake (or both)")] = None,
+) -> list[dict[str, Any]]:
+    return await service.suggestions(db, grant, ev_ebitda=ev_ebitda, stake=stake)
 
 
 @router.post(

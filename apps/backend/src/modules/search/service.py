@@ -1,10 +1,12 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import ColumnElement, String, cast, func, literal, or_, select
+from sqlalchemy import ColumnElement, Select, String, cast, func, literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..audit.service import AuditContext, AuditService
+from ..buyer.models import InvestorProfile
 from ..common.exceptions import PermissionDeniedError, ResourceNotFoundError, ValidationError
 from ..company.models import Company
 from ..contact.models import Contact, Employment
@@ -36,6 +38,18 @@ def rank(expression: Any, term: ColumnElement[str]) -> ColumnElement[float]:
     return func.word_similarity(term, fold(expression))
 
 
+def _ticket_overlaps(ev_min: Decimal | None, ev_max: Decimal | None) -> Select[tuple[int]]:
+    """Investors whose ticket range (EUR m, CO-04) overlaps the searched ticket (EUR k)."""
+    query = select(InvestorProfile.company_id).where(
+        or_(InvestorProfile.ticket_min.is_not(None), InvestorProfile.ticket_max.is_not(None))
+    )
+    if ev_min is not None:
+        query = query.where(or_(InvestorProfile.ticket_max.is_(None), InvestorProfile.ticket_max * 1000 >= ev_min))
+    if ev_max is not None:
+        query = query.where(or_(InvestorProfile.ticket_min.is_(None), InvestorProfile.ticket_min * 1000 <= ev_max))
+    return query
+
+
 class SearchService:
     def __init__(self, contacts: ContactService | None = None) -> None:
         self.contacts = contacts or ContactService()
@@ -64,13 +78,13 @@ class SearchService:
             filters.append(Company.country_id.in_(criteria.country_ids))
         if criteria.sector_ids:
             filters.append(Company.sector_id.in_(criteria.sector_ids))
+        if criteria.ev_min is not None or criteria.ev_max is not None:
+            filters.append(Company.id.in_(_ticket_overlaps(criteria.ev_min, criteria.ev_max)))
         return filters
 
     async def _companies(
         self, db: AsyncSession, criteria: SearchCriteria, term: ColumnElement[str] | None, limit: int
     ) -> list[dict[str, Any]]:
-        if criteria.ev_min is not None or criteria.ev_max is not None:
-            return []
         query = select(Company).where(*self._company_filters(criteria))
         if term is not None:
             query = query.where(matches(Company.name, term)).order_by(rank(Company.name, term).desc(), Company.name)
@@ -82,8 +96,6 @@ class SearchService:
     async def _contacts(
         self, db: AsyncSession, criteria: SearchCriteria, term: ColumnElement[str] | None, limit: int
     ) -> list[dict[str, Any]]:
-        if criteria.ev_min is not None or criteria.ev_max is not None:
-            return []
         full_name = Contact.first_name + " " + Contact.last_name
         query = select(Contact, Employment.company_id).outerjoin(
             Employment, (Employment.contact_id == Contact.id) & Employment.end_date.is_(None)

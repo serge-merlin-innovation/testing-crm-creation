@@ -14,15 +14,22 @@ class Stake(StrEnum):
 
 class BuyerStatus(StrEnum):
     LONG_LIST = "long_list"
+    CLIENT_APPROVED = "client_approved"
     CONTACTED = "contacted"
     TEASER_SENT = "teaser_sent"
     NDA_SENT = "nda_sent"
     NDA_SIGNED = "nda_signed"
     IM_SENT = "im_sent"
     INDICATIVE_OFFER = "indicative_offer"
-    MANAGEMENT_MEETING = "management_meeting"
+    DATA_ROOM_ACCESS = "data_room_access"
     BINDING_OFFER = "binding_offer"
+    PREFERRED_BIDDER = "preferred_bidder"
     DECLINED = "declined"
+
+
+class SuggestStake(StrEnum):
+    MAJORITY = "majority"
+    MINORITY = "minority"
 
 
 class Approval(StrEnum):

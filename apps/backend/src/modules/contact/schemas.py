@@ -74,6 +74,7 @@ class ContactUpdate(BaseModel):
 
 class EmploymentRead(BaseModel):
     company_id: int
+    company_name: str = ""
     function: str | None
     start_date: date | None
     end_date: date | None

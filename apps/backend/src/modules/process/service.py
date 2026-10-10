@@ -398,7 +398,7 @@ class ProcessService:
         counts = dict.fromkeys(FUNNEL_STEPS, 0)
         for buyer in buyers:
             status = BuyerStatus(buyer.status)
-            if status == BuyerStatus.LONG_LIST:
+            if status in (BuyerStatus.LONG_LIST, BuyerStatus.CLIENT_APPROVED):
                 continue
             counts["approached"] += 1
             position = ORDER.index(status) if status != BuyerStatus.DECLINED else -1

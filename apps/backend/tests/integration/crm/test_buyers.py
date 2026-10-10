@@ -10,6 +10,7 @@ from sqlalchemy import update
 
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
 from src.modules.buyer.jobs import run_buyer_jobs
+from src.modules.buyer.schemas import BuyerStatus
 from src.modules.mandate.models import Mandate
 from src.modules.notification.service import NotificationService
 from src.modules.role.permissions import RoleName
@@ -305,9 +306,9 @@ async def test_buy03_c1_status_change_stores_date_and_user_and_funnel_updates(wo
     after = await buyers(world, mandate_id)
     row = after["buyers"][0]
 
-    assert before["long_list"] == 1
+    assert before["client_approved"] == 1
     assert before["contacted"] == 0
-    assert after["funnel"]["long_list"] == 0
+    assert after["funnel"]["client_approved"] == 0
     assert after["funnel"]["contacted"] == 1
     assert row["status_changed_at"].startswith("2026-10-10")
     assert row["status_changed_by_name"] == "anna"
@@ -540,3 +541,145 @@ async def test_merging_a_buyer_company_moves_its_profile_and_deal_buyer_rows(wor
     assert [row["company_id"] for row in (await buyers(world, mandate_id))["buyers"]] == [survivor]
     assert view["has_profile"] is True
     assert view["sector_ids"] == [world.sector_id]
+
+
+# Epic 7 header
+
+
+SPEC_STATUSES = [
+    "long_list",
+    "client_approved",
+    "contacted",
+    "teaser_sent",
+    "nda_sent",
+    "nda_signed",
+    "im_sent",
+    "indicative_offer",
+    "data_room_access",
+    "binding_offer",
+    "preferred_bidder",
+    "declined",
+]
+
+
+async def test_epic7_buyer_statuses_are_the_twelve_from_the_spec(world):
+    mandate_id = await deal(world)
+    await listed(world, mandate_id)
+
+    assert [status.value for status in BuyerStatus] == SPEC_STATUSES
+    assert list((await buyers(world, mandate_id))["funnel"]) == SPEC_STATUSES
+
+
+async def test_epic7_client_approval_moves_the_buyer_to_client_approved(world):
+    mandate_id = await deal(world)
+    [buyer_id] = await listed(world, mandate_id)
+
+    await approve(world, mandate_id, buyer_id)
+
+    assert (await buyers(world, mandate_id))["buyers"][0]["status"] == "client_approved"
+
+
+async def test_epic7_data_room_access_and_preferred_bidder_need_a_signed_nda(world):
+    mandate_id = await deal(world)
+    [buyer_id] = await listed(world, mandate_id)
+    await approve(world, mandate_id, buyer_id)
+
+    blocked = await set_status(world, mandate_id, [buyer_id], "data_room_access")
+    await send(
+        world.analyst,
+        "PUT",
+        f"/api/v1/mandates/{mandate_id}/buyers/{buyer_id}/nda",
+        {"sent_date": "2026-10-01", "signed_date": "2026-10-05"},
+    )
+    room = await set_status(world, mandate_id, [buyer_id], "data_room_access")
+    preferred = await set_status(world, mandate_id, [buyer_id], "preferred_bidder")
+
+    assert blocked.status_code == 422
+    assert room.status_code == 200, room.text
+    assert preferred.status_code == 200, preferred.text
+    assert (await buyers(world, mandate_id))["funnel"]["preferred_bidder"] == 1
+
+
+async def test_buy03_c5_an_activity_logged_on_the_buyer_resets_the_idle_clock(world):
+    mandate_id = await deal(world)
+    [buyer_id] = await listed(world, mandate_id)
+    buyer = (await buyers(world, mandate_id))["buyers"][0]
+    await _to_marketing(world, mandate_id)
+    notifications = NotificationService(world.emails)
+
+    set_clock(FrozenClock(NOW + timedelta(days=10)))
+    logged = await send(
+        world.analyst,
+        "POST",
+        "/api/v1/activities/",
+        {
+            "type": "call",
+            "occurred_at": (NOW + timedelta(days=10)).isoformat(),
+            "note": "Buyer call",
+            "links": [{"record_type": "company", "record_id": buyer["company_id"]}],
+        },
+    )
+    assert logged.status_code == 201, logged.text
+    await run_buyer_jobs(world.db, NOW + timedelta(days=15), notifications)
+    quiet = [mail for mail in world.emails.sent if "no activity" in mail.subject]
+    await run_buyer_jobs(world.db, NOW + timedelta(days=25), notifications)
+
+    assert quiet == []
+    assert len([mail for mail in world.emails.sent if "no activity" in mail.subject]) == 1
+
+
+async def test_co04_c1_ev_ebitda_and_stake_filter_suggest_buyers(world):
+    majority = await company(world, "Majority Partners")
+    await profile(world, majority)
+    minority = await company(world, "Minority Partners")
+    await profile(world, minority, stake="minority", ev_ebitda_min="10", ev_ebitda_max="14")
+    either = await company(world, "Flexible Partners")
+    await profile(world, either, stake="both", ev_ebitda_min="4", ev_ebitda_max="12")
+    mandate_id = await deal(world)
+    path = f"/api/v1/mandates/{mandate_id}/buyers/suggestions"
+
+    def ids(response):
+        assert response.status_code == 200, response.text
+        return sorted(row["company_id"] for row in response.json())
+
+    assert ids(await get(world.analyst, path)) == sorted([majority, minority, either])
+    assert ids(await get(world.analyst, path, stake="majority")) == sorted([majority, either])
+    assert ids(await get(world.analyst, path, stake="minority")) == sorted([minority, either])
+    assert ids(await get(world.analyst, path, ev_ebitda="11")) == sorted([minority, either])
+    assert ids(await get(world.analyst, path, ev_ebitda="6", stake="majority")) == sorted([majority, either])
+    assert (await get(world.analyst, path, stake="both")).status_code == 422
+
+
+async def test_con01_c5_do_not_contact_contact_cannot_be_set_on_a_listed_buyer(world):
+    mandate_id = await deal(world)
+    [buyer_id] = await listed(world, mandate_id)
+    response = await send(
+        world.partner,
+        "POST",
+        "/api/v1/contacts/",
+        {"first_name": "Vera", "last_name": "Stil", "source": "Forum", "do_not_contact": True},
+    )
+    assert response.status_code == 201, response.text
+
+    patched = await send(
+        world.analyst, "PATCH", f"/api/v1/mandates/{mandate_id}/buyers/{buyer_id}", {"contact_id": response.json()["id"]}
+    )
+
+    assert patched.status_code == 422
+    assert "Do not contact" in patched.text
+    assert (await buyers(world, mandate_id))["buyers"][0]["contact_id"] is None
+
+
+async def test_co04_c2_linking_a_portfolio_company_never_drops_its_existing_parent(world):
+    fund = await company(world, "Northstar Capital")
+    holding = await company(world, "Bakery Holding", "target")
+    portfolio = await company(world, "Bakery Group", "target", parent_id=holding)
+
+    refused = await send(world.partner, "POST", f"/api/v1/companies/{fund}/portfolio", {"company_id": portfolio})
+    again = await send(world.partner, "POST", f"/api/v1/companies/{holding}/portfolio", {"company_id": portfolio})
+    detail = (await get(world.partner, f"/api/v1/companies/{portfolio}")).json()
+
+    assert refused.status_code == 422
+    assert "Bakery Holding" in refused.text
+    assert again.status_code == 200, again.text
+    assert detail["parent_id"] == holding
