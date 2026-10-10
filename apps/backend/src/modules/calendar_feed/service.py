@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...infrastructure.config.settings import settings
 from ..activity.models import Activity, ActivityLink
 from ..activity.schemas import ActivityType, RecordType
+from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import ResourceNotFoundError
 from ..mandate.models import DealTeamMember, Mandate, Milestone
 from ..task.models import Task
@@ -76,10 +77,11 @@ class CalendarFeedService:
             await db.commit()
         return feed
 
-    async def regenerate(self, db: AsyncSession, user: dict[str, Any], now: datetime) -> CalendarFeed:
+    async def regenerate(self, db: AsyncSession, user: dict[str, Any], now: datetime, context: AuditContext) -> CalendarFeed:
         feed = await self.get_or_create(db, user, now)
         feed.token = secrets.token_urlsafe(32)
         feed.created_at = now
+        AuditService().record(db, context, "calendar_feed.regenerated", record_type="calendar_feed", record_id=feed.id)
         await db.commit()
         return feed
 

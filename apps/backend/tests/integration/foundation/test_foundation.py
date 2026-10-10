@@ -13,7 +13,6 @@ from src.interfaces.main import app
 from src.modules.audit.models import AuditEntry
 from src.modules.role.models import Role
 from src.modules.role.permissions import DEFAULT_ROLES, Permission, RoleName
-
 from tests.integration.crm.deal_helpers import build_world, create_mandate
 from tests.integration.foundation import helpers as shared_helpers
 

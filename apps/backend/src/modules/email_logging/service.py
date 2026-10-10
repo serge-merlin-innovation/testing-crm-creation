@@ -11,6 +11,7 @@ from ...infrastructure.config.settings import settings
 from ..activity.models import Activity, ActivityLink
 from ..activity.schemas import ActivityCreate, ActivityType, RecordRef, RecordType
 from ..activity.service import ActivityService
+from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import ContactNotFoundError, DomainError, PermissionDeniedError, ResourceNotFoundError
 from ..contact.models import Contact
 from ..mandate.models import Mandate
@@ -52,8 +53,9 @@ def note_for(subject: str, body: str, attachment_names: list[str]) -> str:
 
 
 class EmailLoggingService:
-    def __init__(self, activities: ActivityService | None = None) -> None:
+    def __init__(self, activities: ActivityService | None = None, audit: AuditService | None = None) -> None:
         self.activities = activities or ActivityService()
+        self.audit = audit or AuditService()
 
     @staticmethod
     def address(token: str) -> str:
@@ -111,7 +113,7 @@ class EmailLoggingService:
             return mandate_id
         return None
 
-    async def receive(self, db: AsyncSession, email: InboundEmail, now: datetime) -> InboundResult:
+    async def receive(self, db: AsyncSession, email: InboundEmail, now: datetime, context: AuditContext) -> InboundResult:
         user = await self._sender(db, email)
         message_id = (email.message_id or f"<{secrets.token_hex(16)}@crm>").strip()[:255]
         existing = (
@@ -165,7 +167,9 @@ class EmailLoggingService:
         links = [RecordRef(record_type=RecordType.CONTACT, record_id=cid) for cid in contact_ids]
         if mandate_id is not None:
             links.append(RecordRef(record_type=RecordType.MANDATE, record_id=mandate_id))
-        activity_id = await self._log(db, user, subject, email.text, correspondents, attachment_names, occurred_at, links, now)
+        activity_id = await self._log(
+            db, user, subject, email.text, correspondents, attachment_names, occurred_at, links, now, context
+        )
         db.add(
             LoggedEmail(
                 user_id=user["id"],
@@ -191,6 +195,7 @@ class EmailLoggingService:
         occurred_at: datetime,
         links: list[RecordRef],
         now: datetime,
+        context: AuditContext,
     ) -> int:
         values = ActivityCreate(
             type=ActivityType.EMAIL,
@@ -199,7 +204,7 @@ class EmailLoggingService:
             note=note_for(subject, body, attachment_names),
             links=links[:20],
         )
-        return int((await self.activities.create(db, user, values, now))["id"])
+        return int((await self.activities.create(db, user, values, now, context))["id"])
 
     async def unmatched(self, db: AsyncSession, user: dict[str, Any]) -> list[UnmatchedEmail]:
         query = (
@@ -216,14 +221,20 @@ class EmailLoggingService:
         return item
 
     async def link(
-        self, db: AsyncSession, user: dict[str, Any], unmatched_id: int, values: UnmatchedLink, now: datetime
+        self,
+        db: AsyncSession,
+        user: dict[str, Any],
+        unmatched_id: int,
+        values: UnmatchedLink,
+        now: datetime,
+        context: AuditContext,
     ) -> dict[str, Any]:
         item = await self._own(db, user, unmatched_id)
         links = list(values.links)
         if item.mandate_id is not None:
             links.append(RecordRef(record_type=RecordType.MANDATE, record_id=item.mandate_id))
         activity_id = await self._log(
-            db, user, item.subject, item.body, item.correspondents, item.attachment_names, item.occurred_at, links, now
+            db, user, item.subject, item.body, item.correspondents, item.attachment_names, item.occurred_at, links, now, context
         )
         db.add(
             LoggedEmail(
@@ -236,12 +247,22 @@ class EmailLoggingService:
                 received_at=item.received_at,
             )
         )
+        self.audit.record(
+            db,
+            context,
+            "unmatched_email.linked",
+            record_type="unmatched_email",
+            record_id=item.id,
+            new_values={"activity_id": activity_id},
+        )
         await db.delete(item)
         await db.commit()
         return {"id": activity_id}
 
-    async def discard(self, db: AsyncSession, user: dict[str, Any], unmatched_id: int) -> None:
-        await db.delete(await self._own(db, user, unmatched_id))
+    async def discard(self, db: AsyncSession, user: dict[str, Any], unmatched_id: int, context: AuditContext) -> None:
+        item = await self._own(db, user, unmatched_id)
+        self.audit.record(db, context, "unmatched_email.discarded", record_type="unmatched_email", record_id=item.id)
+        await db.delete(item)
         await db.commit()
 
 

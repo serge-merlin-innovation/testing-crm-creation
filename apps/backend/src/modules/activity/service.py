@@ -5,6 +5,7 @@ from typing import Any
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import ActivityNotFoundError, CompanyNotFoundError, PermissionDeniedError, RestoreWindowClosedError
 from ..company.models import Company
 from ..contact.service import ContactService
@@ -35,6 +36,9 @@ async def require_record(db: AsyncSession, user: dict[str, Any], ref: RecordRef,
 
 
 class ActivityService:
+    def __init__(self, audit: AuditService | None = None) -> None:
+        self.audit = audit or AuditService()
+
     def _read(self, activity: Activity, links: Iterable[ActivityLink]) -> dict[str, Any]:
         edited = activity.updated_at is not None and activity.updated_at - activity.created_at > EDIT_GRACE
         return {
@@ -71,7 +75,9 @@ class ActivityService:
             raise ActivityNotFoundError(f"Activity {activity_id} not found")
         return activity
 
-    async def create(self, db: AsyncSession, user: dict[str, Any], values: ActivityCreate, now: datetime) -> dict[str, Any]:
+    async def create(
+        self, db: AsyncSession, user: dict[str, Any], values: ActivityCreate, now: datetime, context: AuditContext
+    ) -> dict[str, Any]:
         refs = {(ref.record_type, ref.record_id): ref for ref in values.links}
         for ref in refs.values():
             await require_record(db, user, ref, now, DealAction.EDIT)
@@ -87,11 +93,26 @@ class ActivityService:
         await db.flush()
         links = [ActivityLink(activity_id=activity.id, record_type=kind.value, record_id=rid) for kind, rid in refs]
         db.add_all(links)
+        self.audit.record(
+            db,
+            context,
+            "activity.created",
+            record_type="activity",
+            record_id=activity.id,
+            new_values={"type": activity.type, "links": [[kind.value, rid] for kind, rid in refs]},
+            user_id=user["id"],
+        )
         await db.commit()
         return self._read(activity, links)
 
     async def update(
-        self, db: AsyncSession, user: dict[str, Any], activity_id: int, values: ActivityUpdate, now: datetime
+        self,
+        db: AsyncSession,
+        user: dict[str, Any],
+        activity_id: int,
+        values: ActivityUpdate,
+        now: datetime,
+        context: AuditContext,
     ) -> dict[str, Any]:
         activity = await self._get_visible(db, user, activity_id, now)
         if activity.author_id != user["id"]:
@@ -101,18 +122,29 @@ class ActivityService:
             setattr(activity, field, value.value if field == "type" else value)
         if changes:
             activity.updated_at = now
+            self.audit.record(
+                db,
+                context,
+                "activity.updated",
+                record_type="activity",
+                record_id=activity.id,
+                new_values={"fields": sorted(changes)},
+            )
         await db.commit()
         return self._read(activity, (await self._links(db, [activity.id]))[activity.id])
 
-    async def delete(self, db: AsyncSession, user: dict[str, Any], activity_id: int, now: datetime) -> None:
+    async def delete(
+        self, db: AsyncSession, user: dict[str, Any], activity_id: int, now: datetime, context: AuditContext
+    ) -> None:
         activity = await self._get_visible(db, user, activity_id, now)
         if activity.author_id != user["id"] and not has_permission(user, RESTORE_PERMISSION):
             raise PermissionDeniedError("Only the author or an admin deletes an activity")
         activity.deleted_at = now
         activity.deleted_by = user["id"]
+        self.audit.record(db, context, "activity.deleted", record_type="activity", record_id=activity.id)
         await db.commit()
 
-    async def restore(self, db: AsyncSession, activity_id: int, now: datetime) -> None:
+    async def restore(self, db: AsyncSession, activity_id: int, now: datetime, context: AuditContext) -> None:
         activity = await db.get(Activity, activity_id)
         if activity is None or activity.deleted_at is None:
             raise ActivityNotFoundError(f"Deleted activity {activity_id} not found")
@@ -120,6 +152,7 @@ class ActivityService:
             raise RestoreWindowClosedError("Deleted more than 30 days ago")
         activity.deleted_at = None
         activity.deleted_by = None
+        self.audit.record(db, context, "activity.restored", record_type="activity", record_id=activity.id)
         await db.commit()
 
     async def deleted(self, db: AsyncSession, now: datetime) -> list[dict[str, Any]]:
@@ -155,7 +188,12 @@ class ActivityService:
 
 
 class NoteService:
-    async def create(self, db: AsyncSession, user: dict[str, Any], values: NoteCreate, now: datetime) -> Note:
+    def __init__(self, audit: AuditService | None = None) -> None:
+        self.audit = audit or AuditService()
+
+    async def create(
+        self, db: AsyncSession, user: dict[str, Any], values: NoteCreate, now: datetime, context: AuditContext
+    ) -> Note:
         ref = RecordRef(record_type=values.record_type, record_id=values.record_id)
         await require_record(db, user, ref, now, DealAction.EDIT)
         mandate_id = values.record_id if values.record_type == RecordType.MANDATE else values.mandate_id
@@ -171,6 +209,15 @@ class NoteService:
             mandate_id=mandate_id,
         )
         db.add(note)
+        await db.flush()
+        self.audit.record(
+            db,
+            context,
+            "note.created",
+            record_type="note",
+            record_id=note.id,
+            new_values={"record_type": note.record_type, "record_id": note.record_id, "visibility": note.visibility},
+        )
         await db.commit()
         return note
 

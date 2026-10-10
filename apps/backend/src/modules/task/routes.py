@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
+from ..audit.dependencies import AuditContextDep
 from .dependencies import TaskServiceDep
 from .schemas import TaskCreate, TaskRead
 
@@ -18,9 +19,14 @@ router = APIRouter(tags=["Tasks"])
     description="The assignee is notified. A task on a deal can only go to that deal's team (422 on `assignee_id`).",
 )
 async def create_task(
-    values: TaskCreate, db: AsyncSessionDep, service: TaskServiceDep, user: CurrentUserDep, clock: ClockDep
+    values: TaskCreate,
+    db: AsyncSessionDep,
+    service: TaskServiceDep,
+    user: CurrentUserDep,
+    clock: ClockDep,
+    context: AuditContextDep,
 ) -> dict[str, Any]:
-    return await service.create(db, user, values, clock.now())
+    return await service.create(db, user, values, clock.now(), context)
 
 
 @router.get("/mine", response_model=list[TaskRead], summary="My tasks, soonest due first")
@@ -37,6 +43,11 @@ async def my_tasks(
     description="A recurring task creates its next occurrence.",
 )
 async def complete_task(
-    task_id: int, db: AsyncSessionDep, service: TaskServiceDep, user: CurrentUserDep, clock: ClockDep
+    task_id: int,
+    db: AsyncSessionDep,
+    service: TaskServiceDep,
+    user: CurrentUserDep,
+    clock: ClockDep,
+    context: AuditContextDep,
 ) -> dict[str, Any]:
-    return await service.complete(db, user, task_id, clock.now())
+    return await service.complete(db, user, task_id, clock.now(), context)
