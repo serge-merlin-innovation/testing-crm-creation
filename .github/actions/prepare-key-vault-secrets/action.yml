@@ -44,7 +44,7 @@ runs:
       run: |
         set -euo pipefail
 
-        for required_flag in REQUIRE_POSTGRES_SECRET REQUIRE_GHCR_SECRET REQUIRE_BACKEND_SECRET_KEY; do
+        for required_flag in REQUIRE_POSTGRES_SECRET REQUIRE_GHCR_SECRET REQUIRE_BACKEND_SECRET_KEY REQUIRE_TOTP_ENCRYPTION_KEY; do
           if [[ "${!required_flag:-}" != "true" && "${!required_flag:-}" != "false" ]]; then
             echo "$required_flag must be either true or false." >&2
             exit 1
@@ -184,4 +184,4 @@ runs:
         sync_secret \
           "$backend_totp_key_name" \
           "${BOOTSTRAP_TOTP_ENCRYPTION_KEY:-}" \
-          "$REQUIRE_BACKEND_SECRET_KEY"
+          "$REQUIRE_TOTP_ENCRYPTION_KEY"
