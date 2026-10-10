@@ -35,3 +35,7 @@ class TaskRead(BaseModel):
     mandate_id: int | None
     completed_at: datetime | None
     overdue: bool
+
+
+class DealTaskRead(TaskRead):
+    assignee_name: str

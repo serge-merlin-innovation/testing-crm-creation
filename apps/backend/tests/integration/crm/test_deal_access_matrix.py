@@ -200,6 +200,39 @@ ENDPOINTS: list[Endpoint] = [
         hidden_from_unstaffed(member=OK, lead=OK),
         body=lambda ctx: {"sent_date": "2026-10-01"},
     ),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/offers", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/offers",
+        hidden_from_unstaffed(member=OK, lead=OK),
+        body=lambda ctx: {
+            "buyer_id": ctx["buyer_id"],
+            "round": "indicative",
+            "ev": "40",
+            "equity_value": "35",
+            "financing_certainty": "committed",
+        },
+    ),
+    Endpoint(
+        "PUT",
+        "/api/v1/mandates/{mandate_id}/bid-deadlines",
+        hidden_from_unstaffed(member=OK, lead=OK),
+        body=lambda ctx: {"indicative_at": "2026-11-01T12:00:00Z"},
+    ),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/funnel", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/funnel.pdf", hidden_from_unstaffed(member=OK, lead=OK)),
+    # No letter template exists in the matrix world, so the team is refused on the merits (422).
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/letters",
+        hidden_from_unstaffed(member=422, lead=422),
+        body=lambda ctx: {"template_name": "Missing", "buyer_ids": [ctx["buyer_id"]]},
+    ),
+    Endpoint("POST", "/api/v1/mandates/{mandate_id}/status-report", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/documents", hidden_from_unstaffed(member=OK, lead=OK)),
+    # No generated document with that id: the team gets 404 on the merits too.
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/documents/{document_id}", hidden_from_unstaffed(member=HIDDEN, lead=HIDDEN)),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/tasks", hidden_from_unstaffed(member=OK, lead=OK)),
 ]
 
 # Under /mandates but about no existing deal: creating one, and picking its lead partner.
@@ -304,6 +337,7 @@ async def test_deal_access_matrix(world, endpoint: Endpoint, persona: str):
         milestone_id=milestone.json()["id"],
         buyer_id=buyers["buyer_id"],
         invoice_id=invoice.json()["id"],
+        document_id=999999,
     )
     caller = world.people[persona]
     response = await caller.client.request(

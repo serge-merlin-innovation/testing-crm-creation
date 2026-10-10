@@ -191,6 +191,8 @@ class CompanyService:
             await self.check_parent(db, company.id, changes["parent_id"])
         if changes.get("sector_id") is not None:
             await self.picklists.require_active(db, changes["sector_id"], PicklistKind.SECTOR)
+        if "language" in changes and changes["language"] is None:
+            del changes["language"]
         if "name" in changes and changes["name"] is None or "type" in changes and changes["type"] is None:
             raise ValidationError("name and type cannot be cleared")
         old = _snapshot(company)

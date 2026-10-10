@@ -33,6 +33,7 @@ describe("getPrimaryNavigation", () => {
       "/users",
       "/permissions",
       "/picklists",
+      "/templates",
       "/merge",
       "/imports",
       "/exports",

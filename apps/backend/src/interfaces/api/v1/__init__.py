@@ -37,6 +37,8 @@ from ....modules.offboarding.routes import router as offboarding_router
 from ....modules.origination.routes import router as origination_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.privacy.routes import router as privacy_router
+from ....modules.process.routes import router as process_router
+from ....modules.process.routes import templates_router
 from ....modules.role.routes import router as roles_router
 from ....modules.search.routes import filters_router as saved_filters_router
 from ....modules.search.routes import router as search_router
@@ -59,6 +61,8 @@ router.include_router(deal_fees_router, prefix="/mandates")
 router.include_router(fees_router, prefix="/fees")
 router.include_router(compliance_router, prefix="/mandates")
 router.include_router(buyers_router, prefix="/mandates")
+router.include_router(process_router, prefix="/mandates")
+router.include_router(templates_router, prefix="/templates")
 router.include_router(buyer_companies_router, prefix="/companies")
 router.include_router(buyer_contacts_router, prefix="/contacts")
 router.include_router(conflict_reviews_router, prefix="/conflict-reviews")

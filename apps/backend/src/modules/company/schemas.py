@@ -5,6 +5,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ..contact.schemas import ContactLanguage
 from .enterprise_number import normalize_enterprise_number
 
 
@@ -70,6 +71,7 @@ class CompanyCreate(BaseModel):
     nace_code: Annotated[str | None, Field(max_length=16)] = None
     address: Annotated[str | None, Field(max_length=400)] = None
     parent_id: int | None = None
+    language: ContactLanguage = ContactLanguage.EN
     # Set after the user saw the similar-name duplicates and chose to create anyway.
     ignore_similar: bool = False
 
@@ -90,6 +92,7 @@ class CompanyUpdate(BaseModel):
     nace_code: Annotated[str | None, Field(max_length=16)] = None
     address: Annotated[str | None, Field(max_length=400)] = None
     parent_id: int | None = None
+    language: ContactLanguage | None = None
 
 
 class DuplicateCompany(BaseModel):
@@ -113,6 +116,7 @@ class CompanyRead(BaseModel):
     address: str | None
     register_source: str | None
     parent_id: int | None
+    language: ContactLanguage = ContactLanguage.EN
 
 
 class GroupNode(BaseModel):

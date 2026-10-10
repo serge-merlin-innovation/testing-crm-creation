@@ -1002,6 +1002,36 @@
         "title": "AuditEntryRead",
         "type": "object"
       },
+      "BidDeadlines": {
+        "properties": {
+          "binding_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Binding At"
+          },
+          "indicative_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Indicative At"
+          }
+        },
+        "title": "BidDeadlines",
+        "type": "object"
+      },
       "Body_import_users_api_v1_users_import_post": {
         "properties": {
           "file": {
@@ -1632,6 +1662,10 @@
             "title": "Ignore Similar",
             "type": "boolean"
           },
+          "language": {
+            "$ref": "#/components/schemas/ContactLanguage",
+            "default": "en"
+          },
           "legal_form": {
             "anyOf": [
               {
@@ -1747,6 +1781,10 @@
           "id": {
             "title": "Id",
             "type": "integer"
+          },
+          "language": {
+            "$ref": "#/components/schemas/ContactLanguage",
+            "default": "en"
           },
           "legal_form": {
             "anyOf": [
@@ -1899,6 +1937,10 @@
             "title": "Id",
             "type": "integer"
           },
+          "language": {
+            "$ref": "#/components/schemas/ContactLanguage",
+            "default": "en"
+          },
           "legal_form": {
             "anyOf": [
               {
@@ -2029,6 +2071,16 @@
               }
             ],
             "title": "Address"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactLanguage"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "legal_form": {
             "anyOf": [
@@ -2403,6 +2455,11 @@
             "$ref": "#/components/schemas/LegalBasis",
             "default": "legitimate_interest"
           },
+          "marketing_opt_out": {
+            "default": false,
+            "title": "Marketing Opt Out",
+            "type": "boolean"
+          },
           "phone": {
             "anyOf": [
               {
@@ -2589,6 +2646,10 @@
           "legal_basis": {
             "$ref": "#/components/schemas/LegalBasis"
           },
+          "marketing_opt_out": {
+            "title": "Marketing Opt Out",
+            "type": "boolean"
+          },
           "phone": {
             "anyOf": [
               {
@@ -2639,6 +2700,7 @@
           "language",
           "salutation",
           "do_not_contact",
+          "marketing_opt_out",
           "legal_basis",
           "source",
           "current_role",
@@ -2741,6 +2803,17 @@
                 "type": "null"
               }
             ]
+          },
+          "marketing_opt_out": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marketing Opt Out"
           },
           "phone": {
             "anyOf": [
@@ -3038,6 +3111,102 @@
         "title": "DealStage",
         "type": "string"
       },
+      "DealTaskRead": {
+        "properties": {
+          "assignee_id": {
+            "title": "Assignee Id",
+            "type": "integer"
+          },
+          "assignee_name": {
+            "title": "Assignee Name",
+            "type": "string"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_by": {
+            "title": "Created By",
+            "type": "integer"
+          },
+          "due_date": {
+            "format": "date",
+            "title": "Due Date",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mandate_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mandate Id"
+          },
+          "overdue": {
+            "title": "Overdue",
+            "type": "boolean"
+          },
+          "record_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Id"
+          },
+          "record_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecordType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recurrence": {
+            "$ref": "#/components/schemas/Recurrence"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "assignee_id",
+          "created_by",
+          "due_date",
+          "recurrence",
+          "record_type",
+          "record_id",
+          "mandate_id",
+          "completed_at",
+          "overdue",
+          "assignee_name"
+        ],
+        "title": "DealTaskRead",
+        "type": "object"
+      },
       "Decision": {
         "enum": [
           "approve",
@@ -3254,6 +3423,19 @@
         ],
         "title": "ExclusionRead",
         "type": "object"
+      },
+      "ExclusionReason": {
+        "enum": [
+          "not_active",
+          "no_signed_nda",
+          "opted_out",
+          "do_not_contact",
+          "no_contact",
+          "no_email",
+          "no_template_language"
+        ],
+        "title": "ExclusionReason",
+        "type": "string"
       },
       "ExportPreview": {
         "properties": {
@@ -3702,6 +3884,16 @@
         "title": "FinancialYearRead",
         "type": "object"
       },
+      "FinancingCertainty": {
+        "enum": [
+          "committed",
+          "highly_confident",
+          "subject_to_financing",
+          "equity_only"
+        ],
+        "title": "FinancingCertainty",
+        "type": "string"
+      },
       "ForgotPassword": {
         "additionalProperties": false,
         "properties": {
@@ -3715,6 +3907,119 @@
           "email"
         ],
         "title": "ForgotPassword",
+        "type": "object"
+      },
+      "Funnel": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/FunnelStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "code_name",
+          "steps"
+        ],
+        "title": "Funnel",
+        "type": "object"
+      },
+      "FunnelStep": {
+        "properties": {
+          "conversion_pct": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversion Pct"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "count",
+          "conversion_pct"
+        ],
+        "title": "FunnelStep",
+        "type": "object"
+      },
+      "GeneratedRead": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "buyer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer Id"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TemplateKind"
+          },
+          "language": {
+            "$ref": "#/components/schemas/ContactLanguage"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "language",
+          "subject",
+          "body",
+          "created_at",
+          "buyer_id",
+          "contact_id"
+        ],
+        "title": "GeneratedRead",
         "type": "object"
       },
       "GroupNode": {
@@ -4962,6 +5267,124 @@
           "percent"
         ],
         "title": "LehmanTier",
+        "type": "object"
+      },
+      "LetterExcluded": {
+        "properties": {
+          "buyer_id": {
+            "title": "Buyer Id",
+            "type": "integer"
+          },
+          "buyer_name": {
+            "title": "Buyer Name",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ExclusionReason"
+          }
+        },
+        "required": [
+          "buyer_id",
+          "buyer_name",
+          "reason",
+          "message"
+        ],
+        "title": "LetterExcluded",
+        "type": "object"
+      },
+      "LetterRequest": {
+        "properties": {
+          "buyer_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Buyer Ids",
+            "type": "array"
+          },
+          "template_name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Template Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "template_name",
+          "buyer_ids"
+        ],
+        "title": "LetterRequest",
+        "type": "object"
+      },
+      "LetterResult": {
+        "properties": {
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/LetterExcluded"
+            },
+            "title": "Excluded",
+            "type": "array"
+          },
+          "sent": {
+            "items": {
+              "$ref": "#/components/schemas/LetterSent"
+            },
+            "title": "Sent",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sent",
+          "excluded"
+        ],
+        "title": "LetterResult",
+        "type": "object"
+      },
+      "LetterSent": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "buyer_id": {
+            "title": "Buyer Id",
+            "type": "integer"
+          },
+          "buyer_name": {
+            "title": "Buyer Name",
+            "type": "string"
+          },
+          "contact_name": {
+            "title": "Contact Name",
+            "type": "string"
+          },
+          "document_id": {
+            "title": "Document Id",
+            "type": "integer"
+          },
+          "language": {
+            "$ref": "#/components/schemas/ContactLanguage"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "buyer_id",
+          "buyer_name",
+          "contact_name",
+          "language",
+          "subject",
+          "body",
+          "document_id"
+        ],
+        "title": "LetterSent",
         "type": "object"
       },
       "LinkCreate": {
@@ -6597,6 +7020,308 @@
         "title": "OffboardingPreview",
         "type": "object"
       },
+      "OfferComparison": {
+        "properties": {
+          "bids": {
+            "items": {
+              "$ref": "#/components/schemas/OfferRead"
+            },
+            "title": "Bids",
+            "type": "array"
+          },
+          "deadlines": {
+            "$ref": "#/components/schemas/BidDeadlines"
+          },
+          "ebitda": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ebitda"
+          },
+          "ebitda_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ebitda Year"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/OfferRead"
+            },
+            "title": "History",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ebitda",
+          "ebitda_year",
+          "bids",
+          "history",
+          "deadlines"
+        ],
+        "title": "OfferComparison",
+        "type": "object"
+      },
+      "OfferCreate": {
+        "properties": {
+          "buyer_id": {
+            "title": "Buyer Id",
+            "type": "integer"
+          },
+          "cash_pct": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,6}0*$)\\d{0,3}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "default": "100",
+            "title": "Cash Pct"
+          },
+          "conditions": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Conditions",
+            "type": "string"
+          },
+          "earn_out_pct": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,6}0*$)\\d{0,3}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Earn Out Pct"
+          },
+          "equity_value": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,15}0*$)\\d{0,12}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "description": "EUR millions",
+            "title": "Equity Value"
+          },
+          "ev": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,15}0*$)\\d{0,12}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "description": "EUR millions",
+            "title": "Ev"
+          },
+          "financing_certainty": {
+            "$ref": "#/components/schemas/FinancingCertainty"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "rollover_pct": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,6}0*$)\\d{0,3}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Rollover Pct"
+          },
+          "round": {
+            "$ref": "#/components/schemas/OfferRound"
+          },
+          "vendor_loan_pct": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,6}0*$)\\d{0,3}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "title": "Vendor Loan Pct"
+          }
+        },
+        "required": [
+          "buyer_id",
+          "round",
+          "ev",
+          "equity_value",
+          "financing_certainty"
+        ],
+        "title": "OfferCreate",
+        "type": "object"
+      },
+      "OfferRead": {
+        "properties": {
+          "buyer_id": {
+            "title": "Buyer Id",
+            "type": "integer"
+          },
+          "buyer_name": {
+            "title": "Buyer Name",
+            "type": "string"
+          },
+          "cash_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Cash Pct",
+            "type": "string"
+          },
+          "conditions": {
+            "title": "Conditions",
+            "type": "string"
+          },
+          "earn_out_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Earn Out Pct",
+            "type": "string"
+          },
+          "entered_at": {
+            "format": "date-time",
+            "title": "Entered At",
+            "type": "string"
+          },
+          "entered_by_name": {
+            "title": "Entered By Name",
+            "type": "string"
+          },
+          "equity_value": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Equity Value",
+            "type": "string"
+          },
+          "ev": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Ev",
+            "type": "string"
+          },
+          "ev_ebitda": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Ebitda"
+          },
+          "financing_certainty": {
+            "$ref": "#/components/schemas/FinancingCertainty"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "late": {
+            "title": "Late",
+            "type": "boolean"
+          },
+          "received_at": {
+            "format": "date-time",
+            "title": "Received At",
+            "type": "string"
+          },
+          "rollover_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Rollover Pct",
+            "type": "string"
+          },
+          "round": {
+            "$ref": "#/components/schemas/OfferRound"
+          },
+          "vendor_loan_pct": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Vendor Loan Pct",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "buyer_id",
+          "buyer_name",
+          "round",
+          "version",
+          "ev",
+          "equity_value",
+          "cash_pct",
+          "earn_out_pct",
+          "vendor_loan_pct",
+          "rollover_pct",
+          "conditions",
+          "financing_certainty",
+          "received_at",
+          "late",
+          "entered_by_name",
+          "entered_at",
+          "ev_ebitda"
+        ],
+        "title": "OfferRead",
+        "type": "object"
+      },
+      "OfferRound": {
+        "enum": [
+          "indicative",
+          "binding"
+        ],
+        "title": "OfferRound",
+        "type": "string"
+      },
       "OpportunityCreate": {
         "properties": {
           "company_id": {
@@ -7670,6 +8395,19 @@
           "available"
         ],
         "title": "RegisterPrefill",
+        "type": "object"
+      },
+      "ReportRequest": {
+        "properties": {
+          "template_name": {
+            "default": "Status report",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Template Name",
+            "type": "string"
+          }
+        },
+        "title": "ReportRequest",
         "type": "object"
       },
       "RequestStatus": {
@@ -9006,6 +9744,121 @@
         ],
         "title": "TeamRole",
         "type": "string"
+      },
+      "TemplateKind": {
+        "enum": [
+          "letter",
+          "report"
+        ],
+        "title": "TemplateKind",
+        "type": "string"
+      },
+      "TemplateRead": {
+        "properties": {
+          "body": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TemplateKind"
+          },
+          "language": {
+            "$ref": "#/components/schemas/ContactLanguage"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "references_im": {
+            "default": false,
+            "title": "References Im",
+            "type": "boolean"
+          },
+          "subject": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By Name"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "language",
+          "subject",
+          "body",
+          "id",
+          "updated_at",
+          "updated_by_name"
+        ],
+        "title": "TemplateRead",
+        "type": "object"
+      },
+      "TemplateWrite": {
+        "properties": {
+          "body": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TemplateKind"
+          },
+          "language": {
+            "$ref": "#/components/schemas/ContactLanguage"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "references_im": {
+            "default": false,
+            "title": "References Im",
+            "type": "boolean"
+          },
+          "subject": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "language",
+          "subject",
+          "body"
+        ],
+        "title": "TemplateWrite",
+        "type": "object"
       },
       "TimelineRead": {
         "properties": {
@@ -11762,6 +12615,7 @@
                     "country_id": 1,
                     "enterprise_number": "text",
                     "id": 1,
+                    "language": "en",
                     "legal_form": "text",
                     "nace_code": "text",
                     "name": "name",
@@ -11809,6 +12663,7 @@
                 "country_id": 1,
                 "enterprise_number": "BE0403.170.701",
                 "ignore_similar": false,
+                "language": "en",
                 "legal_form": "text",
                 "nace_code": "text",
                 "name": "text",
@@ -11833,6 +12688,7 @@
                   "country_id": 1,
                   "enterprise_number": "text",
                   "id": 1,
+                  "language": "en",
                   "legal_form": "text",
                   "nace_code": "text",
                   "name": "name",
@@ -11949,6 +12805,7 @@
                     "name": "name"
                   },
                   "id": 1,
+                  "language": "en",
                   "legal_form": "text",
                   "nace_code": "text",
                   "name": "name",
@@ -11999,6 +12856,7 @@
             "application/json": {
               "example": {
                 "address": "text",
+                "language": "en",
                 "legal_form": "text",
                 "nace_code": "text",
                 "name": "text",
@@ -12023,6 +12881,7 @@
                   "country_id": 1,
                   "enterprise_number": "text",
                   "id": 1,
+                  "language": "en",
                   "legal_form": "text",
                   "nace_code": "text",
                   "name": "name",
@@ -12806,6 +13665,7 @@
                     "language": "en",
                     "last_name": "last_name",
                     "legal_basis": "legitimate_interest",
+                    "marketing_opt_out": true,
                     "phone": "text",
                     "relationship_holders": [
                       {
@@ -12863,6 +13723,7 @@
                 "language": "en",
                 "last_name": "last_name",
                 "legal_basis": "legitimate_interest",
+                "marketing_opt_out": false,
                 "phone": "+32 2 123 45 67",
                 "salutation": "text",
                 "source": "Met at M&A forum 2026"
@@ -12903,6 +13764,7 @@
                   "language": "en",
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
+                  "marketing_opt_out": true,
                   "phone": "text",
                   "relationship_holders": [
                     {
@@ -12984,6 +13846,7 @@
                   "language": "en",
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
+                  "marketing_opt_out": true,
                   "phone": "text",
                   "relationship_holders": [
                     {
@@ -13046,6 +13909,7 @@
                 "language": "en",
                 "last_name": "text",
                 "legal_basis": "legitimate_interest",
+                "marketing_opt_out": true,
                 "phone": "text",
                 "salutation": "text",
                 "source": "text"
@@ -13086,6 +13950,7 @@
                   "language": "en",
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
+                  "marketing_opt_out": true,
                   "phone": "text",
                   "relationship_holders": [
                     {
@@ -13483,6 +14348,7 @@
                   "language": "en",
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
+                  "marketing_opt_out": true,
                   "phone": "text",
                   "relationship_holders": [
                     {
@@ -13576,6 +14442,7 @@
                   "language": "en",
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
+                  "marketing_opt_out": true,
                   "phone": "text",
                   "relationship_holders": [
                     {
@@ -15181,6 +16048,69 @@
         ]
       }
     },
+    "/api/v1/mandates/{mandate_id}/bid-deadlines": {
+      "put": {
+        "operationId": "put_deadlines_api_v1_mandates__mandate_id__bid_deadlines_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "binding_at": "2026-10-10T09:00:00Z",
+                "indicative_at": "2026-10-10T09:00:00Z"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/BidDeadlines"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "binding_at": "2026-10-10T09:00:00Z",
+                  "indicative_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BidDeadlines"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set the bid deadlines",
+        "tags": [
+          "Bidding process"
+        ]
+      }
+    },
     "/api/v1/mandates/{mandate_id}/buyers": {
       "get": {
         "operationId": "get_buyers_api_v1_mandates__mandate_id__buyers_get",
@@ -16062,6 +16992,121 @@
         ]
       }
     },
+    "/api/v1/mandates/{mandate_id}/documents": {
+      "get": {
+        "operationId": "list_documents_api_v1_mandates__mandate_id__documents_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "body": "body",
+                    "buyer_id": 1,
+                    "contact_id": 1,
+                    "created_at": "2026-10-10T09:00:00Z",
+                    "id": 1,
+                    "kind": "letter",
+                    "language": "en",
+                    "subject": "subject"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GeneratedRead"
+                  },
+                  "title": "Response List Documents Api V1 Mandates  Mandate Id  Documents Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Letters and reports generated on the deal, as they were produced",
+        "tags": [
+          "Bidding process"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/documents/{document_id}": {
+      "get": {
+        "operationId": "document_pdf_api_v1_mandates__mandate_id__documents__document_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "title": "Document Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": null,
+                "schema": {}
+              },
+              "application/pdf": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "A generated letter or report as PDF",
+        "tags": [
+          "Bidding process"
+        ]
+      }
+    },
     "/api/v1/mandates/{mandate_id}/export": {
       "get": {
         "description": "Deal team only: compliance reading a closed deal and break-glass access may not export (AUTHZ-08 c3).",
@@ -16257,6 +17302,106 @@
         "summary": "Set a deal's fee terms (back-office, or a partner on the deal)",
         "tags": [
           "Fees"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/funnel": {
+      "get": {
+        "operationId": "get_funnel_api_v1_mandates__mandate_id__funnel_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "code_name": "code_name",
+                  "steps": [
+                    {
+                      "conversion_pct": "text",
+                      "count": 1,
+                      "key": "key"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Funnel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Counts and conversion per process step",
+        "tags": [
+          "Bidding process"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/funnel.pdf": {
+      "get": {
+        "operationId": "get_funnel_pdf_api_v1_mandates__mandate_id__funnel_pdf_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": null,
+                "schema": {}
+              },
+              "application/pdf": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The funnel as PDF (audited export)",
+        "tags": [
+          "Bidding process"
         ]
       }
     },
@@ -16662,6 +17807,89 @@
         "summary": "Record the KYC review",
         "tags": [
           "Compliance"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/letters": {
+      "post": {
+        "description": "Each buyer's contact gets the template in their language with their salutation. Buyers that cannot receive it come back in `excluded` with the reason (no signed NDA when the letter references the IM, opted out, Do not contact, ...). Each send is logged as an activity.",
+        "operationId": "send_letters_api_v1_mandates__mandate_id__letters_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "buyer_ids": [
+                  1
+                ],
+                "template_name": "template_name"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/LetterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "excluded": [
+                    {
+                      "buyer_id": 1,
+                      "buyer_name": "buyer_name",
+                      "message": "message",
+                      "reason": "not_active"
+                    }
+                  ],
+                  "sent": [
+                    {
+                      "body": "body",
+                      "buyer_id": 1,
+                      "buyer_name": "buyer_name",
+                      "contact_name": "contact_name",
+                      "document_id": 1,
+                      "language": "en",
+                      "subject": "subject"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/LetterResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send a process letter to the selected buyers",
+        "tags": [
+          "Bidding process"
         ]
       }
     },
@@ -17081,6 +18309,191 @@
         ]
       }
     },
+    "/api/v1/mandates/{mandate_id}/offers": {
+      "get": {
+        "description": "Offer values are not fee fields: every deal member reads them, analysts included.",
+        "operationId": "get_offers_api_v1_mandates__mandate_id__offers_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "bids": [
+                    {
+                      "buyer_id": 1,
+                      "buyer_name": "buyer_name",
+                      "cash_pct": "cash_pct",
+                      "conditions": "conditions",
+                      "earn_out_pct": "earn_out_pct",
+                      "entered_at": "2026-10-10T09:00:00Z",
+                      "entered_by_name": "entered_by_name",
+                      "equity_value": "equity_value",
+                      "ev": "ev",
+                      "ev_ebitda": "text",
+                      "financing_certainty": "committed",
+                      "id": 1,
+                      "late": true,
+                      "received_at": "2026-10-10T09:00:00Z",
+                      "rollover_pct": "rollover_pct",
+                      "round": "indicative",
+                      "vendor_loan_pct": "vendor_loan_pct",
+                      "version": 1
+                    }
+                  ],
+                  "deadlines": {
+                    "binding_at": "2026-10-10T09:00:00Z",
+                    "indicative_at": "2026-10-10T09:00:00Z"
+                  },
+                  "ebitda": "text",
+                  "ebitda_year": 1,
+                  "history": [
+                    {
+                      "buyer_id": 1,
+                      "buyer_name": "buyer_name",
+                      "cash_pct": "cash_pct",
+                      "conditions": "conditions",
+                      "earn_out_pct": "earn_out_pct",
+                      "entered_at": "2026-10-10T09:00:00Z",
+                      "entered_by_name": "entered_by_name",
+                      "equity_value": "equity_value",
+                      "ev": "ev",
+                      "ev_ebitda": "text",
+                      "financing_certainty": "committed",
+                      "id": 1,
+                      "late": true,
+                      "received_at": "2026-10-10T09:00:00Z",
+                      "rollover_pct": "rollover_pct",
+                      "round": "indicative",
+                      "vendor_loan_pct": "vendor_loan_pct",
+                      "version": 1
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OfferComparison"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Bid comparison: latest offer per buyer and round by EV, with implied EV/EBITDA, plus every version",
+        "tags": [
+          "Bidding process"
+        ]
+      },
+      "post": {
+        "description": "EV and equity value in EUR millions. An offer received after the round's bid deadline is flagged late.",
+        "operationId": "add_offer_api_v1_mandates__mandate_id__offers_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "buyer_id": 1,
+                "cash_pct": "100",
+                "conditions": "",
+                "earn_out_pct": "0",
+                "equity_value": 25000.0,
+                "ev": 25000.0,
+                "financing_certainty": "committed",
+                "received_at": "2026-10-10T09:00:00Z",
+                "rollover_pct": "0",
+                "round": "indicative",
+                "vendor_loan_pct": "0"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/OfferCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "buyer_id": 1,
+                  "buyer_name": "buyer_name",
+                  "cash_pct": "cash_pct",
+                  "conditions": "conditions",
+                  "earn_out_pct": "earn_out_pct",
+                  "entered_at": "2026-10-10T09:00:00Z",
+                  "entered_by_name": "entered_by_name",
+                  "equity_value": "equity_value",
+                  "ev": "ev",
+                  "ev_ebitda": "text",
+                  "financing_certainty": "committed",
+                  "id": 1,
+                  "late": true,
+                  "received_at": "2026-10-10T09:00:00Z",
+                  "rollover_pct": "rollover_pct",
+                  "round": "indicative",
+                  "vendor_loan_pct": "vendor_loan_pct",
+                  "version": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OfferRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record an offer, or a revised version of one",
+        "tags": [
+          "Bidding process"
+        ]
+      }
+    },
     "/api/v1/mandates/{mandate_id}/reopen": {
       "post": {
         "operationId": "reopen_mandate_api_v1_mandates__mandate_id__reopen_post",
@@ -17265,6 +18678,72 @@
         ]
       }
     },
+    "/api/v1/mandates/{mandate_id}/status-report": {
+      "post": {
+        "description": "Funnel, timeline vs plan and next steps, in the client's language. No notes, buyer names, offers or fees. Logged as an activity.",
+        "operationId": "status_report_api_v1_mandates__mandate_id__status_report_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "template_name": "Status report"
+              },
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReportRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Values"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": null,
+                "schema": {}
+              },
+              "application/pdf": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate the client status report (PDF)",
+        "tags": [
+          "Bidding process"
+        ]
+      }
+    },
     "/api/v1/mandates/{mandate_id}/summary": {
       "get": {
         "description": "Compliance / back-office read it on deals they are not staffed on (ROLE-01). Never editable here.",
@@ -17344,6 +18823,71 @@
         "summary": "Read-only deal summary (team, or back-office on any deal)",
         "tags": [
           "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/tasks": {
+      "get": {
+        "operationId": "deal_tasks_api_v1_mandates__mandate_id__tasks_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "assignee_id": 1,
+                    "assignee_name": "assignee_name",
+                    "completed_at": "2026-10-10T09:00:00Z",
+                    "created_by": 1,
+                    "due_date": "2026-10-10",
+                    "id": 1,
+                    "mandate_id": 1,
+                    "overdue": true,
+                    "record_id": 1,
+                    "record_type": "contact",
+                    "recurrence": "none",
+                    "title": "title"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DealTaskRead"
+                  },
+                  "title": "Response Deal Tasks Api V1 Mandates  Mandate Id  Tasks Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The deal's tasks, open first",
+        "tags": [
+          "Bidding process"
         ]
       }
     },
@@ -20869,6 +22413,203 @@
         "summary": "Complete a task",
         "tags": [
           "Tasks"
+        ]
+      }
+    },
+    "/api/v1/templates/": {
+      "get": {
+        "operationId": "list_templates_api_v1_templates__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "body": "body",
+                    "id": 1,
+                    "kind": "letter",
+                    "language": "en",
+                    "name": "name",
+                    "references_im": false,
+                    "subject": "subject",
+                    "updated_at": "2026-10-10T09:00:00Z",
+                    "updated_by_name": "text"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateRead"
+                  },
+                  "title": "Response List Templates Api V1 Templates  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Letter and report templates",
+        "tags": [
+          "Templates"
+        ]
+      },
+      "post": {
+        "operationId": "create_template_api_v1_templates__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "body": "body",
+                "kind": "letter",
+                "language": "en",
+                "name": "name",
+                "references_im": false,
+                "subject": "subject"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/TemplateWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "body": "body",
+                  "id": 1,
+                  "kind": "letter",
+                  "language": "en",
+                  "name": "name",
+                  "references_im": false,
+                  "subject": "subject",
+                  "updated_at": "2026-10-10T09:00:00Z",
+                  "updated_by_name": "text"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create a template in one language",
+        "tags": [
+          "Templates"
+        ]
+      }
+    },
+    "/api/v1/templates/names": {
+      "get": {
+        "operationId": "template_names_api_v1_templates_names_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {}
+                ],
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Template Names Api V1 Templates Names Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Template names and their languages, for picking one on a deal",
+        "tags": [
+          "Templates"
+        ]
+      }
+    },
+    "/api/v1/templates/{template_id}": {
+      "put": {
+        "description": "Audited. Letters and reports generated earlier keep their text.",
+        "operationId": "update_template_api_v1_templates__template_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "title": "Template Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "body": "body",
+                "kind": "letter",
+                "language": "en",
+                "name": "name",
+                "references_im": false,
+                "subject": "subject"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/TemplateWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "body": "body",
+                  "id": 1,
+                  "kind": "letter",
+                  "language": "en",
+                  "name": "name",
+                  "references_im": false,
+                  "subject": "subject",
+                  "updated_at": "2026-10-10T09:00:00Z",
+                  "updated_by_name": "text"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit a template",
+        "tags": [
+          "Templates"
         ]
       }
     },
