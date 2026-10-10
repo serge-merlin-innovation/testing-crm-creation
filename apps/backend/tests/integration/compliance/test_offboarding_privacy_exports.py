@@ -201,6 +201,16 @@ async def test_reactivation_restores_the_role_but_no_deal_team_membership(world)
     assert world.analyst.id not in [m["user_id"] for m in team["members"]]
 
 
+async def test_the_admin_list_shows_deactivated_users_for_reactivation(world):
+    await deactivate(world, world.analyst.id)
+
+    inactive = (await world.admin.client.get("/api/v1/users/", params={"status": "inactive"})).json()["data"]
+    active = (await world.admin.client.get("/api/v1/users/")).json()["data"]
+
+    assert [(u["id"], u["status"]) for u in inactive] == [(world.analyst.id, "inactive")]
+    assert world.analyst.id not in [u["id"] for u in active]
+
+
 async def test_only_admins_offboard(world):
     assert (
         await world.partner.client.post(f"/api/v1/users/{world.analyst.id}/deactivate", json={}, headers=world.partner.headers)

@@ -10048,7 +10048,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "pattern": "^(invited|active)$",
+                  "pattern": "^(invited|active|inactive)$",
                   "type": "string"
                 },
                 {
@@ -10230,7 +10230,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "pattern": "^(invited|active)$",
+                  "pattern": "^(invited|active|inactive)$",
                   "type": "string"
                 },
                 {
