@@ -14,6 +14,12 @@ const PARTNER = {
   email: `e2e.a11y.${RUN}@example.com`,
   password: "Velvet-Harbour-58-Beacon",
 };
+const COMPLIANCE = {
+  firstName: "Corneel",
+  lastName: "Toezicht",
+  email: `e2e.a11y.compliance.${RUN}@example.com`,
+  password: "Amber-Lighthouse-42-Quarry",
+};
 const PHONE = { width: 375, height: 812 };
 const DESKTOP = { width: 1280, height: 900 };
 
@@ -25,6 +31,7 @@ async function seed(browser: Browser): Promise<Seeded> {
   const admin = adminContext.request;
   const adminHeaders = await signInApi(admin, ADMIN);
   await inviteUser(browser, admin, adminHeaders, PARTNER, "Partner");
+  await inviteUser(browser, admin, adminHeaders, COMPLIANCE, "Compliance / Back-office");
   const sector = await admin.post("/api/v1/picklists/", {
     headers: adminHeaders,
     data: { kind: "sector", code: `a11y-${RUN}`, label_en: `Accessibility ${RUN}`, label_fr: `Accessibilité ${RUN}`, label_nl: `Toegankelijkheid ${RUN}` },
@@ -101,20 +108,23 @@ async function signedInContext(browser: Browser, identity: { email: string; pass
   return context;
 }
 
-/** Every listed page plus the detail pages behind them. Public pages are checked signed out. */
-function pagesFor(who: "admin" | "partner"): string[] {
-  const listed = Object.entries(PAGE_AUDIENCE)
-    .filter(([, audience]) => audience.kind !== "public")
-    .map(([path]) => path);
-  const admin = ["/users", "/permissions", "/settings", "/picklists", "/templates", "/imports", "/stage-criteria", "/profile", "/overview", "/merge", "/exports", "/privacy", "/access", "/search"];
-  if (who === "admin") {
-    return listed.filter((path) => admin.includes(path));
-  }
-  return [
-    ...listed.filter((path) => !admin.includes(path) || ["/profile", "/overview", "/search", "/access", "/exports", "/privacy", "/merge"].includes(path)),
-    `/deals/${seeded.dealId}`,
-    ...(seeded.opportunityId ? [`/origination/${seeded.opportunityId}`] : []),
-  ].filter((path) => !["/conflict-reviews", "/settings", "/users", "/permissions", "/picklists", "/templates", "/imports", "/stage-criteria"].includes(path));
+type Auditor = "admin" | "partner" | "compliance";
+
+/** Which signed-in identity audits each listed page: a page reaches axe only through someone who may open it. */
+const AUDITED_BY: Record<Auditor, string[]> = {
+  admin: ["/users", "/permissions", "/settings", "/picklists", "/templates", "/imports", "/stage-criteria", "/profile", "/overview", "/merge", "/exports", "/privacy", "/access", "/search"],
+  partner: ["/profile", "/overview", "/search", "/access", "/exports", "/privacy", "/merge", "/analytics", "/deals", "/origination", "/companies", "/contacts", "/inbox", "/fees", "/fee-forecast", "/win-loss"],
+  compliance: ["/conflict-reviews", "/privacy", "/fees", "/overview", "/profile"],
+};
+
+/** Public pages are checked signed out; /health/ready is the uptime probe's JSON, not a page. */
+const PUBLIC_PAGES = ["/login", "/reset-password", "/accept-invitation"];
+const NOT_A_PAGE = ["/", "/health/ready"];
+
+/** Every listed page plus the detail pages behind them. */
+function pagesFor(who: Auditor): string[] {
+  const detail = who === "partner" ? [`/deals/${seeded.dealId}`, ...(seeded.opportunityId ? [`/origination/${seeded.opportunityId}`] : [])] : [];
+  return [...AUDITED_BY[who], ...detail];
 }
 
 async function settle(page: Page) {
@@ -148,6 +158,12 @@ async function axeViolations(page: Page) {
   }));
 }
 
+test("every page PAGE_AUDIENCE lists is audited by someone", () => {
+  const audited = new Set([...PUBLIC_PAGES, ...NOT_A_PAGE, ...Object.values(AUDITED_BY).flat()]);
+  expect(Object.keys(PAGE_AUDIENCE).filter((path) => !audited.has(path))).toEqual([]);
+  expect(Object.keys(PAGE_AUDIENCE).filter((path) => PAGE_AUDIENCE[path].kind === "public" && !PUBLIC_PAGES.includes(path) && !NOT_A_PAGE.includes(path))).toEqual([]);
+});
+
 test.describe.configure({ mode: "default" });
 
 test.beforeAll(async ({ browser }) => {
@@ -160,7 +176,7 @@ for (const viewport of [PHONE, DESKTOP]) {
       const context = await browser.newContext({ viewport });
       const page = await context.newPage();
       const problems: string[] = [];
-      for (const path of ["/login", "/reset-password", "/accept-invitation"]) {
+      for (const path of PUBLIC_PAGES) {
         await page.goto(path);
         await settle(page);
         problems.push(...(await audit(page, path)));
@@ -169,9 +185,10 @@ for (const viewport of [PHONE, DESKTOP]) {
       await context.close();
     });
 
-    for (const who of ["admin", "partner"] as const) {
+    for (const who of ["admin", "partner", "compliance"] as const) {
       test(`${who} pages: no horizontal scroll, WCAG 2.1 AA`, async ({ browser }) => {
-        const context: BrowserContext = await signedInContext(browser, who === "admin" ? ADMIN : PARTNER, "en");
+        const identity = { admin: ADMIN, partner: PARTNER, compliance: COMPLIANCE }[who];
+        const context: BrowserContext = await signedInContext(browser, identity, "en");
         const page = await context.newPage();
         await page.setViewportSize(viewport);
         const problems: string[] = [];
