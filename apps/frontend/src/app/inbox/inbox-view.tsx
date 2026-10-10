@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,7 @@ export function InboxView({ messages, language }: { messages: Messages; language
             <AlertDescription>{messages["common.loadFailed"]}</AlertDescription>
           </Alert>
         ) : null}
-        <div className="overflow-x-auto" tabIndex={0}>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
           <Table>
             <TableHeader>
               <TableRow>
@@ -98,7 +99,7 @@ export function InboxView({ messages, language }: { messages: Messages; language
               ))}
             </TableBody>
           </Table>
-        </div>
+        </ScrollRegion>
         {inbox.data?.length === 0 ? <p>{messages["common.empty"]}</p> : null}
         {notice ? <p role="status">{notice}</p> : null}
         {error ? (

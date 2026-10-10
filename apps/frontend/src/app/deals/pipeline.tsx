@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState } from "react";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -192,52 +193,54 @@ export function Pipeline({ messages, search }: { messages: Messages; search: str
           <TabsTrigger value="list">{messages["pipeline.list"]}</TabsTrigger>
         </TabsList>
         <TabsContent value="board">
-          <div className="flex gap-2 overflow-x-auto pb-2" tabIndex={0}>
-            {BOARD_STAGES.map((stage) => (
-              <section
-                key={stage}
-                aria-label={stageLabel(stage)}
-                data-stage={stage}
-                className="flex w-56 shrink-0 flex-col gap-2"
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  drop(stage, Number(event.dataTransfer.getData("text/plain")));
-                }}
-              >
-                <CardTitle>
-                  <h2>
-                    {stageLabel(stage)} <Badge variant="outline">{columns[stage]?.length ?? 0}</Badge>
-                  </h2>
-                </CardTitle>
-                {(columns[stage] ?? []).map((deal) => (
-                  <Card
-                    key={deal.id}
-                    draggable
-                    data-deal={deal.code_name}
-                    onDragStart={(event) => {
-                      event.dataTransfer.setData("text/plain", String(deal.id));
-                    }}
-                    className="cursor-grab"
-                  >
-                    <CardHeader>
-                      <CardTitle>
-                        <Button asChild variant="link">
-                          <Link href={`/deals/${deal.id}`}>{deal.code_name}</Link>
-                        </Button>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription>{deal.lead_partner_name}</CardDescription>
-                    </CardContent>
-                  </Card>
-                ))}
-              </section>
-            ))}
-          </div>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <div className="flex gap-2 pb-2">
+              {BOARD_STAGES.map((stage) => (
+                <section
+                  key={stage}
+                  aria-label={stageLabel(stage)}
+                  data-stage={stage}
+                  className="flex w-56 shrink-0 flex-col gap-2"
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    drop(stage, Number(event.dataTransfer.getData("text/plain")));
+                  }}
+                >
+                  <CardTitle>
+                    <h2>
+                      {stageLabel(stage)} <Badge variant="outline">{columns[stage]?.length ?? 0}</Badge>
+                    </h2>
+                  </CardTitle>
+                  {(columns[stage] ?? []).map((deal) => (
+                    <Card
+                      key={deal.id}
+                      draggable
+                      data-deal={deal.code_name}
+                      onDragStart={(event) => {
+                        event.dataTransfer.setData("text/plain", String(deal.id));
+                      }}
+                      className="cursor-grab"
+                    >
+                      <CardHeader>
+                        <CardTitle>
+                          <Button asChild variant="link">
+                            <Link href={`/deals/${deal.id}`}>{deal.code_name}</Link>
+                          </Button>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <CardDescription>{deal.lead_partner_name}</CardDescription>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </section>
+              ))}
+            </div>
+          </ScrollRegion>
         </TabsContent>
         <TabsContent value="list">
-          <div className="overflow-x-auto" tabIndex={0}>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -264,7 +267,7 @@ export function Pipeline({ messages, search }: { messages: Messages; search: str
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </ScrollRegion>
         </TabsContent>
       </Tabs>
       {deals.data?.length === 0 ? <p>{messages["deals.empty"]}</p> : null}

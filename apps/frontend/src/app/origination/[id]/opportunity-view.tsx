@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -69,28 +70,30 @@ export function OpportunityView({
               <AlertDescription>{messages["origination.conflictWarning"]}</AlertDescription>
             </Alert>
           ) : null}
-          <Table>
-            <TableBody>
-              <Row label={messages["origination.stage"]} value={messages[stageLabelKey(opportunity.stage)]} />
-              <Row label={messages["deals.type"]} value={messages[`origination.type.${opportunity.type}` as MessageKey]} />
-              <Row
-                label={messages["origination.trigger"]}
-                value={messages[`origination.trigger.${opportunity.trigger}` as MessageKey]}
-              />
-              <Row label={messages["origination.ev"]} value={formatAmount(opportunity.estimated_ev, languageOf(messages))} />
-              <Row label={messages["origination.probability"]} value={String(opportunity.probability)} />
-              <Row label={messages["origination.owner"]} value={opportunity.owner_name} />
-              {opportunity.lost_reason ? (
-                <Row label={messages["origination.lostReason"]} value={messages[lostReasonLabelKey(opportunity.lost_reason)]} />
-              ) : null}
-              {opportunity.competitor_advisor ? (
-                <Row label={messages["origination.competitor"]} value={opportunity.competitor_advisor} />
-              ) : null}
-              {opportunity.revisit_date ? (
-                <Row label={messages["origination.revisitDate"]} value={formatIsoDate(opportunity.revisit_date, languageOf(messages))} />
-              ) : null}
-            </TableBody>
-          </Table>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table>
+              <TableBody>
+                <Row label={messages["origination.stage"]} value={messages[stageLabelKey(opportunity.stage)]} />
+                <Row label={messages["deals.type"]} value={messages[`origination.type.${opportunity.type}` as MessageKey]} />
+                <Row
+                  label={messages["origination.trigger"]}
+                  value={messages[`origination.trigger.${opportunity.trigger}` as MessageKey]}
+                />
+                <Row label={messages["origination.ev"]} value={formatAmount(opportunity.estimated_ev, languageOf(messages))} />
+                <Row label={messages["origination.probability"]} value={String(opportunity.probability)} />
+                <Row label={messages["origination.owner"]} value={opportunity.owner_name} />
+                {opportunity.lost_reason ? (
+                  <Row label={messages["origination.lostReason"]} value={messages[lostReasonLabelKey(opportunity.lost_reason)]} />
+                ) : null}
+                {opportunity.competitor_advisor ? (
+                  <Row label={messages["origination.competitor"]} value={opportunity.competitor_advisor} />
+                ) : null}
+                {opportunity.revisit_date ? (
+                  <Row label={messages["origination.revisitDate"]} value={formatIsoDate(opportunity.revisit_date, languageOf(messages))} />
+                ) : null}
+              </TableBody>
+            </Table>
+          </ScrollRegion>
           {opportunity.mandate_id ? (
             <Button asChild variant="outline">
               <Link href={`/deals/${opportunity.mandate_id}`}>{messages["origination.openMandate"]}</Link>
@@ -469,27 +472,29 @@ function CredentialsCard({
                 {messages["origination.searchCredentials"]}
               </Button>
             </div>
-            <Table>
-              <TableBody>
-                {(results.data ?? []).map((credential) => (
-                  <TableRow key={credential.id} data-credential-result={credential.code_name}>
-                    <TableCell>{credential.code_name}</TableCell>
-                    <TableCell>{credential.ev ?? messages["deals.none"]}</TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={cited.has(credential.id)}
-                        onClick={() => void cite(credential.id)}
-                      >
-                        {messages["origination.cite"]}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <ScrollRegion label={messages["a11y.scrollRegion"]}>
+              <Table>
+                <TableBody>
+                  {(results.data ?? []).map((credential) => (
+                    <TableRow key={credential.id} data-credential-result={credential.code_name}>
+                      <TableCell>{credential.code_name}</TableCell>
+                      <TableCell>{credential.ev ?? messages["deals.none"]}</TableCell>
+                      <TableCell>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={cited.has(credential.id)}
+                          onClick={() => void cite(credential.id)}
+                        >
+                          {messages["origination.cite"]}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollRegion>
           </>
         ) : null}
       </CardContent>

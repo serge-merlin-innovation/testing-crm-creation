@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -91,29 +92,31 @@ function RequestAccess({ messages }: { messages: Messages }) {
           </Alert>
         ) : null}
         {mine.data && mine.data.length > 0 ? (
-          <Table aria-label={messages["access.mine"]}>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{messages["access.codeName"]}</TableHead>
-                <TableHead>{messages["access.status"]}</TableHead>
-                <TableHead>{messages["access.reason"]}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {mine.data.map((request) => (
-                <TableRow key={request.id} data-request={request.code_name}>
-                  <TableCell>{request.code_name}</TableCell>
-                  <TableCell>
-                    <Badge variant={request.status === "rejected" ? "destructive" : "secondary"}>
-                      {messages[STATUS_LABEL[request.status]]}
-                    </Badge>
-                    {request.expires_at ? ` ${fillTemplate(messages["access.until"], { date: day(request.expires_at, messages) })}` : null}
-                  </TableCell>
-                  <TableCell>{request.decision_reason ?? request.reason}</TableCell>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table aria-label={messages["access.mine"]}>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{messages["access.codeName"]}</TableHead>
+                  <TableHead>{messages["access.status"]}</TableHead>
+                  <TableHead>{messages["access.reason"]}</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {mine.data.map((request) => (
+                  <TableRow key={request.id} data-request={request.code_name}>
+                    <TableCell>{request.code_name}</TableCell>
+                    <TableCell>
+                      <Badge variant={request.status === "rejected" ? "destructive" : "secondary"}>
+                        {messages[STATUS_LABEL[request.status]]}
+                      </Badge>
+                      {request.expires_at ? ` ${fillTemplate(messages["access.until"], { date: day(request.expires_at, messages) })}` : null}
+                    </TableCell>
+                    <TableCell>{request.decision_reason ?? request.reason}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollRegion>
         ) : null}
       </CardContent>
     </Card>
@@ -251,30 +254,32 @@ function ApprovalQueue({ messages }: { messages: Messages }) {
       <CardContent className="flex flex-col gap-4">
         {queue.data && queue.data.length === 0 ? <p>{messages["access.queueEmpty"]}</p> : null}
         {queue.data && queue.data.length > 0 ? (
-          <Table aria-label={messages["access.queue"]}>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{messages["access.codeName"]}</TableHead>
-                <TableHead>{messages["access.requester"]}</TableHead>
-                <TableHead>{messages["access.reason"]}</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {queue.data.map((request) => (
-                <TableRow key={request.id} data-pending={request.code_name}>
-                  <TableCell>{request.code_name}</TableCell>
-                  <TableCell>{request.requester_name}</TableCell>
-                  <TableCell>{request.reason}</TableCell>
-                  <TableCell>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setOpen(request.id)}>
-                      {messages["access.open"]}
-                    </Button>
-                  </TableCell>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table aria-label={messages["access.queue"]}>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{messages["access.codeName"]}</TableHead>
+                  <TableHead>{messages["access.requester"]}</TableHead>
+                  <TableHead>{messages["access.reason"]}</TableHead>
+                  <TableHead />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {queue.data.map((request) => (
+                  <TableRow key={request.id} data-pending={request.code_name}>
+                    <TableCell>{request.code_name}</TableCell>
+                    <TableCell>{request.requester_name}</TableCell>
+                    <TableCell>{request.reason}</TableCell>
+                    <TableCell>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setOpen(request.id)}>
+                        {messages["access.open"]}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollRegion>
         ) : null}
         {open !== null ? <RequestDetail key={open} id={open} messages={messages} onDone={queue.reload} /> : null}
       </CardContent>

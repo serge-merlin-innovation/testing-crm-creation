@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -54,28 +55,30 @@ export function StageCriteriaView({ messages }: { messages: Messages }) {
         <CardDescription>{messages["criteria.description"]}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{messages["deals.stage"]}</TableHead>
-              <TableHead>{messages["criteria.criterion"]}</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(criteria.data ?? []).map((criterion) => (
-              <TableRow key={criterion.id}>
-                <TableCell>{stageLabel(criterion.stage)}</TableCell>
-                <TableCell>{criterion.description}</TableCell>
-                <TableCell>
-                  <Button type="button" variant="outline" size="sm" onClick={() => void remove(criterion.id)}>
-                    {messages["criteria.remove"]}
-                  </Button>
-                </TableCell>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{messages["deals.stage"]}</TableHead>
+                <TableHead>{messages["criteria.criterion"]}</TableHead>
+                <TableHead />
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {(criteria.data ?? []).map((criterion) => (
+                <TableRow key={criterion.id}>
+                  <TableCell>{stageLabel(criterion.stage)}</TableCell>
+                  <TableCell>{criterion.description}</TableCell>
+                  <TableCell>
+                    <Button type="button" variant="outline" size="sm" onClick={() => void remove(criterion.id)}>
+                      {messages["criteria.remove"]}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollRegion>
         <form onSubmit={(event) => void add(event)}>
           <FieldGroup>
             <Field>

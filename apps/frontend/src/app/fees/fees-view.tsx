@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -37,28 +38,30 @@ export function FeesView({ messages }: { messages: Messages }) {
             <a href={`/api/v1/fees/export${query}`}>{messages["fees.export"]}</a>
           </Button>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{messages["deals.codeName"]}</TableHead>
-              <TableHead>{messages["fees.retainer"]}</TableHead>
-              <TableHead>{messages["fees.expected"]}</TableHead>
-              <TableHead>{messages["fees.final"]}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(rows.data ?? []).map((row) => (
-              <TableRow key={row.mandate_id} data-fee-row={row.code_name}>
-                <TableCell>
-                  <Link href={`/deals/${row.mandate_id}`}>{row.code_name}</Link>
-                </TableCell>
-                <TableCell>{row.retainer_monthly}</TableCell>
-                <TableCell>{formatAmount(row.expected_fee, languageOf(messages))}</TableCell>
-                <TableCell>{row.final_fee ?? messages["deals.none"]}</TableCell>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{messages["deals.codeName"]}</TableHead>
+                <TableHead>{messages["fees.retainer"]}</TableHead>
+                <TableHead>{messages["fees.expected"]}</TableHead>
+                <TableHead>{messages["fees.final"]}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {(rows.data ?? []).map((row) => (
+                <TableRow key={row.mandate_id} data-fee-row={row.code_name}>
+                  <TableCell>
+                    <Link href={`/deals/${row.mandate_id}`}>{row.code_name}</Link>
+                  </TableCell>
+                  <TableCell>{row.retainer_monthly}</TableCell>
+                  <TableCell>{formatAmount(row.expected_fee, languageOf(messages))}</TableCell>
+                  <TableCell>{row.final_fee ?? messages["deals.none"]}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollRegion>
       </CardContent>
     </Card>
   );

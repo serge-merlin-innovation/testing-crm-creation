@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate } from "@/lib/i18n/format";
@@ -32,24 +33,26 @@ export function WhoKnows({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Table aria-label={`${messages["contacts.relationshipsTitle"]} ${contactName}`}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{messages["contacts.colleague"]}</TableHead>
-              <TableHead>{messages["contacts.interactions"]}</TableHead>
-              <TableHead>{messages["contacts.lastInteraction"]}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(rows.data ?? []).map((row) => (
-              <TableRow key={row.user_id}>
-                <TableCell>{row.name}</TableCell>
-                <TableCell>{row.count}</TableCell>
-                <TableCell>{formatDate(new Date(row.last_interaction_at), language)}</TableCell>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
+          <Table aria-label={`${messages["contacts.relationshipsTitle"]} ${contactName}`}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{messages["contacts.colleague"]}</TableHead>
+                <TableHead>{messages["contacts.interactions"]}</TableHead>
+                <TableHead>{messages["contacts.lastInteraction"]}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {(rows.data ?? []).map((row) => (
+                <TableRow key={row.user_id}>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.count}</TableCell>
+                  <TableCell>{formatDate(new Date(row.last_interaction_at), language)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollRegion>
         {rows.data?.length === 0 ? <p>{messages["common.empty"]}</p> : null}
       </CardContent>
     </Card>

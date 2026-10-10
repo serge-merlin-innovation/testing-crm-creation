@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
@@ -59,22 +60,24 @@ export function LastLoginCard({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableBody>
-            <TableRow>
-              <TableHead>{messages["profile.lastLogin"]}</TableHead>
-              <TableCell>{lastLogin?.at ? formatDate(new Date(lastLogin.at), language) : never}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableHead>{messages["profile.lastLoginIp"]}</TableHead>
-              <TableCell>{lastLogin?.ip ?? never}</TableCell>
-            </TableRow>
-            <TableRow>
-              <TableHead>{messages["profile.lastLoginDevice"]}</TableHead>
-              <TableCell>{lastLogin?.device ?? never}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
+          <Table>
+            <TableBody>
+              <TableRow>
+                <TableHead>{messages["profile.lastLogin"]}</TableHead>
+                <TableCell>{lastLogin?.at ? formatDate(new Date(lastLogin.at), language) : never}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableHead>{messages["profile.lastLoginIp"]}</TableHead>
+                <TableCell>{lastLogin?.ip ?? never}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableHead>{messages["profile.lastLoginDevice"]}</TableHead>
+                <TableCell>{lastLogin?.device ?? never}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </ScrollRegion>
       </CardContent>
     </Card>
   );

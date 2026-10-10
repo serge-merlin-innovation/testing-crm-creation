@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -28,30 +29,32 @@ export function ForecastView({ messages }: { messages: Messages }) {
             <a href={EXPORT_PATH} download>{messages["forecast.export"]}</a>
           </Button>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{messages["forecast.month"]}</TableHead>
-              <TableHead>{messages["forecast.retainers"]}</TableHead>
-              <TableHead>{messages["forecast.successFees"]}</TableHead>
-              <TableHead>{messages["forecast.total"]}</TableHead>
-              <TableHead>{messages["forecast.invoiced"]}</TableHead>
-              <TableHead>{messages["forecast.paid"]}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(forecast.data?.months ?? []).map((row) => (
-              <TableRow key={row.month} data-month={row.month}>
-                <TableCell>{row.month}</TableCell>
-                <TableCell>{row.retainers}</TableCell>
-                <TableCell>{row.success_fees}</TableCell>
-                <TableCell>{row.forecast_total}</TableCell>
-                <TableCell>{row.actual_invoiced}</TableCell>
-                <TableCell>{row.actual_paid}</TableCell>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{messages["forecast.month"]}</TableHead>
+                <TableHead>{messages["forecast.retainers"]}</TableHead>
+                <TableHead>{messages["forecast.successFees"]}</TableHead>
+                <TableHead>{messages["forecast.total"]}</TableHead>
+                <TableHead>{messages["forecast.invoiced"]}</TableHead>
+                <TableHead>{messages["forecast.paid"]}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {(forecast.data?.months ?? []).map((row) => (
+                <TableRow key={row.month} data-month={row.month}>
+                  <TableCell>{row.month}</TableCell>
+                  <TableCell>{row.retainers}</TableCell>
+                  <TableCell>{row.success_fees}</TableCell>
+                  <TableCell>{row.forecast_total}</TableCell>
+                  <TableCell>{row.actual_invoiced}</TableCell>
+                  <TableCell>{row.actual_paid}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollRegion>
       </CardContent>
     </Card>
   );

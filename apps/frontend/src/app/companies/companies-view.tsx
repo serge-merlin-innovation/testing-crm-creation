@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -92,7 +93,7 @@ export function CompaniesView({ messages }: { messages: Messages }) {
               <AlertDescription>{messages["common.loadFailed"]}</AlertDescription>
             </Alert>
           ) : null}
-          <div className="overflow-x-auto" tabIndex={0}>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -124,7 +125,7 @@ export function CompaniesView({ messages }: { messages: Messages }) {
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </ScrollRegion>
           {companies.data?.length === 0 ? <p>{messages["common.empty"]}</p> : null}
           {profileFor !== null ? <InvestorProfilePanel key={profileFor} companyId={profileFor} messages={messages} /> : null}
         </CardContent>

@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -122,29 +123,31 @@ export function OriginationView({ messages, canCreate }: { messages: Messages; c
                     {messages[stageLabelKey(stage)]} <Badge variant="secondary">{columns[stage].length}</Badge>
                   </h2>
                 </CardTitle>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{messages["origination.company"]}</TableHead>
-                      <TableHead>{messages["origination.probability"]}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {columns[stage].map((row) => (
-                      <TableRow key={row.id} data-opportunity={row.company_name}>
-                        <TableCell>
-                          <Link href={`/origination/${row.id}`}>{row.company_name}</Link>
-                          {row.conflict_warning ? (
-                            <Badge variant="destructive" className="ml-2">
-                              !
-                            </Badge>
-                          ) : null}
-                        </TableCell>
-                        <TableCell>{row.probability}</TableCell>
+                <ScrollRegion label={messages["a11y.scrollRegion"]}>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{messages["origination.company"]}</TableHead>
+                        <TableHead>{messages["origination.probability"]}</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {columns[stage].map((row) => (
+                        <TableRow key={row.id} data-opportunity={row.company_name}>
+                          <TableCell>
+                            <Link href={`/origination/${row.id}`}>{row.company_name}</Link>
+                            {row.conflict_warning ? (
+                              <Badge variant="destructive" className="ml-2">
+                                !
+                              </Badge>
+                            ) : null}
+                          </TableCell>
+                          <TableCell>{row.probability}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollRegion>
               </section>
             ))}
           </div>

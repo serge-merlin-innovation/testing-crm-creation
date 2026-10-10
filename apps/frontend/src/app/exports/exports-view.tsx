@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState } from "react";
 import { EditAction } from "@/components/session-provider";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -139,43 +140,45 @@ export function ExportsView({ messages, canApprove }: { messages: Messages; canA
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{messages["common.name"]}</TableHead>
-                <TableHead>{messages["exports.filter"]}</TableHead>
-                <TableHead>{messages["exports.rows"]}</TableHead>
-                <TableHead>{messages["exports.reason"]}</TableHead>
-                <TableHead>{messages["users.status"]}</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(approvals.data ?? []).map((approval) => (
-                <TableRow key={approval.id}>
-                  <TableCell>{approval.requested_by_name}</TableCell>
-                  <TableCell>{approval.filter.q ?? ""}</TableCell>
-                  <TableCell>{approval.row_count}</TableCell>
-                  <TableCell>{approval.reason}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{approval.status}</Badge>
-                  </TableCell>
-                  <TableCell className="flex gap-2">
-                    {canApprove && approval.status === "pending" ? (
-                      <>
-                        <Button size="sm" onClick={() => void decide(approval.id, true)}>
-                          {messages["exports.approve"]}
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => void decide(approval.id, false)}>
-                          {messages["exports.reject"]}
-                        </Button>
-                      </>
-                    ) : null}
-                  </TableCell>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{messages["common.name"]}</TableHead>
+                  <TableHead>{messages["exports.filter"]}</TableHead>
+                  <TableHead>{messages["exports.rows"]}</TableHead>
+                  <TableHead>{messages["exports.reason"]}</TableHead>
+                  <TableHead>{messages["users.status"]}</TableHead>
+                  <TableHead />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {(approvals.data ?? []).map((approval) => (
+                  <TableRow key={approval.id}>
+                    <TableCell>{approval.requested_by_name}</TableCell>
+                    <TableCell>{approval.filter.q ?? ""}</TableCell>
+                    <TableCell>{approval.row_count}</TableCell>
+                    <TableCell>{approval.reason}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{approval.status}</Badge>
+                    </TableCell>
+                    <TableCell className="flex gap-2">
+                      {canApprove && approval.status === "pending" ? (
+                        <>
+                          <Button size="sm" onClick={() => void decide(approval.id, true)}>
+                            {messages["exports.approve"]}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => void decide(approval.id, false)}>
+                            {messages["exports.reject"]}
+                          </Button>
+                        </>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollRegion>
           {approvals.data?.length === 0 ? <p>{messages["common.empty"]}</p> : null}
         </CardContent>
       </Card>
