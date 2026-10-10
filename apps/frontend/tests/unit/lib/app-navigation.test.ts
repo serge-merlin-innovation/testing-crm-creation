@@ -37,6 +37,7 @@ describe("getPrimaryNavigation", () => {
       "/imports",
       "/exports",
       "/stage-criteria",
+      "/access",
     ]);
   });
 
@@ -50,6 +51,7 @@ describe("getPrimaryNavigation", () => {
       "/contacts",
       "/merge",
       "/exports",
+      "/access",
     ]);
   });
 
@@ -72,6 +74,7 @@ describe("getPrimaryNavigation", () => {
       "/analytics",
       "/merge",
       "/exports",
+      "/access",
     ]);
   });
 

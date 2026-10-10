@@ -1,7 +1,7 @@
 """origination opportunities
 
 Revision ID: b32b7af0bfc9
-Revises: 3fe8bfeb0d3d
+Revises: 7494bc3ff192
 Create Date: 2026-10-10 10:46:40.008112
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "b32b7af0bfc9"
-down_revision: str | Sequence[str] | None = "3fe8bfeb0d3d"
+down_revision: str | Sequence[str] | None = "7494bc3ff192"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -10,7 +10,7 @@ from ..role.authorization import has_permission, require_permission
 from ..role.permissions import Permission
 from .dependencies import MandateServiceDep, PipelineServiceDep
 from .pipeline import StageBlockedError, StaleVersion
-from .policy import EditGrant, ReadGrant, ReopenGrant, SummaryGrant, TeamGrant
+from .policy import EditGrant, ExportGrant, ReadGrant, ReopenGrant, SummaryGrant, TeamGrant
 from .schemas import (
     DealFilters,
     DealLinkCreate,
@@ -141,6 +141,24 @@ async def update_mandate(
         ) from error
     except MandateExistsError as error:
         raise _conflict("This code name is already in use.") from error
+
+
+@router.get(
+    "/{mandate_id}/export",
+    summary="Export the deal and its team as CSV",
+    description="Deal team only: compliance reading a closed deal and break-glass access may not export (AUTHZ-08 c3).",
+    response_class=Response,
+    responses={**HIDDEN, 200: {"content": {"text/csv": {}}}},
+)
+async def export_mandate(
+    grant: ExportGrant, db: AsyncSessionDep, service: MandateServiceDep, clock: ClockDep, context: AuditContextDep
+) -> Response:
+    body = await service.export_csv(db, grant, clock.now(), context)
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{grant.mandate.code_name}.csv"'},
+    )
 
 
 @router.get("/{mandate_id}/history", response_model=list[HistoryEntry], summary="Who changed what, when", responses=HIDDEN)
