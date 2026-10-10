@@ -10,6 +10,7 @@ from sqlalchemy import update
 
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
 from src.modules.buyer.jobs import run_buyer_jobs
+from src.modules.buyer.schemas import BuyerStatus
 from src.modules.mandate.models import Mandate
 from src.modules.notification.service import NotificationService
 from src.modules.role.permissions import RoleName
@@ -562,8 +563,6 @@ SPEC_STATUSES = [
 
 
 async def test_epic7_buyer_statuses_are_the_twelve_from_the_spec(world):
-    from src.modules.buyer.schemas import BuyerStatus
-
     mandate_id = await deal(world)
     await listed(world, mandate_id)
 
