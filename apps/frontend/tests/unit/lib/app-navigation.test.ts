@@ -46,12 +46,18 @@ describe("getPrimaryNavigation", () => {
       "/overview",
       "/search",
       "/deals",
+      "/origination",
       "/companies",
       "/contacts",
       "/merge",
       "/exports",
       "/access",
     ]);
+  });
+
+  // ORI-01 c3: origination follows the deal wall, so roles without deals.read_staffed get no link.
+  it("hides origination from an admin", () => {
+    expect(hrefs(getPrimaryNavigation(admin))).not.toContain("/origination");
   });
 
   // ROLE-01 c2: an Admin has no deal permission, so no Deals link.

@@ -33,6 +33,8 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   // Signed-in only: the backend's 404 decides, so a hidden deal reads Not found for every role
   // instead of a redirect that would differ between "no permission" and "not staffed".
   "/deals": { kind: "authenticated" },
+  // Same wall as deals: the backend 404s an opportunity the reader neither owns nor was invited to.
+  "/origination": { kind: "authenticated" },
   "/companies": { kind: "authenticated" },
   "/contacts": { kind: "authenticated" },
   "/inbox": { kind: "authenticated" },

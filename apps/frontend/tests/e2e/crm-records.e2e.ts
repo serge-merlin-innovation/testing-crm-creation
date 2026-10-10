@@ -8,16 +8,16 @@ test.describe("an analyst", () => {
 
   test("creates a company and finds it by name", async ({ page }) => {
     await page.goto("/companies");
-    await page.getByLabel("Name").fill(`Northwind ${RUN}`);
+    await page.getByLabel("Name").fill(`Zephyrine Optics ${RUN}`);
     await page.getByLabel("Country").click();
     await page.getByRole("option", { name: "Netherlands" }).click();
     await page.getByLabel("VAT or registry number").fill(`NW-${RUN}`);
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("status")).toHaveText("Company created.");
 
-    await page.getByRole("textbox", { name: "Search" }).fill(`northwind ${RUN}`);
+    await page.getByRole("textbox", { name: "Search" }).fill(`zephyrine optics ${RUN}`);
     await page.getByRole("button", { name: "Search" }).click();
-    await expect(page.getByRole("cell", { name: `Northwind ${RUN}` })).toBeVisible();
+    await expect(page.getByRole("cell", { name: `Zephyrine Optics ${RUN}` })).toBeVisible();
   });
 
   test("creates a contact with an inline phone error first", async ({ page }) => {
