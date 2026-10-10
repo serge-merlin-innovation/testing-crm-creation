@@ -485,15 +485,17 @@ function ReviewCard({ review, messages, onDone }: { review: AccessReview; messag
         <>
           <ul className="flex flex-col gap-1">
             {review.members.map((member) => (
-              <li key={member.user_id} className="flex items-center gap-2">
+              <li key={member.user_id}>
+                <Field orientation="horizontal">
                 <Checkbox
                   id={`remove-${review.id}-${member.user_id}`}
                   checked={removed.has(member.user_id)}
                   onCheckedChange={() => toggle(member.user_id)}
                 />
-                <label htmlFor={`remove-${review.id}-${member.user_id}`}>
+                <FieldLabel htmlFor={`remove-${review.id}-${member.user_id}`}>
                   {messages["access.remove"]} {member.name} ({member.role.replace("_", " ")})
-                </label>
+                </FieldLabel>
+                </Field>
               </li>
             ))}
           </ul>

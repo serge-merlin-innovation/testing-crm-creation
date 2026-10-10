@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DECLINE_LABEL, type DeclineReason } from "@/lib/buyers";
@@ -49,23 +49,25 @@ function Choices({
   chosen: number[];
   onChange: (ids: number[]) => void;
 }) {
+  const prefix = useId();
   return (
-    <fieldset className="flex flex-col gap-1">
-      <legend>{label}</legend>
+    <FieldSet>
+      <FieldLegend variant="label">{label}</FieldLegend>
       <div className="flex flex-wrap gap-3">
         {options.map((option) => (
-          <label key={option.id} className="flex items-center gap-1">
+          <Field key={option.id} orientation="horizontal" className="w-auto">
             <Checkbox
+              id={`${prefix}-${option.id}`}
               checked={chosen.includes(option.id)}
               onCheckedChange={(checked) =>
                 onChange(checked ? [...chosen, option.id] : chosen.filter((id) => id !== option.id))
               }
             />
-            {option.label}
-          </label>
+            <FieldLabel htmlFor={`${prefix}-${option.id}`}>{option.label}</FieldLabel>
+          </Field>
         ))}
       </div>
-    </fieldset>
+    </FieldSet>
   );
 }
 

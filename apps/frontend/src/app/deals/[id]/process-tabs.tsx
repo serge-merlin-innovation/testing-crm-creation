@@ -577,17 +577,17 @@ export function LettersTab({
             </Select>
           </Field>
           {(grid.data?.buyers ?? []).map((buyer) => (
-            <div key={buyer.id} className="flex items-center gap-2">
+            <Field key={buyer.id} orientation="horizontal">
               <Checkbox
                 id={`letter-buyer-${buyer.id}`}
                 checked={selected.includes(buyer.id)}
                 onCheckedChange={() => setSelected(toggle(selected, buyer.id))}
               />
-              <label htmlFor={`letter-buyer-${buyer.id}`}>
+              <FieldLabel htmlFor={`letter-buyer-${buyer.id}`}>
                 {buyer.name}{" "}
                 {buyer.contact_name ? `(${buyer.contact_name})` : ""}
-              </label>
-            </div>
+              </FieldLabel>
+            </Field>
           ))}
           <Button
             onClick={() => void send()}

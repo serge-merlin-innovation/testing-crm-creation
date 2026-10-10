@@ -195,7 +195,7 @@ export function TemplatesView({ messages }: { messages: Messages }) {
               ) : null}
               {errors.body ? <FieldError>{errors.body}</FieldError> : null}
             </Field>
-            <div className="flex items-center gap-2">
+            <Field orientation="horizontal">
               <Checkbox
                 id="template-im"
                 checked={values.references_im}
@@ -203,10 +203,10 @@ export function TemplatesView({ messages }: { messages: Messages }) {
                   setValues({ ...values, references_im: checked === true })
                 }
               />
-              <label htmlFor="template-im">
+              <FieldLabel htmlFor="template-im">
                 {messages["templates.referencesIm"]}
-              </label>
-            </div>
+              </FieldLabel>
+            </Field>
             {errors.form ? <FieldError>{errors.form}</FieldError> : null}
             <div className="flex gap-2">
               <Button type="submit" disabled={unknown.length > 0}>
