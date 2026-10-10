@@ -399,3 +399,57 @@ async def test_read_only_gets_aggregated_dashboards_and_nothing_else(world):
         assert response.status_code in (403, 404), f"{path}: {response.status_code}"
         assert "Falcon" not in response.text
         assert "Acme" not in response.text
+
+
+async def test_win_loss_counts_other_partners_pitches_and_deals_anonymously(world):
+    base = "/api/v1/origination/opportunities"
+
+    async def lost_pitch(owner, reason: str) -> None:
+        body = {
+            "company_id": world.client_id,
+            "type": "sell_side",
+            "trigger": "succession",
+            "estimated_ev": "40000",
+            "probability": 30,
+        }
+        created = await post(owner, base, body)
+        assert created.status_code == 201, created.text
+        lost = await post(owner, f"{base}/{created.json()['id']}/stage", {"stage": "lost", "lost_reason": reason})
+        assert lost.status_code == 200, lost.text
+
+    async def closed_deal(code: str) -> None:
+        set_clock(FrozenClock(datetime(2026, 7, 16, 9, 0, tzinfo=UTC)))
+        mandate_id = await deal(world, code, lead=world.outsider)
+        set_clock(FrozenClock(NOW))
+        current = (await get(world.outsider, f"/api/v1/mandates/{mandate_id}")).json()
+        body = {
+            "version": current["version"],
+            "outcome": "closed_won",
+            "final_ev": "30000",
+            "buyer": "Northwind",
+            "ev_ebitda": "6",
+            "closing_date": "2026-10-14",
+            "tombstone_allowed": False,
+        }
+        assert (await post(world.outsider, f"/api/v1/mandates/{mandate_id}/close", body)).status_code == 200
+
+    period = {"from": "2026-10-01", "to": "2026-10-31"}
+    await lost_pitch(world.partner, "fee")
+    await lost_pitch(world.outsider, "timing")
+    await closed_deal("Kestrel")
+    single = (await get(world.partner, f"{REPORTS}/win-loss", **period)).json()
+    assert (single["pitches"], single["lost"], single["closed_deals"]) == (1, 1, 0)
+
+    for _ in range(2):
+        await lost_pitch(world.outsider, "timing")
+    for code in ("Osprey", "Plover"):
+        await closed_deal(code)
+
+    response = await get(world.partner, f"{REPORTS}/win-loss", **period)
+    body = response.json()
+    assert (body["pitches"], body["won"], body["lost"]) == (4, 0, 4)
+    assert body["top_lost_reasons"][0] == {"reason": "timing", "count": 3}
+    assert body["closed_deals"] == 3
+    assert [(s["deals"], Decimal(s["average_ev_ebitda"])) for s in body["ev_ebitda_by_sector"]] == [(3, Decimal("6.00"))]
+    for leak in ("Kestrel", "Osprey", "Plover", "Northwind", "otto"):
+        assert leak not in response.text

@@ -10,7 +10,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Any
+from typing import Any, TypeVar
 
 from openpyxl import Workbook  # type: ignore[import-untyped]
 from sqlalchemy import and_, select
@@ -36,6 +36,7 @@ from ..task.service import read as read_task
 from .models import DealForecast
 from .schemas import ForecastValues
 
+_T = TypeVar("_T")
 CENT = Decimal("0.01")
 HIDDEN_CELL_MINIMUM = 3
 KEY_DATE_HORIZON = timedelta(days=30)
@@ -381,38 +382,37 @@ class ReportingService:
     async def win_loss(self, db: AsyncSession, user: dict[str, Any], now: datetime, start: date, end: date) -> dict[str, Any]:
         begin = datetime.combine(start, datetime.min.time(), tzinfo=now.tzinfo)
         finish = datetime.combine(end + timedelta(days=1), datetime.min.time(), tzinfo=now.tzinfo)
-        decided = (
-            (
-                await db.execute(
-                    select(Opportunity).where(
-                        visible_opportunities(user),
-                        Opportunity.stage.in_([OpportunityStage.WON.value, OpportunityStage.LOST.value]),
-                        Opportunity.stage_changed_at >= begin,
-                        Opportunity.stage_changed_at < finish,
-                    )
+        # REP-04: firm-wide. What the viewer cannot read counts only as an anonymous group of HIDDEN_CELL_MINIMUM or more.
+        rows = (
+            await db.execute(
+                select(Opportunity, visible_opportunities(user)).where(
+                    Opportunity.stage.in_([OpportunityStage.WON.value, OpportunityStage.LOST.value]),
+                    Opportunity.stage_changed_at >= begin,
+                    Opportunity.stage_changed_at < finish,
                 )
             )
-            .scalars()
-            .all()
-        )
+        ).all()
+        decided = [o for o, seen in rows if seen] + _anonymous([o for o, seen in rows if not seen])
         won = sum(1 for o in decided if o.stage == OpportunityStage.WON.value)
         lost = [o for o in decided if o.stage == OpportunityStage.LOST.value]
         reasons = Counter(o.lost_reason or "unspecified" for o in lost)
         top = sorted(reasons.items(), key=lambda item: (-item[1], item[0]))[:TOP_LOST_REASONS]
 
-        closed = (
+        readable = set(await DealPolicy(now).visible_mandate_ids(db, user))
+        every = (
             await db.execute(
-                DealPolicy(now).visible(
-                    user,
-                    select(Mandate, PicklistValue.label_en)
-                    .join(PicklistValue, PicklistValue.id == Mandate.sector_id)
-                    .where(
-                        Mandate.stage == DealStage.CLOSED_WON.value,
-                        and_(Mandate.closing_date >= start, Mandate.closing_date <= end),
-                    ),
+                select(Mandate, PicklistValue.label_en)
+                .join(PicklistValue, PicklistValue.id == Mandate.sector_id)
+                .where(
+                    Mandate.stage == DealStage.CLOSED_WON.value,
+                    and_(Mandate.closing_date >= start, Mandate.closing_date <= end),
+                    ~in_conflict_hiding() | Mandate.id.in_(readable or [-1]),
                 )
             )
         ).all()
+        closed = [row for row in every if row[0].id in readable] + _anonymous(
+            [row for row in every if row[0].id not in readable]
+        )
         durations = [Decimal((m.closing_date - m.created_at.date()).days) for m, _ in closed if m.closing_date]
         sectors: dict[int, tuple[str, list[Decimal]]] = {}
         for mandate, label in closed:
@@ -445,7 +445,7 @@ def _countable(members: list[_Deal], visible: set[int]) -> list[_Deal]:
     return [d for d in members if d.mandate.id in visible] + _anonymous([d for d in members if d.mandate.id not in visible])
 
 
-def _anonymous(hidden: list[_Deal]) -> list[_Deal]:
+def _anonymous(hidden: list[_T]) -> list[_T]:
     """Hidden deals, only when there are enough of them that no single one can be singled out."""
     return hidden if len(hidden) >= HIDDEN_CELL_MINIMUM else []
 
