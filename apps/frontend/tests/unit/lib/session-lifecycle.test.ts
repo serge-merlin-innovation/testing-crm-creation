@@ -16,7 +16,7 @@ import {
   shouldRenewOnActivity,
   laterStatus,
 } from "@/lib/session-timer";
-import { createUnsavedChanges } from "@/lib/unsaved-changes";
+import { createUnsavedChanges, trackUnsavedForms } from "@/lib/unsaved-changes";
 
 const status = (idle: string, absolute: string | null = null) =>
   parseSessionStatus({
@@ -126,5 +126,46 @@ describe("mobile access (AUTH-07 c2)", () => {
   it("hides with the md breakpoint so it applies before any script runs", () => {
     expect(editActionClassName(true)).toBe("hidden md:contents");
     expect(editActionClassName(false)).toBe("contents");
+  });
+});
+
+describe("trackUnsavedForms (AUTH-04 c4): typing in any form but a search marks it unsaved", () => {
+  function fakeRoot() {
+    const listeners: Record<string, (event: { target: unknown }) => void> = {};
+    return {
+      addEventListener: (type: string, listener: (event: { target: unknown }) => void) => {
+        listeners[type] = listener;
+      },
+      removeEventListener: (type: string) => {
+        delete listeners[type];
+      },
+      fire: (type: string, target: unknown) => listeners[type]?.({ target }),
+      listeners,
+    };
+  }
+  const form = { getAttribute: (name: string) => (name === "aria-label" ? "New contact" : null) };
+  const search = { getAttribute: (name: string) => (name === "role" ? "search" : null) };
+  const tracked = { closest: (selector: string) => (selector === "form" ? form : null) };
+  const inSearch = { closest: (selector: string) => (selector === "form" ? search : null) };
+  const untracked = { closest: () => null };
+
+  it("marks a tracked form dirty on input and clean on submit", () => {
+    const registry = createUnsavedChanges();
+    const root = fakeRoot();
+    trackUnsavedForms(root, registry);
+
+    root.fire("input", untracked);
+    root.fire("input", inSearch);
+    expect(registry.any()).toBe(false);
+    root.fire("input", tracked);
+    expect(registry.any()).toBe(true);
+    root.fire("submit", form);
+    expect(registry.any()).toBe(false);
+  });
+
+  it("stops listening when disposed", () => {
+    const root = fakeRoot();
+    trackUnsavedForms(root, createUnsavedChanges())();
+    expect(Object.keys(root.listeners)).toEqual([]);
   });
 });

@@ -24,7 +24,7 @@ import {
 } from "@/lib/app-navigation";
 import type { MessageKey } from "@/lib/i18n/messages";
 import type { SessionIdentity } from "@/lib/page-audience";
-import { unsavedChanges } from "@/lib/unsaved-changes";
+import { typedForms, unsavedChanges } from "@/lib/unsaved-changes";
 import { logout } from "@/services/auth";
 
 /** Only ever rendered for a signed-in reader, hence the hardcoded `isAuthenticated`. Role and
@@ -45,7 +45,7 @@ export function AppNavbar({
   const activeItem = getActiveNavigationLabel(pathname, navigationItems);
 
   const requestLogout = () => {
-    if (unsavedChanges.any()) {
+    if (unsavedChanges.any() || typedForms.any()) {
       setConfirmingLogout(true);
       return;
     }
@@ -60,6 +60,7 @@ export function AppNavbar({
     try {
       await logout();
       unsavedChanges.clear();
+      typedForms.clear();
       // replace, not push: Back must not return to the signed-in page just left.
       router.replace("/login");
       router.refresh();

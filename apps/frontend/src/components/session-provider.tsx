@@ -23,7 +23,7 @@ import {
   type SessionPhase,
   type SessionStatus,
 } from "@/lib/session-timer";
-import { unsavedChanges } from "@/lib/unsaved-changes";
+import { trackUnsavedForms, typedForms, unsavedChanges } from "@/lib/unsaved-changes";
 import { fetchSessionStatus, renewSession } from "@/services/session";
 
 const CHANNEL = "crm-session";
@@ -122,6 +122,11 @@ export function SessionProvider({
     const timer = window.setInterval(tick, TICK_MS);
     return () => window.clearInterval(timer);
   }, [status]);
+
+  useEffect(() => trackUnsavedForms(document), []);
+
+  // Leaving a page through the app's own links abandons its forms, so they no longer count.
+  useEffect(() => typedForms.clear(), [pathname]);
 
   useEffect(() => {
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
