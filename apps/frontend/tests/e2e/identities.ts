@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type APIRequestContext, type Page } from "@playwright/test";
 import { currentCode, saveSecret } from "./totp";
 
 // Playwright resolves a relative storageState against the working directory, which both runners
@@ -64,4 +64,21 @@ export async function signIn(page: Page, identity: { email: string; password: st
     await expect(page.getByRole("list", { name: "Your recovery codes" }).getByRole("listitem")).toHaveCount(10);
     await page.getByRole("button", { name: "Continue" }).click();
   }
+}
+
+/** The same whole sign-in over the API: password, then enrolment or the code. Returns CSRF headers. */
+export async function signInApi(request: APIRequestContext, identity: { email: string; password: string }) {
+  const login = await request.post("/api/v1/auth/login", { form: identity });
+  expect(login.status(), await login.text()).toBe(200);
+  const first = await login.json();
+  if (first.step === "done") return { "X-CSRF-Token": first.csrf_token as string };
+
+  if (first.step === "enrol") {
+    saveSecret(identity.email, new URL(first.otpauth_uri).searchParams.get("secret")!);
+  }
+  const verified = await request.post("/api/v1/auth/login/second-factor", {
+    data: { challenge: first.challenge, code: currentCode(identity.email) },
+  });
+  expect(verified.status(), await verified.text()).toBe(200);
+  return { "X-CSRF-Token": (await verified.json()).csrf_token as string };
 }
