@@ -1,10 +1,11 @@
 import { expect, test as setup, type Page } from "@playwright/test";
 import { DEFAULT_AUTHENTICATED_PATH, LOGIN_PATH } from "@/lib/auth-routing";
-import { ADMIN, MEMBER, MEMBER_ROLE, submitCredentials, type Identity } from "./identities";
+import { currentCode } from "./totp";
+import { ADMIN, MEMBER, MEMBER_ROLE, signIn, type Identity } from "./identities";
 
 async function signInAndBankSession(page: Page, identity: Identity) {
   await page.goto(LOGIN_PATH);
-  await submitCredentials(page, identity);
+  await signIn(page, identity);
 
   await expect(
     page,
@@ -24,7 +25,11 @@ setup("create the member account with the Analyst role", async ({ request }) => 
     form: { email: ADMIN.email, password: ADMIN.password },
   });
   expect(login.status(), await login.text()).toBe(200);
-  const headers = { "X-CSRF-Token": (await login.json()).csrf_token };
+  const verified = await request.post("/api/v1/auth/login/second-factor", {
+    data: { challenge: (await login.json()).challenge, code: currentCode(ADMIN.email) },
+  });
+  expect(verified.status(), await verified.text()).toBe(200);
+  const headers = { "X-CSRF-Token": (await verified.json()).csrf_token };
 
   // 201 on a fresh database; 409 on every run after that, which is the same end state.
   const created = await request.post("/api/v1/users/", {

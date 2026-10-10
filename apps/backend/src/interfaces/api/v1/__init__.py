@@ -8,6 +8,7 @@ from ....modules.company.routes import router as companies_router
 from ....modules.contact.routes import router as contacts_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.role.routes import router as roles_router
+from ....modules.security.routes import router as security_router
 from ....modules.user.routes import router as users_router
 
 router = APIRouter(prefix="/v1")
@@ -18,6 +19,7 @@ router.include_router(companies_router, prefix="/companies")
 router.include_router(contacts_router, prefix="/contacts")
 router.include_router(picklists_router, prefix="/picklists")
 router.include_router(auth_router, prefix="/auth")
+router.include_router(security_router)
 
 if settings.ENVIRONMENT not in (EnvironmentOption.PRODUCTION, EnvironmentOption.STAGING):
     router.include_router(testing_router, prefix="/test-hooks")

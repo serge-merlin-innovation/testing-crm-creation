@@ -1,4 +1,5 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
+import { currentCode, saveSecret } from "./totp";
 
 // Playwright resolves a relative storageState against the working directory, which both runners
 // leave at apps/frontend. These are session cookies, so this path and the .gitignore entry
@@ -39,4 +40,28 @@ export async function submitCredentials(
   await page.getByLabel("Email").fill(credentials.email);
   await page.getByLabel("Password").fill(credentials.password);
   await page.getByRole("button", { name: "Sign in securely" }).click();
+}
+
+/** Password, then enrolment (first time) or the authenticator code: the whole sign-in. */
+export async function signIn(page: Page, identity: { email: string; password: string }) {
+  await submitCredentials(page, identity);
+
+  const enrol = page.getByRole("heading", { name: "Set up two-factor sign-in" });
+  const code = page.getByRole("heading", { name: "Authentication code" });
+  await expect(enrol.or(code)).toBeVisible();
+
+  if (await enrol.isVisible()) {
+    saveSecret(identity.email, await page.getByLabel("Or enter this key by hand").inputValue());
+  }
+
+  await page.getByLabel("Code", { exact: true }).fill(currentCode(identity.email));
+  await page.getByRole("button", { name: "Verify" }).click();
+
+  const recovery = page.getByRole("heading", { name: "Your recovery codes" });
+  const left = page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  await Promise.race([recovery.waitFor(), left]);
+  if (await recovery.isVisible()) {
+    await expect(page.getByRole("list", { name: "Your recovery codes" }).getByRole("listitem")).toHaveCount(10);
+    await page.getByRole("button", { name: "Continue" }).click();
+  }
 }

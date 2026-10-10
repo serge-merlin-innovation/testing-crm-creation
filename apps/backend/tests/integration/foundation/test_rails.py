@@ -27,7 +27,7 @@ async def test_frozen_clock_drives_audit_timestamps(client: AsyncClient, seeded_
     await make_user(seeded_db, "admin@firm.be", RoleName.ADMIN)
     await login(client, "admin@firm.be")
 
-    entry = (await seeded_db.execute(select(AuditEntry))).scalar_one()
+    entry = (await seeded_db.execute(select(AuditEntry).where(AuditEntry.action == "login"))).scalar_one()
 
     assert entry.created_at == frozen
     assert entry.retain_until == frozen.replace(year=2040)
