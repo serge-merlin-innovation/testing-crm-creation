@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EditAction } from "@/components/session-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,13 +78,15 @@ export function PermissionMatrixEditor({ messages }: { messages: Record<MessageK
         <CardDescription>{messages["permissions.description"]}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div>
-          <Button asChild variant="outline">
-            <a href={`${MATRIX_PATH}/export`} download>
-              {messages["permissions.export"]}
-            </a>
-          </Button>
-        </div>
+        <EditAction>
+          <div>
+            <Button asChild variant="outline">
+              <a href={`${MATRIX_PATH}/export`} download>
+                {messages["permissions.export"]}
+              </a>
+            </Button>
+          </div>
+        </EditAction>
 
         {error ? (
           <Alert variant="destructive">
