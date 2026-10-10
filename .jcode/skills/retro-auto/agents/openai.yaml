@@ -1,0 +1,5 @@
+interface:
+  display_name: "Retro Auto"
+  short_description: "Unattended retrospective written to postmortem/ at the end of a code session."
+policy:
+  allow_implicit_invocation: true

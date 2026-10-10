@@ -1,0 +1,4 @@
+interface:
+  display_name: "Set up the project"
+  short_description: "Branch rules, local stack, Azure OIDC, labels, design system, PR"
+  default_prompt: "Use $setup to set up this project after cloning it from the template."
