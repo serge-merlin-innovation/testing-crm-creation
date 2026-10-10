@@ -463,6 +463,27 @@ async def test_every_export_route_logs_user_time_kind_filter_and_rows(world, kin
     assert entry.new_values["rows"] >= 1
 
 
+# GDPR-01 c2: the contacts export carries the opt-out flag, and a mailing export drops opted-out contacts.
+async def test_mailing_export_excludes_opted_out_and_do_not_contact_and_shows_the_flag(world):
+    await contact(world.partner, first="Mail", last="Keep")
+    await contact(world.partner, first="Mail", last="Optout", marketing_opt_out=True)
+    await contact(world.partner, first="Mail", last="Blocked", do_not_contact=True)
+
+    full = await world.partner.client.get("/api/v1/exports/contacts", params={"q": "Mail"})
+    mailing = await world.partner.client.get("/api/v1/exports/contacts", params={"q": "Mail", "for_mailing": "true"})
+
+    assert full.status_code == mailing.status_code == 200, mailing.text
+    header, *rows = full.text.strip().splitlines()
+    assert "marketing_opt_out" in header.split(",")
+    assert len(rows) == 3
+    mailed = mailing.text.strip().splitlines()[1:]
+    assert [row.split(",")[2] for row in mailed] == ["Keep"]
+    preview = await world.partner.client.get("/api/v1/exports/contacts/preview", params={"q": "Mail", "for_mailing": "true"})
+    assert preview.json()["row_count"] == 1
+    entry = (await world.db.execute(select(AuditEntry).where(AuditEntry.action == "export"))).scalars().all()[-1]
+    assert entry.new_values["filter"] == {"q": "Mail", "for_mailing": True}
+
+
 # Security review S12: a contact name that starts like a formula is quoted in the CSV.
 async def test_contact_export_quotes_formula_like_values(world):
     await contact(world.partner, first="=HYPERLINK(evil)", last="@Attack")

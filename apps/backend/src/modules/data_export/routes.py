@@ -18,9 +18,9 @@ Q = Annotated[str | None, Query(max_length=200)]
 
 @router.get("/exports/contacts/preview", response_model=ExportPreview, summary="How many rows, and whether approval is needed")
 async def preview_contacts_export(
-    db: AsyncSessionDep, service: DataExportServiceDep, user: CurrentUserDep, q: Q = None
+    db: AsyncSessionDep, service: DataExportServiceDep, user: CurrentUserDep, q: Q = None, for_mailing: bool = False
 ) -> ExportPreview:
-    rows = await service.count(db, ContactFilter(q=q))
+    rows = await service.count(db, ContactFilter(q=q, for_mailing=for_mailing))
     return ExportPreview(row_count=rows, needs_approval=service.needs_approval(user, rows), limit=APPROVAL_LIMIT)
 
 
@@ -32,10 +32,15 @@ async def preview_contacts_export(
     responses={200: {"content": {"text/csv": {}}}, 403: {"description": "Partner approval required"}},
 )
 async def export_contacts(
-    db: AsyncSessionDep, service: DataExportServiceDep, user: CurrentUserDep, context: AuditContextDep, q: Q = None
+    db: AsyncSessionDep,
+    service: DataExportServiceDep,
+    user: CurrentUserDep,
+    context: AuditContextDep,
+    q: Q = None,
+    for_mailing: Annotated[bool, Query(description="GDPR-01 c2: drop opted-out and do-not-contact contacts")] = False,
 ) -> Response:
     try:
-        body = await service.export_contacts(db, user, ContactFilter(q=q), context)
+        body = await service.export_contacts(db, user, ContactFilter(q=q, for_mailing=for_mailing), context)
     except ApprovalRequiredError as error:
         raise HTTPException(
             status_code=403,

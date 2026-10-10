@@ -866,7 +866,9 @@
         "properties": {
           "filter": {
             "$ref": "#/components/schemas/ContactFilter",
-            "default": {}
+            "default": {
+              "for_mailing": false
+            }
           },
           "reason": {
             "examples": [
@@ -2507,6 +2509,11 @@
       "ContactFilter": {
         "additionalProperties": false,
         "properties": {
+          "for_mailing": {
+            "default": false,
+            "title": "For Mailing",
+            "type": "boolean"
+          },
           "q": {
             "anyOf": [
               {
@@ -15804,6 +15811,7 @@
                     "decided_at": "2026-10-10T09:00:00Z",
                     "decided_by": 1,
                     "filter": {
+                      "for_mailing": false,
                       "q": "text"
                     },
                     "id": 1,
@@ -15841,6 +15849,7 @@
             "application/json": {
               "example": {
                 "filter": {
+                  "for_mailing": false,
                   "q": "text"
                 },
                 "reason": "Mailing for the Benelux PE event"
@@ -15860,6 +15869,7 @@
                   "decided_at": "2026-10-10T09:00:00Z",
                   "decided_by": 1,
                   "filter": {
+                    "for_mailing": false,
                     "q": "text"
                   },
                   "id": 1,
@@ -15931,6 +15941,7 @@
                   "decided_at": "2026-10-10T09:00:00Z",
                   "decided_by": 1,
                   "filter": {
+                    "for_mailing": false,
                     "q": "text"
                   },
                   "id": 1,
@@ -15988,6 +15999,18 @@
               ],
               "title": "Q"
             }
+          },
+          {
+            "description": "GDPR-01 c2: drop opted-out and do-not-contact contacts",
+            "in": "query",
+            "name": "for_mailing",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "GDPR-01 c2: drop opted-out and do-not-contact contacts",
+              "title": "For Mailing",
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -16036,6 +16059,16 @@
                 }
               ],
               "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "for_mailing",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "For Mailing",
+              "type": "boolean"
             }
           }
         ],

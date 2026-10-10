@@ -15,6 +15,7 @@ class ContactFilter(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     q: Annotated[str | None, Field(max_length=200)] = None
+    for_mailing: bool = False
 
 
 class ApprovalRequest(BaseModel):

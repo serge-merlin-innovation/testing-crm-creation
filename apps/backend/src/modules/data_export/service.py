@@ -22,7 +22,7 @@ APPROVAL_LIMIT = 500
 CONTACTS = "contacts"
 # REP-06 names the Analyst role; other roles export without a second pair of eyes, but always logged.
 LIMITED_ROLES = frozenset({RoleName.ANALYST.value})
-COLUMNS = ["id", "first_name", "last_name", "email", "phone", "language", "legal_basis", "do_not_contact"]
+COLUMNS = ["id", "first_name", "last_name", "email", "phone", "language", "legal_basis", "do_not_contact", "marketing_opt_out"]
 
 
 class ApprovalRequiredError(Exception):
@@ -40,6 +40,8 @@ def _matching(values: ContactFilter) -> Any:
                 Contact.email.icontains(term, autoescape=True),
             )
         )
+    if values.for_mailing:
+        query = query.where(Contact.marketing_opt_out.is_(False), Contact.do_not_contact.is_(False))
     return query
 
 
@@ -88,7 +90,7 @@ class DataExportService:
             context,
             CONTACTS,
             record_type=CONTACTS,
-            filters=values.model_dump(),
+            filters=values.model_dump(exclude_defaults=True),
             rows=written,
             approval_id=approval.id if approval else None,
         )
