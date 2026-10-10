@@ -648,3 +648,23 @@ async def test_co04_c1_ev_ebitda_and_stake_filter_suggest_buyers(world):
     assert ids(await get(world.analyst, path, ev_ebitda="11")) == sorted([minority, either])
     assert ids(await get(world.analyst, path, ev_ebitda="6", stake="majority")) == sorted([majority, either])
     assert (await get(world.analyst, path, stake="both")).status_code == 422
+
+
+async def test_con01_c5_do_not_contact_contact_cannot_be_set_on_a_listed_buyer(world):
+    mandate_id = await deal(world)
+    [buyer_id] = await listed(world, mandate_id)
+    response = await send(
+        world.partner,
+        "POST",
+        "/api/v1/contacts/",
+        {"first_name": "Vera", "last_name": "Stil", "source": "Forum", "do_not_contact": True},
+    )
+    assert response.status_code == 201, response.text
+
+    patched = await send(
+        world.analyst, "PATCH", f"/api/v1/mandates/{mandate_id}/buyers/{buyer_id}", {"contact_id": response.json()["id"]}
+    )
+
+    assert patched.status_code == 422
+    assert "Do not contact" in patched.text
+    assert (await buyers(world, mandate_id))["buyers"][0]["contact_id"] is None
