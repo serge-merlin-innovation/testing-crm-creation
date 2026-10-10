@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
@@ -8,6 +8,17 @@ from .dependencies import ContactServiceDep
 from .schemas import ContactCreate, ContactRead, ContactUpdate
 
 router = APIRouter(tags=["Contacts"])
+
+
+@router.get("/", response_model=list[ContactRead], summary="Contacts by name or email, alphabetical")
+async def list_contacts(
+    db: AsyncSessionDep,
+    service: ContactServiceDep,
+    _: CurrentUserDep,
+    q: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> list[dict[str, Any]]:
+    return await service.search(db, q, limit)
 
 
 @router.post(

@@ -1,6 +1,6 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Path, Query
 
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
@@ -31,6 +31,17 @@ def _duplicate_conflict(error: DuplicateCompanyError) -> HTTPException:
             "duplicates": [duplicate.model_dump() for duplicate in error.duplicates],
         },
     )
+
+
+@router.get("/", response_model=list[CompanyRead], summary="Companies by name, alphabetical")
+async def list_companies(
+    db: AsyncSessionDep,
+    service: CompanyServiceDep,
+    _: CurrentUserDep,
+    q: str | None = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> list[dict[str, Any]]:
+    return await service.search(db, q, limit)
 
 
 @router.post(
