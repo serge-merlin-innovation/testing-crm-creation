@@ -1,21 +1,15 @@
-import { expect, test, type APIRequestContext, type Browser } from "@playwright/test";
+import { expect, test, type Browser } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
-import { ADMIN, MEMBER, submitCredentials } from "./identities";
+import { ADMIN, MEMBER, signIn, signInApi } from "./identities";
 
 const PARTNER = { email: "e2e.partner@example.com", password: "E2ePartner!1", name: "E2E Partner" };
 const RUN = Date.now().toString(36);
-
-async function signIn(request: APIRequestContext, email: string, password: string) {
-  const response = await request.post("/api/v1/auth/login", { form: { email, password } });
-  expect(response.status(), await response.text()).toBe(200);
-  return { "X-CSRF-Token": (await response.json()).csrf_token as string };
-}
 
 /** A partner-owned deal, created through the API. The banked analyst is not on its team. */
 async function seedDeal(browser: Browser) {
   const adminContext = await browser.newContext();
   const admin = adminContext.request;
-  const adminHeaders = await signIn(admin, ADMIN.email, ADMIN.password);
+  const adminHeaders = await signInApi(admin, ADMIN);
 
   await admin.post("/api/v1/users/", {
     headers: adminHeaders,
@@ -40,7 +34,7 @@ async function seedDeal(browser: Browser) {
 
   const partnerContext = await browser.newContext();
   const request = partnerContext.request;
-  const headers = await signIn(request, PARTNER.email, PARTNER.password);
+  const headers = await signInApi(request, PARTNER);
   const countries: { id: number; code: string }[] = await (await request.get("/api/v1/picklists/?kind=country")).json();
   const company = await request.post("/api/v1/companies/", {
     headers,
@@ -81,7 +75,7 @@ test("a deep link to an inaccessible deal lands on Not found after login", async
   await page.goto(`/deals/${deal.id}`);
   await expect(page).toHaveURL(`${LOGIN_PATH}?next=${encodeURIComponent(`/deals/${deal.id}`)}`);
 
-  await submitCredentials(page, MEMBER);
+  await signIn(page, MEMBER);
 
   await expect(page).toHaveURL(`/deals/${deal.id}`);
   await expect(page.getByRole("heading", { name: "Not found" })).toBeVisible();
@@ -94,7 +88,7 @@ test.describe("the deal team", () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto(LOGIN_PATH);
-    await submitCredentials(page, PARTNER);
+    await signIn(page, PARTNER);
     await expect(page).not.toHaveURL(new RegExp(LOGIN_PATH));
   });
 
@@ -123,7 +117,7 @@ test.describe("the deal team", () => {
     await expect(page.getByLabel("Estimated EV (EUR k)")).toBeVisible();
 
     const other = await browser.newContext();
-    const headers = await signIn(other.request, PARTNER.email, PARTNER.password);
+    const headers = await signInApi(other.request, PARTNER);
     const current = await (await other.request.get(`/api/v1/mandates/${deal.id}`)).json();
     const saved = await other.request.patch(`/api/v1/mandates/${deal.id}`, {
       headers,

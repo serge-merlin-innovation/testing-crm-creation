@@ -1,13 +1,12 @@
 from typing import Annotated, Any
 
 from crudauth import Principal
-from crudauth.exceptions import ForbiddenException, UnauthorizedException
-from fastapi import APIRouter, Depends, Form, Request, Response
+from crudauth.exceptions import UnauthorizedException
+from fastapi import APIRouter, Depends, Request, Response
 
-from ...modules.audit.service import AuditContext, AuditService
+from ...modules.audit.service import AuditService
 from ...modules.user.crud import crud_users
 from ...modules.user.schemas import UserRead
-from ..clock import ClockDep
 from ..dependencies import AsyncSessionDep
 from ..logging import get_logger
 from .dependencies import get_current_principal, get_optional_principal
@@ -18,55 +17,6 @@ logger = get_logger()
 router = APIRouter(tags=["Authentication"])
 
 audit = AuditService()
-
-
-@router.post(
-    "/login",
-    summary="Log in with email and password",
-    description="""
-            Verifies the email and password, refuses a user who holds no role, and opens a
-            server-side session (HTTP-only cookie plus a CSRF token). Rate limited per IP and
-            per account. Every attempt that names a known account is written to the audit log.
-            """,
-    responses={
-        200: {"description": "Login successful, session created"},
-        401: {"description": "Invalid email or password"},
-        403: {"description": "The account holds no role"},
-        429: {"description": "Too many login attempts, try again later"},
-    },
-)
-async def login(
-    request: Request,
-    response: Response,
-    email: Annotated[str, Form()],
-    password: Annotated[str, Form()],
-    db: AsyncSessionDep,
-    clock: ClockDep,
-) -> dict[str, str]:
-    try:
-        user = await crud_auth.authenticate_password(db, email, password, request=request)
-    except UnauthorizedException:
-        raise UnauthorizedException("Invalid email or password")
-
-    user_id = crud_auth.repo.user_id(user)
-    context = AuditContext.from_request(request, user_id, clock)
-    profile = await crud_users.get(db=db, id=user_id, is_deleted=False, schema_to_select=UserRead)
-
-    if not profile or profile.get("role_name") is None:
-        audit.record(db, context, "login.denied", record_type="user", record_id=user_id, new_values={"reason": "no_role"})
-        await db.commit()
-        raise ForbiddenException("Your account has no role. Ask an administrator for access.")
-
-    session_id, csrf_token = await crud_auth.sessions.create_session(
-        request,
-        user_id=user_id,
-        metadata={"login_type": "password"},
-    )
-    audit.record(db, context, "login", record_type="user", record_id=user_id)
-    await db.commit()
-    crud_auth.sessions.set_session_cookies(response, session_id, csrf_token)
-
-    return {"csrf_token": csrf_token}
 
 
 @router.post(

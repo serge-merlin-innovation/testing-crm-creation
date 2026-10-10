@@ -13,6 +13,7 @@ from ....modules.mandate.routes import router as mandates_router
 from ....modules.notification.routes import router as notifications_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.role.routes import router as roles_router
+from ....modules.security.routes import router as security_router
 from ....modules.user.routes import router as users_router
 
 router = APIRouter(prefix="/v1")
@@ -25,6 +26,7 @@ router.include_router(picklists_router, prefix="/picklists")
 router.include_router(mandates_router, prefix="/mandates")
 router.include_router(notifications_router, prefix="/notifications")
 router.include_router(auth_router, prefix="/auth")
+router.include_router(security_router)
 router.include_router(api_tokens_router, prefix="/api-tokens")
 router.include_router(api_clients_router, prefix="/api-clients")
 router.include_router(oauth_router, prefix="/oauth")

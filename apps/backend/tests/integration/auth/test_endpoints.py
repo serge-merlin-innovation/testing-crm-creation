@@ -16,11 +16,10 @@ pytestmark = pytest.mark.asyncio
 async def test_login_success_sets_session_cookie(client: AsyncClient, seeded_db: AsyncSession):
     await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
 
-    response = await client.post("/api/v1/auth/login", data={"email": "ana@firm.be", "password": PASSWORD})
+    csrf = await login(client, "ana@firm.be")
 
-    assert response.status_code == 200
-    assert response.json()["csrf_token"]
-    assert "session_id" in response.cookies
+    assert csrf["X-CSRF-Token"]
+    assert "session_id" in client.cookies
 
 
 async def test_login_email_is_case_insensitive(client: AsyncClient, seeded_db: AsyncSession):
@@ -55,14 +54,14 @@ async def test_login_soft_deleted_user_rejected(client: AsyncClient, seeded_db: 
 
 
 async def test_repeated_failed_logins_are_rate_limited(client: AsyncClient, seeded_db: AsyncSession):
-    await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
+    # An unknown account, so the per-account lock (423) cannot answer first.
     statuses = [
-        (await client.post("/api/v1/auth/login", data={"email": "ana@firm.be", "password": "wrong"})).status_code
+        (await client.post("/api/v1/auth/login", data={"email": "ghost@firm.be", "password": "wrong"})).status_code
         for _ in range(10)
     ]
 
     assert 429 in statuses, f"Ten failed logins in a row were never rate limited: {statuses}"
-    locked_out = await client.post("/api/v1/auth/login", data={"email": "ana@firm.be", "password": PASSWORD})
+    locked_out = await client.post("/api/v1/auth/login", data={"email": "ghost@firm.be", "password": PASSWORD})
     assert locked_out.status_code == 429
     assert locked_out.headers.get("retry-after")
 

@@ -321,7 +321,10 @@ async def test_audit_log_rows_cannot_be_updated_or_deleted(client: AsyncClient, 
             await seeded_db.execute(text(statement))
         await seeded_db.rollback()
 
-    assert (await seeded_db.execute(select(AuditEntry.action))).scalars().all() == ["login"]
+    assert (await seeded_db.execute(select(AuditEntry.action).order_by(AuditEntry.id))).scalars().all() == [
+        "user.2fa_enrolled",
+        "login",
+    ]
 
 
 async def test_audit_api_offers_no_edit_or_delete(client: AsyncClient, seeded_db: AsyncSession):
@@ -338,8 +341,8 @@ async def test_audit_entries_are_retained_ten_years(client: AsyncClient, seeded_
     await make_user(seeded_db, "admin@firm.be", RoleName.ADMIN)
     await login(client, "admin@firm.be")
 
-    entry = (await client.get("/api/v1/audit/")).json()["data"][0]
-    entry_row = (await seeded_db.execute(select(AuditEntry))).scalar_one()
+    entry = (await client.get("/api/v1/audit/", params={"action": "login"})).json()["data"][0]
+    entry_row = (await seeded_db.execute(select(AuditEntry).where(AuditEntry.action == "login"))).scalar_one()
 
     assert entry["retain_until"]
     assert entry_row.retain_until - entry_row.created_at >= timedelta(days=3652)

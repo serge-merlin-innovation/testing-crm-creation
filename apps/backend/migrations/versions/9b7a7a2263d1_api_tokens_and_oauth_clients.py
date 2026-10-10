@@ -1,7 +1,7 @@
 """API tokens and OAuth clients
 
 Revision ID: 9b7a7a2263d1
-Revises: d4e5f6a7b8c9
+Revises: 0e09d7717140
 Create Date: 2026-10-10 04:51:16.969258
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "9b7a7a2263d1"
-down_revision: str | Sequence[str] | None = "d4e5f6a7b8c9"
+down_revision: str | Sequence[str] | None = "0e09d7717140"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -1715,6 +1715,39 @@
         "title": "LegalBasis",
         "type": "string"
       },
+      "LoginCompleted": {
+        "properties": {
+          "csrf_token": {
+            "title": "Csrf Token",
+            "type": "string"
+          },
+          "recovery_codes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recovery Codes"
+          },
+          "step": {
+            "const": "done",
+            "default": "done",
+            "title": "Step",
+            "type": "string"
+          }
+        },
+        "required": [
+          "csrf_token"
+        ],
+        "title": "LoginCompleted",
+        "type": "object"
+      },
       "MandateCreate": {
         "properties": {
           "client_id": {
@@ -2658,6 +2691,202 @@
         "title": "RoleRead",
         "type": "object"
       },
+      "SecondFactorRequired": {
+        "properties": {
+          "challenge": {
+            "title": "Challenge",
+            "type": "string"
+          },
+          "otpauth_uri": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otpauth Uri"
+          },
+          "qr_svg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qr Svg"
+          },
+          "step": {
+            "enum": [
+              "code",
+              "enrol"
+            ],
+            "title": "Step",
+            "type": "string"
+          }
+        },
+        "required": [
+          "step",
+          "challenge"
+        ],
+        "title": "SecondFactorRequired",
+        "type": "object"
+      },
+      "SecondFactorSubmit": {
+        "additionalProperties": false,
+        "properties": {
+          "challenge": {
+            "title": "Challenge",
+            "type": "string"
+          },
+          "code": {
+            "maxLength": 16,
+            "minLength": 6,
+            "title": "Code",
+            "type": "string"
+          },
+          "trust_device": {
+            "default": false,
+            "title": "Trust Device",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "challenge",
+          "code"
+        ],
+        "title": "SecondFactorSubmit",
+        "type": "object"
+      },
+      "SecurityPolicyRead": {
+        "properties": {
+          "trusted_devices_enabled": {
+            "title": "Trusted Devices Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "trusted_devices_enabled"
+        ],
+        "title": "SecurityPolicyRead",
+        "type": "object"
+      },
+      "SecurityPolicyUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "trusted_devices_enabled": {
+            "title": "Trusted Devices Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "trusted_devices_enabled"
+        ],
+        "title": "SecurityPolicyUpdate",
+        "type": "object"
+      },
+      "SecurityProfile": {
+        "properties": {
+          "last_login_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "last_login_device": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login Device"
+          },
+          "last_login_ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login Ip"
+          },
+          "locked_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locked Until"
+          },
+          "travel_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel From"
+          },
+          "travel_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel Until"
+          },
+          "travelling": {
+            "title": "Travelling",
+            "type": "boolean"
+          },
+          "two_factor_enabled": {
+            "title": "Two Factor Enabled",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "two_factor_enabled",
+          "locked_until",
+          "last_login_at",
+          "last_login_ip",
+          "last_login_device",
+          "travel_from",
+          "travel_until",
+          "travelling"
+        ],
+        "title": "SecurityProfile",
+        "type": "object"
+      },
       "TeamMemberCreate": {
         "properties": {
           "expires_at": {
@@ -2774,6 +3003,37 @@
         ],
         "title": "TeamRole",
         "type": "string"
+      },
+      "TravelUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "travel_from": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel From"
+          },
+          "travel_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Travel Until"
+          }
+        },
+        "title": "TravelUpdate",
+        "type": "object"
       },
       "UserCreate": {
         "additionalProperties": false,
@@ -3549,7 +3809,7 @@
     },
     "/api/v1/auth/login": {
       "post": {
-        "description": "Verifies the email and password, refuses a user who holds no role, and opens a\n            server-side session (HTTP-only cookie plus a CSRF token). Rate limited per IP and\n            per account. Every attempt that names a known account is written to the audit log.",
+        "description": "Checks the password, then asks for the TOTP code (or enrolment) unless this device is trusted.",
         "operationId": "login_api_v1_auth_login_post",
         "requestBody": {
           "content": {
@@ -3570,18 +3830,25 @@
             "content": {
               "application/json": {
                 "example": {
-                  "key": "text"
+                  "challenge": "challenge",
+                  "otpauth_uri": "text",
+                  "qr_svg": "text",
+                  "step": "code"
                 },
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Login Api V1 Auth Login Post",
-                  "type": "object"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SecondFactorRequired"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LoginCompleted"
+                    }
+                  ],
+                  "title": "Response Login Api V1 Auth Login Post"
                 }
               }
             },
-            "description": "Login successful, session created"
+            "description": "Successful Response"
           },
           "401": {
             "description": "Invalid email or password"
@@ -3599,11 +3866,73 @@
             },
             "description": "Validation Error"
           },
+          "423": {
+            "description": "The account is locked"
+          },
           "429": {
-            "description": "Too many login attempts, try again later"
+            "description": "Too many login attempts from this IP or for this account"
           }
         },
-        "summary": "Log in with email and password",
+        "summary": "Log in with email and password, first step",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/login/second-factor": {
+      "post": {
+        "operationId": "second_factor_api_v1_auth_login_second_factor_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "challenge": "challenge",
+                "code": "code",
+                "trust_device": false
+              },
+              "schema": {
+                "$ref": "#/components/schemas/SecondFactorSubmit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "csrf_token": "csrf_token",
+                  "recovery_codes": [
+                    "text"
+                  ],
+                  "step": "done"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/LoginCompleted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Wrong code or expired challenge"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "423": {
+            "description": "The account is locked"
+          }
+        },
+        "summary": "Log in, second step: the TOTP or a recovery code",
         "tags": [
           "Authentication"
         ]
@@ -5959,6 +6288,75 @@
         ]
       }
     },
+    "/api/v1/security/policy": {
+      "get": {
+        "operationId": "get_policy_api_v1_security_policy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "trusted_devices_enabled": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityPolicyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Login security policy",
+        "tags": [
+          "Authentication"
+        ]
+      },
+      "put": {
+        "operationId": "put_policy_api_v1_security_policy_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "trusted_devices_enabled": true
+              },
+              "schema": {
+                "$ref": "#/components/schemas/SecurityPolicyUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "trusted_devices_enabled": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityPolicyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Allow or forbid Trust this device (Admin)",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
     "/api/v1/test-hooks/clock": {
       "put": {
         "operationId": "set_test_clock_api_v1_test_hooks_clock_put",
@@ -6463,6 +6861,41 @@
         ]
       }
     },
+    "/api/v1/users/{user_id}/reset-2fa": {
+      "post": {
+        "operationId": "reset_two_factor_api_v1_users__user_id__reset_2fa_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset a user's 2FA so they re-enrol (Admin)",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
     "/api/v1/users/{user_id}/role": {
       "patch": {
         "description": "Replaces the user's single role. Applies at the user's next request and is audited.",
@@ -6604,6 +7037,161 @@
         "summary": "Grant a role to a user who has none (Admin)",
         "tags": [
           "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{user_id}/security": {
+      "get": {
+        "operationId": "get_security_profile_api_v1_users__user_id__security_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "last_login_at": "2026-10-10T09:00:00Z",
+                  "last_login_device": "text",
+                  "last_login_ip": "text",
+                  "locked_until": "2026-10-10T09:00:00Z",
+                  "travel_from": "2026-10-10",
+                  "travel_until": "2026-10-10",
+                  "travelling": true,
+                  "two_factor_enabled": true,
+                  "user_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityProfile"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Last login, 2FA, lock and travel state",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/users/{user_id}/travel": {
+      "put": {
+        "operationId": "set_travel_api_v1_users__user_id__travel_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "travel_from": "2026-10-10",
+                "travel_until": "2026-10-10"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/TravelUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "last_login_at": "2026-10-10T09:00:00Z",
+                  "last_login_device": "text",
+                  "last_login_ip": "text",
+                  "locked_until": "2026-10-10T09:00:00Z",
+                  "travel_from": "2026-10-10",
+                  "travel_until": "2026-10-10",
+                  "travelling": true,
+                  "two_factor_enabled": true,
+                  "user_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityProfile"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Flag a user as travelling for a date range",
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/users/{user_id}/unlock": {
+      "post": {
+        "operationId": "unlock_user_api_v1_users__user_id__unlock_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unlock a locked account (Admin)",
+        "tags": [
+          "Authentication"
         ]
       }
     },
