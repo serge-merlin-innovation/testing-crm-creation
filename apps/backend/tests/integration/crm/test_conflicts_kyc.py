@@ -175,7 +175,9 @@ async def test_compliance_clears_or_rejects_with_a_logged_reason(world):
     assert body["conflict_status"] == "cleared"
     assert body["decided_by_name"] == "cora"
     assert body["reason"] == "Different teams, no overlap"
-    assert (await get(world.analyst, f"/api/v1/mandates/{cleared['id']}")).status_code == 200
+    reread = await get(world.analyst, f"/api/v1/mandates/{cleared['id']}")
+    assert reread.status_code == 200
+    assert reread.json()["stage"] == "preparation"
 
     rejection = await decide(world.compliance, rejected["id"], "reject", reason="We act for the buyer")
     assert rejection.status_code == 200
