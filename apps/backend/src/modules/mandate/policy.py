@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...infrastructure.clock import Clock, get_clock
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..common.exceptions import DealClosedError, DealForbiddenError, DealFrozenError, DealNotFoundError
-from ..role.authorization import has_permission
+from ..role.authorization import has_permission, is_compliance
 from ..role.permissions import Permission
 from .models import DealTeamMember, EmergencyAccess, Mandate
 from .schemas import ConflictStatus
@@ -90,10 +90,6 @@ class DealGrant:
             and self.membership.role in CLOSER_ROLES
             and has_permission(self.user, Permission.DEALS_EDIT_STAFFED)
         )
-
-
-def is_compliance(user: dict[str, Any]) -> bool:
-    return has_permission(user, Permission.CONFLICTS_REGISTER)
 
 
 def in_conflict_hiding() -> Any:

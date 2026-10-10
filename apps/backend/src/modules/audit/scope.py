@@ -9,10 +9,10 @@ from typing import Any
 from sqlalchemy import String, and_, cast, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..mandate.policy import DealPolicy, is_compliance
+from ..mandate.policy import DealPolicy
 from ..origination.models import Opportunity
 from ..origination.service import visible as visible_opportunities
-from ..role.authorization import has_permission
+from ..role.authorization import has_permission, is_compliance
 from ..role.permissions import Permission
 from .models import AuditEntry
 

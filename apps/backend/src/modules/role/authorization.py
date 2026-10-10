@@ -11,6 +11,10 @@ def has_permission(user: dict[str, Any], permission: Permission) -> bool:
     return permission.value in (user.get("permissions") or [])
 
 
+def is_compliance(user: dict[str, Any]) -> bool:
+    return has_permission(user, Permission.CONFLICTS_REGISTER)
+
+
 AGGREGATE_ONLY = frozenset({Permission.DASHBOARD_AGGREGATED.value, Permission.DASHBOARD_FIRM.value})
 
 
