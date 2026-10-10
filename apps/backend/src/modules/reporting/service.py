@@ -26,6 +26,7 @@ from ..mandate.policy import DealGrant, DealPolicy, in_conflict_hiding
 from ..mandate.stages import DealStage
 from ..origination.models import Opportunity
 from ..origination.schemas import OpportunityStage
+from ..origination.service import visible as visible_opportunities
 from ..picklist.models import PicklistValue
 from ..role.authorization import has_permission
 from ..role.permissions import Permission
@@ -369,8 +370,6 @@ class ReportingService:
     # REP-04: win/loss
 
     async def win_loss(self, db: AsyncSession, user: dict[str, Any], now: datetime, start: date, end: date) -> dict[str, Any]:
-        from ..origination.service import visible as visible_opportunities
-
         begin = datetime.combine(start, datetime.min.time(), tzinfo=now.tzinfo)
         finish = datetime.combine(end + timedelta(days=1), datetime.min.time(), tzinfo=now.tzinfo)
         decided = (

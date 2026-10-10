@@ -179,7 +179,8 @@ async def test_unstaffed_deals_count_only_in_aggregates_never_by_name(world):
     assert Decimal(body["weighted_fees_by_quarter"][0]["weighted_fees"]) == Decimal("1500000.00")
     for leak in ("Kestrel", "Osprey", "Plover", "Acme"):
         assert leak not in response.text
-    assert "mandate_id" not in response.text and '"id"' not in response.text
+    assert "mandate_id" not in response.text
+    assert '"id"' not in response.text
 
 
 # REP-03
@@ -210,8 +211,10 @@ async def test_fee_forecast_shows_retainers_and_success_fees_per_month_for_12_mo
     assert export.headers["content-type"].startswith("application/vnd.openxmlformats-officedocument.spreadsheetml")
     sheet = load_workbook(io.BytesIO(export.content)).active
     rows = list(sheet.iter_rows(values_only=True))
-    assert rows[0][0] == "Month" and len(rows) == 13
-    assert rows[4][0] == "2027-01" and rows[4][2] == 500000
+    assert rows[0][0] == "Month"
+    assert len(rows) == 13
+    assert rows[4][0] == "2027-01"
+    assert rows[4][2] == 500000
 
 
 async def test_fee_forecast_shows_actual_vs_forecast_per_month_from_invoices(world):
@@ -339,7 +342,8 @@ async def test_reports_and_exports_exclude_deals_i_am_not_staffed_on(world):
     )
     assert closed.status_code == 200, closed.text
     report = (await get(world.partner, f"{REPORTS}/win-loss", **{"from": "2026-10-01", "to": "2026-10-31"})).json()
-    assert report["closed_deals"] == 0 and report["ev_ebitda_by_sector"] == []
+    assert report["closed_deals"] == 0
+    assert report["ev_ebitda_by_sector"] == []
 
 
 # ROLE-01 c3
@@ -375,4 +379,5 @@ async def test_read_only_gets_aggregated_dashboards_and_nothing_else(world):
     for path in refused:
         response = await world.reader.client.get(path, headers=world.reader.headers)
         assert response.status_code in (403, 404), f"{path}: {response.status_code}"
-        assert "Falcon" not in response.text and "Acme" not in response.text
+        assert "Falcon" not in response.text
+        assert "Acme" not in response.text
