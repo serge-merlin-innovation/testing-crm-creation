@@ -13,6 +13,7 @@ import { fieldErrors, readDetail } from "@/lib/deals";
 import type { Language, MessageKey } from "@/lib/i18n/messages";
 import { contactPayload, RECORD_LANGUAGES } from "@/lib/records";
 import { sendJson, useApiData } from "@/lib/use-api";
+import { RecordTimeline } from "@/components/record-timeline";
 import { WhoKnows } from "./who-knows";
 
 type Messages = Record<MessageKey, string>;
@@ -42,6 +43,7 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
   const [selected, setSelected] = useState<Contact | null>(null);
+  const [timelineFor, setTimelineFor] = useState<Contact | null>(null);
 
   const companyName = (id: number | undefined) => companies.data?.find((company) => company.id === id)?.name ?? "";
 
@@ -144,9 +146,16 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
                         .map((holder) => `${holder.name} (${holder.strength}/3)`)
                         .join(", ")}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => setSelected(contact)}>
                         {messages["contacts.relationships"]}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setTimelineFor(contact)}
+                      >
+                        {messages["timeline.open"]}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -157,6 +166,12 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
           {contacts.data?.length === 0 ? <p>{messages["common.empty"]}</p> : null}
         </CardContent>
       </Card>
+
+      {timelineFor ? (
+        <section aria-label={`${messages["timeline.title"]} ${timelineFor.first_name} ${timelineFor.last_name}`}>
+          <RecordTimeline key={timelineFor.id} recordType="contact" recordId={timelineFor.id} messages={messages} />
+        </section>
+      ) : null}
 
       {selected ? (
         <WhoKnows

@@ -12,6 +12,7 @@ import { fieldErrors, readDetail } from "@/lib/deals";
 import type { Language, MessageKey } from "@/lib/i18n/messages";
 import { companyPayload, RECORD_LANGUAGES } from "@/lib/records";
 import { sendJson, useApiData } from "@/lib/use-api";
+import { RecordTimeline } from "@/components/record-timeline";
 import { InvestorProfilePanel } from "./investor-profile";
 
 type Messages = Record<MessageKey, string>;
@@ -36,6 +37,7 @@ export function CompaniesView({ messages }: { messages: Messages }) {
   const [notice, setNotice] = useState("");
   const [duplicates, setDuplicates] = useState<{ list: Duplicate[]; canConfirm: boolean } | null>(null);
   const [profileFor, setProfileFor] = useState<number | null>(null);
+  const [timelineFor, setTimelineFor] = useState<{ id: number; name: string } | null>(null);
 
   const belgian = countries.data?.find((country) => String(country.id) === countryId)?.code === "BE";
 
@@ -108,7 +110,15 @@ export function CompaniesView({ messages }: { messages: Messages }) {
                     <TableCell>{company.name}</TableCell>
                     <TableCell>{company.type}</TableCell>
                     <TableCell>{company.enterprise_number ?? ""}</TableCell>
-                    <TableCell>
+                    <TableCell className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTimelineFor({ id: company.id, name: company.name })}
+                      >
+                        {messages["timeline.open"]}
+                      </Button>
                       {BUYER_TYPES.has(company.type) ? (
                         <Button
                           type="button"
@@ -129,6 +139,12 @@ export function CompaniesView({ messages }: { messages: Messages }) {
           {profileFor !== null ? <InvestorProfilePanel key={profileFor} companyId={profileFor} messages={messages} /> : null}
         </CardContent>
       </Card>
+
+      {timelineFor ? (
+        <section aria-label={`${messages["timeline.title"]} ${timelineFor.name}`}>
+          <RecordTimeline key={timelineFor.id} recordType="company" recordId={timelineFor.id} messages={messages} />
+        </section>
+      ) : null}
 
       <Card>
         <CardHeader>
