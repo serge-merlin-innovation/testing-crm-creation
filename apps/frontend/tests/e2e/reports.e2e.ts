@@ -137,7 +137,9 @@ test("the firm dashboard counts mandates and weights expected fees by quarter", 
   await page.goto(`/deals/${deal.id}`);
   await page.getByLabel("Probability (%)").fill("50");
   await page.getByLabel("Expected closing date").fill("2027-02-15");
+  const saved = page.waitForResponse((response) => response.url().endsWith(`/mandates/${deal.id}/forecast`) && response.request().method() === "PUT");
   await page.getByRole("button", { name: "Update forecast" }).click();
+  expect((await saved).status()).toBe(200);
   await expect(page.getByLabel("Probability (%)")).toHaveValue("50");
 
   await page.goto("/analytics");
