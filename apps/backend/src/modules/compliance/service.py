@@ -1,7 +1,7 @@
 """Conflict check (AUTHZ-05) and KYC / engagement letter gate (ORI-05).
 
 The mandate module calls in through two hooks installed by `install()`: the conflict check on
-creation and the KYC answer of the Preparation gate (decision 14).
+creation and the KYC answer of the Preparation gate (ORI-05).
 """
 
 from datetime import datetime, timedelta
@@ -490,6 +490,6 @@ async def conflict_check(db: AsyncSession, mandate: Mandate, counterparty_ids: l
 
 
 def install() -> None:
-    """Plugs the compliance slice into mandate creation and the Preparation gate (decision 14)."""
+    """Plugs the compliance slice into mandate creation and the Preparation gate."""
     mandate_pipeline.set_kyc_check(kyc_approved)
     mandate_service.set_conflict_check(conflict_check)

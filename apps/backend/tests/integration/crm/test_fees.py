@@ -1,4 +1,4 @@
-"""Ticket #10: fees (DEAL-05), fee-field visibility (AUTHZ-06), invoices (REP-07), ROLE-01 c4 + c5."""
+"""Fees (DEAL-05), fee-field visibility (AUTHZ-06), invoices (REP-07), ROLE-01 c4 + c5."""
 
 from datetime import UTC, datetime
 from decimal import Decimal

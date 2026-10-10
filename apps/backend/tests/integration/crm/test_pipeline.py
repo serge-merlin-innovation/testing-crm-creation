@@ -1,4 +1,4 @@
-"""Ticket #8: the pipeline board, stage gates, milestones, closing and closed-deal access."""
+"""The pipeline board, stage gates, milestones, closing and closed-deal access."""
 
 from datetime import UTC, datetime, timedelta
 

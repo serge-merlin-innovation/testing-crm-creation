@@ -1,4 +1,4 @@
-"""Ticket #13: investor profiles (CO-04), buyer long list (BUY-01/02), status grid (BUY-03), NDAs (BUY-04),
+"""Investor profiles (CO-04), buyer long list (BUY-01/02), status grid (BUY-03), NDAs (BUY-04),
 buyer status hidden from the unstaffed (AUTHZ-02 c5) and Do not contact (CON-01 c5)."""
 
 import io

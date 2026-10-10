@@ -1,4 +1,4 @@
-"""Chinese-wall fixes from the feat/ma-crm review."""
+"""Edges of the deal wall: the audit log, break-glass exports, client exclusions and staffed non-deal roles."""
 
 from datetime import UTC, datetime
 
@@ -42,7 +42,7 @@ async def audit_rows(actor, **params) -> list[dict]:
     return response.json()["data"]
 
 
-# B1 (ROLE-01 c2, AUTHZ-02, AUTHZ-06): the audit log shows Admin no deal content and no fee rows.
+# ROLE-01 c2, AUTHZ-02, AUTHZ-06: the audit log shows Admin no deal content and no fee rows.
 async def test_audit_log_hides_deal_and_fee_rows_from_admin(world):
     mandate = await create_mandate(world, world.partner, world.client_id)
     fees = await world.partner.client.put(
@@ -75,7 +75,7 @@ async def break_glass(world, code_name: str = "Falcon") -> None:
     assert response.status_code == 201, response.text
 
 
-# B3 (AUTHZ-08 c3): break-glass reads the buyer list but never exports it.
+# AUTHZ-08 c3: break-glass reads the buyer list but never exports it.
 async def test_break_glass_cannot_export_the_buyer_list(world):
     mandate = await create_mandate(world, world.partner, world.client_id)
     await break_glass(world)
@@ -85,7 +85,7 @@ async def test_break_glass_cannot_export_the_buyer_list(world):
     assert exported.status_code == 403, exported.text
 
 
-# Review S1: a client's exclusion list is the deal team's; nobody else learns the company is a client.
+# A client's exclusion list is the deal team's; nobody else learns the company is a client.
 async def test_exclusion_list_is_for_the_client_deal_team_only(world):
     mandate = await create_mandate(world, world.partner, world.client_id)
     await staff(world, mandate["id"], world.analyst)
@@ -108,7 +108,7 @@ async def test_exclusion_list_is_for_the_client_deal_team_only(world):
     assert [row["company_id"] for row in rows] == [rival]
 
 
-# Review S4 (ROLE-01 c2, AUTHZ-02 c8): staffing grants read whatever the role; edits still need the permission.
+# ROLE-01 c2, AUTHZ-02 c8: staffing grants read whatever the role; edits still need the permission.
 @pytest.mark.parametrize("persona", ["admin", "compliance"])
 async def test_a_staffed_admin_or_compliance_user_reads_their_deal(world, persona):
     member = getattr(world, persona)

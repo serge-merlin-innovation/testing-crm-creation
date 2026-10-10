@@ -46,8 +46,7 @@ REQUIRABLE_FIELDS: dict[str, str] = {
     "client_id": "Client",
 }
 
-# The KYC status comes from the compliance slice (ORI-05, ticket #9). Until it plugs in its own
-# check, no KYC is approved, so the built-in Preparation gate holds every deal there.
+# The compliance slice installs the KYC check at startup (ORI-05); without it no deal passes Preparation.
 KycCheck = Callable[[AsyncSession, Mandate], Awaitable[bool]]
 
 

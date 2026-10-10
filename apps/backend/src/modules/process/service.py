@@ -36,7 +36,7 @@ from .schemas import (
 )
 
 ORDER = list(BuyerStatus)
-# Statuses at or past each funnel step. Declined buyers count as approached only (decision 46).
+# Statuses at or past each funnel step. Declined buyers count as approached only (BUY-07).
 STEP_FLOOR = {
     "nda": BuyerStatus.NDA_SIGNED,
     "im": BuyerStatus.IM_SENT,

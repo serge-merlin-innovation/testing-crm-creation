@@ -1,4 +1,4 @@
-"""Ticket #11: wall-crossing requests (AUTHZ-04), delegation (AUTHZ-07), break-glass (AUTHZ-08),
+"""Wall-crossing requests (AUTHZ-04), delegation (AUTHZ-07), break-glass (AUTHZ-08),
 the quarterly access review (ADM-05) and step-up for sensitive actions (AUTH-02 c5)."""
 
 from datetime import UTC, datetime, timedelta
