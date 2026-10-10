@@ -197,7 +197,7 @@ class TaskService:
                     user_id=user_id,
                     email=assignee.email,
                     kind=EventKind.TASK_OVERDUE_DIGEST.value,
-                    title=f"You have {len(tasks)} overdue task{'s' if len(tasks) > 1 else ''}",
+                    title="You have 1 overdue task" if len(tasks) == 1 else f"You have {len(tasks)} overdue tasks",
                     body="\n".join(lines),
                     link="/tasks",
                 ),

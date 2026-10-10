@@ -12,6 +12,7 @@ from ..infrastructure.clock import get_clock
 from ..infrastructure.config.settings import get_settings
 from ..infrastructure.database import session as database_session
 from ..infrastructure.dependencies import AsyncSessionDep
+from ..infrastructure.i18n.middleware import LocalizeErrorsMiddleware
 from ..infrastructure.jobs import job_runner
 from ..infrastructure.security import validate_production_security
 from ..interfaces.api import router
@@ -117,6 +118,7 @@ async def readiness_check(db: AsyncSessionDep) -> JSONResponse:
     return JSONResponse({"status": "ready", "database": "ok"})
 
 
+app.add_middleware(LocalizeErrorsMiddleware)
 app.openapi = lambda: build_openapi(app)  # type: ignore[method-assign]
 
 

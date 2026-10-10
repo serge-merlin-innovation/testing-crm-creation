@@ -1,0 +1,1274 @@
+{
+ "A buyer already approached cannot be excluded": {
+  "fr": "Un acquéreur déjà approché ne peut pas être exclu",
+  "nl": "Een reeds benaderde koper kan niet worden uitgesloten"
+ },
+ "A closed stage has no exit": {
+  "fr": "Une étape clôturée n'a pas de sortie",
+  "nl": "Een afgesloten fase heeft geen uitgang"
+ },
+ "A colleague shared an origination opportunity with you.": {
+  "fr": "Un collègue a partagé une opportunité d'origination avec vous.",
+  "nl": "Een collega heeft een originatie-opportuniteit met u gedeeld."
+ },
+ "A company cannot be its own parent": {
+  "fr": "Une société ne peut pas être sa propre société mère",
+  "nl": "Een onderneming kan niet haar eigen moederonderneming zijn"
+ },
+ "A deal task can only go to someone on the deal team": {
+  "fr": "Une tâche de dossier ne peut être confiée qu'à un membre de l'équipe",
+  "nl": "Een dealtaak kan enkel naar iemand van het dealteam gaan"
+ },
+ "A deal-confidential note names its deal": {
+  "fr": "Une note confidentielle au dossier doit indiquer son dossier",
+  "nl": "Een dealvertrouwelijke notitie moet haar deal vermelden"
+ },
+ "A lead partner must hold the Partner role": {
+  "fr": "Un associé responsable doit avoir le rôle Associé",
+  "nl": "Een leidende partner moet de rol Partner hebben"
+ },
+ "A login to {0} succeeded from {1} ({2}).": {
+  "fr": "Une connexion à {0} a réussi depuis {1} ({2}).",
+  "nl": "Een aanmelding op {0} is gelukt vanaf {1} ({2})."
+ },
+ "A milestone needs a planned date": {
+  "fr": "Un jalon doit avoir une date prévue",
+  "nl": "Een mijlpaal heeft een geplande datum nodig"
+ },
+ "A milestone of {0} is planned for {1}. Open the deal to update it.": {
+  "fr": "Un jalon de {0} est prévu le {1}. Ouvrez le dossier pour le mettre à jour.",
+  "nl": "Een mijlpaal van {0} is gepland op {1}. Open de deal om hem bij te werken."
+ },
+ "A reason is required": {
+  "fr": "Un motif est requis",
+  "nl": "Een reden is verplicht"
+ },
+ "A user can hold only one role": {
+  "fr": "Un utilisateur ne peut avoir qu'un seul rôle",
+  "nl": "Een gebruiker kan maar één rol hebben"
+ },
+ "A user can hold only one role.": {
+  "fr": "Un utilisateur ne peut avoir qu'un seul rôle.",
+  "nl": "Een gebruiker kan maar één rol hebben."
+ },
+ "A user with this email already exists.": {
+  "fr": "Un utilisateur avec cette adresse e-mail existe déjà.",
+  "nl": "Er bestaat al een gebruiker met dit e-mailadres."
+ },
+ "A value with this code already exists": {
+  "fr": "Une valeur avec ce code existe déjà",
+  "nl": "Er bestaat al een waarde met deze code"
+ },
+ "A value with this code exists.": {
+  "fr": "Une valeur avec ce code existe.",
+  "nl": "Er bestaat een waarde met deze code."
+ },
+ "API client not found": {
+  "fr": "Client API introuvable",
+  "nl": "API-client niet gevonden"
+ },
+ "API credentials are managed from the CRM, not over the API.": {
+  "fr": "Les identifiants API se gèrent depuis le CRM, pas via l'API.",
+  "nl": "API-sleutels beheert u in de CRM, niet via de API."
+ },
+ "API token not found": {
+  "fr": "Jeton API introuvable",
+  "nl": "API-token niet gevonden"
+ },
+ "Access request not found": {
+  "fr": "Demande d'accès introuvable",
+  "nl": "Toegangsaanvraag niet gevonden"
+ },
+ "Access request not found.": {
+  "fr": "Demande d'accès introuvable.",
+  "nl": "Toegangsaanvraag niet gevonden."
+ },
+ "Access review not found": {
+  "fr": "Revue d'accès introuvable",
+  "nl": "Toegangsreview niet gevonden"
+ },
+ "Access review not found.": {
+  "fr": "Revue d'accès introuvable.",
+  "nl": "Toegangsreview niet gevonden."
+ },
+ "Access review of {0} overdue": {
+  "fr": "Revue d'accès de {0} en retard",
+  "nl": "Toegangsreview van {0} te laat"
+ },
+ "Access to {0} approved": {
+  "fr": "Accès à {0} approuvé",
+  "nl": "Toegang tot {0} goedgekeurd"
+ },
+ "Access to {0} rejected": {
+  "fr": "Accès à {0} refusé",
+  "nl": "Toegang tot {0} geweigerd"
+ },
+ "Account locked": {
+  "fr": "Compte verrouillé",
+  "nl": "Account vergrendeld"
+ },
+ "Activity not found.": {
+  "fr": "Activité introuvable.",
+  "nl": "Activiteit niet gevonden."
+ },
+ "Activity {0} not found": {
+  "fr": "Activité {0} introuvable",
+  "nl": "Activiteit {0} niet gevonden"
+ },
+ "Already invited": {
+  "fr": "Déjà invité",
+  "nl": "Al uitgenodigd"
+ },
+ "Already on the team": {
+  "fr": "Déjà dans l'équipe",
+  "nl": "Al in het team"
+ },
+ "Already won": {
+  "fr": "Déjà gagnée",
+  "nl": "Al gewonnen"
+ },
+ "An NDA you own on {0} was sent more than {1} days ago and is not signed.": {
+  "fr": "Un NDA dont vous êtes responsable sur {0} a été envoyé il y a plus de {1} jours et n'est pas signé.",
+  "nl": "Een NDA die u beheert op {0} werd meer dan {1} dagen geleden verstuurd en is niet ondertekend."
+ },
+ "An export needs your approval": {
+  "fr": "Un export attend votre approbation",
+  "nl": "Een export wacht op uw goedkeuring"
+ },
+ "An invoice cannot be paid before it was sent": {
+  "fr": "Une facture ne peut pas être payée avant d'avoir été envoyée",
+  "nl": "Een factuur kan niet betaald zijn voor ze verstuurd werd"
+ },
+ "Announce maintenance at least 48 hours before it starts.": {
+  "fr": "Annoncez la maintenance au moins 48 heures avant son début.",
+  "nl": "Kondig onderhoud minstens 48 uur vooraf aan."
+ },
+ "Approve wall-crossing request on {0}": {
+  "fr": "Approuver la demande de wall-crossing sur {0}",
+  "nl": "Wall-crossingaanvraag op {0} goedkeuren"
+ },
+ "At most {0} rows per file": {
+  "fr": "Au maximum {0} lignes par fichier",
+  "nl": "Maximaal {0} rijen per bestand"
+ },
+ "Attach the amended engagement letter link": {
+  "fr": "Joignez le lien vers la lettre de mission modifiée",
+  "nl": "Voeg de link naar de gewijzigde opdrachtbrief toe"
+ },
+ "Basic authentication is not supported. Use an API token or OAuth 2.0 client credentials.": {
+  "fr": "L'authentification Basic n'est pas prise en charge. Utilisez un jeton API ou des identifiants client OAuth 2.0.",
+  "nl": "Basic-authenticatie wordt niet ondersteund. Gebruik een API-token of OAuth 2.0-clientgegevens."
+ },
+ "Break-glass access is read-only": {
+  "fr": "L'accès d'urgence est en lecture seule",
+  "nl": "Noodtoegang is alleen-lezen"
+ },
+ "Break-glass access to {0}": {
+  "fr": "Accès d'urgence à {0}",
+  "nl": "Noodtoegang tot {0}"
+ },
+ "Buyer {0} is not on this deal": {
+  "fr": "L'acquéreur {0} ne fait pas partie de ce dossier",
+  "nl": "Koper {0} hoort niet bij deze deal"
+ },
+ "Cannot remove the last Admin": {
+  "fr": "Impossible de retirer le dernier administrateur",
+  "nl": "De laatste beheerder kan niet worden verwijderd"
+ },
+ "Cash, earn-out, vendor loan and rollover must add up to 100%": {
+  "fr": "Cash, earn-out, crédit vendeur et réinvestissement doivent totaliser 100 %",
+  "nl": "Cash, earn-out, verkoperslening en herinvestering moeten samen 100% zijn"
+ },
+ "Choose a new owner for this person's contacts, tasks and deals.": {
+  "fr": "Choisissez un nouveau responsable pour les contacts, tâches et dossiers de cette personne.",
+  "nl": "Kies een nieuwe eigenaar voor de contacten, taken en deals van deze persoon."
+ },
+ "Choose a new password within 30 minutes:\n{0}/reset-password?token={1}\n\nThe link works once. If you did not ask for it, ignore this email.": {
+  "fr": "Choisissez un nouveau mot de passe dans les 30 minutes :\n{0}/reset-password?token={1}\n\nLe lien ne fonctionne qu'une fois. Si vous ne l'avez pas demandé, ignorez cet e-mail.",
+  "nl": "Kies binnen 30 minuten een nieuw wachtwoord:\n{0}/reset-password?token={1}\n\nDe link werkt één keer. Hebt u dit niet gevraagd, negeer dan deze e-mail."
+ },
+ "Choose one of: {0}": {
+  "fr": "Choisissez parmi : {0}",
+  "nl": "Kies een van: {0}"
+ },
+ "Choose someone else": {
+  "fr": "Choisissez quelqu'un d'autre",
+  "nl": "Kies iemand anders"
+ },
+ "Choose the mandate's sector": {
+  "fr": "Choisissez le secteur du mandat",
+  "nl": "Kies de sector van het mandaat"
+ },
+ "Close the deal to mark it Closed won or Aborted": {
+  "fr": "Clôturez le dossier pour le marquer Gagné ou Abandonné",
+  "nl": "Sluit de deal af om hem als Gewonnen of Afgebroken te markeren"
+ },
+ "Code name in use": {
+  "fr": "Nom de code déjà utilisé",
+  "nl": "Codenaam al in gebruik"
+ },
+ "Columns not in the file: {0}": {
+  "fr": "Colonnes absentes du fichier : {0}",
+  "nl": "Kolommen niet in het bestand: {0}"
+ },
+ "Company not found.": {
+  "fr": "Société introuvable.",
+  "nl": "Onderneming niet gevonden."
+ },
+ "Company {0} does not exist": {
+  "fr": "La société {0} n'existe pas",
+  "nl": "Onderneming {0} bestaat niet"
+ },
+ "Company {0} not found": {
+  "fr": "Société {0} introuvable",
+  "nl": "Onderneming {0} niet gevonden"
+ },
+ "Compliance decides; the deal partner comments": {
+  "fr": "La compliance décide ; l'associé du dossier commente",
+  "nl": "Compliance beslist; de dealpartner geeft commentaar"
+ },
+ "Compliance reads a closed deal, never edits it": {
+  "fr": "La compliance consulte un dossier clôturé, sans jamais le modifier",
+  "nl": "Compliance leest een afgesloten deal, maar bewerkt hem nooit"
+ },
+ "Confirm Won to create the mandate": {
+  "fr": "Confirmez Gagnée pour créer le mandat",
+  "nl": "Bevestig Gewonnen om het mandaat aan te maken"
+ },
+ "Confirm or remove each person staffed on {0} by {1}.": {
+  "fr": "Confirmez ou retirez chaque personne affectée à {0} avant le {1}.",
+  "nl": "Bevestig of verwijder elke persoon op {0} tegen {1}."
+ },
+ "Confirm the {0} team for {1}": {
+  "fr": "Confirmez l'équipe {0} pour {1}",
+  "nl": "Bevestig het team van {0} voor {1}"
+ },
+ "Conflict review of {0} is waiting": {
+  "fr": "La revue de conflits de {0} est en attente",
+  "nl": "Conflictreview van {0} wacht"
+ },
+ "Contact not found.": {
+  "fr": "Contact introuvable.",
+  "nl": "Contact niet gevonden."
+ },
+ "Contact {0} does not exist": {
+  "fr": "Le contact {0} n'existe pas",
+  "nl": "Contact {0} bestaat niet"
+ },
+ "Contact {0} not found": {
+  "fr": "Contact {0} introuvable",
+  "nl": "Contact {0} niet gevonden"
+ },
+ "Credential not found": {
+  "fr": "Référence introuvable",
+  "nl": "Referentie niet gevonden"
+ },
+ "Criterion exists": {
+  "fr": "Le critère existe déjà",
+  "nl": "Criterium bestaat al"
+ },
+ "Deal {0} not found": {
+  "fr": "Dossier {0} introuvable",
+  "nl": "Deal {0} niet gevonden"
+ },
+ "Deal {0} not visible": {
+  "fr": "Dossier {0} non visible",
+  "nl": "Deal {0} niet zichtbaar"
+ },
+ "Delegation not found": {
+  "fr": "Délégation introuvable",
+  "nl": "Delegatie niet gevonden"
+ },
+ "Deleted activity {0} not found": {
+  "fr": "Activité supprimée {0} introuvable",
+  "nl": "Verwijderde activiteit {0} niet gevonden"
+ },
+ "Deleted more than 30 days ago": {
+  "fr": "Supprimée il y a plus de 30 jours",
+  "nl": "Meer dan 30 dagen geleden verwijderd"
+ },
+ "Document not found": {
+  "fr": "Document introuvable",
+  "nl": "Document niet gevonden"
+ },
+ "Email already registered": {
+  "fr": "Adresse e-mail déjà enregistrée",
+  "nl": "E-mailadres al geregistreerd"
+ },
+ "Enter your authentication code to confirm this action.": {
+  "fr": "Saisissez votre code d'authentification pour confirmer cette action.",
+  "nl": "Voer uw authenticatiecode in om deze actie te bevestigen."
+ },
+ "Every deal needs a lead partner: the last lead partner cannot be removed.": {
+  "fr": "Chaque dossier a besoin d'un associé responsable : le dernier ne peut pas être retiré.",
+  "nl": "Elke deal heeft een leidende partner nodig: de laatste kan niet worden verwijderd."
+ },
+ "Every deal needs one lead partner": {
+  "fr": "Chaque dossier a besoin d'un associé responsable",
+  "nl": "Elke deal heeft een leidende partner nodig"
+ },
+ "Every deal needs one lead partner: add another lead partner before removing this one.": {
+  "fr": "Chaque dossier a besoin d'un associé responsable : ajoutez-en un autre avant de retirer celui-ci.",
+  "nl": "Elke deal heeft een leidende partner nodig: voeg er een andere toe voor u deze verwijdert."
+ },
+ "Exit criterion not found.": {
+  "fr": "Critère de sortie introuvable.",
+  "nl": "Exitcriterium niet gevonden."
+ },
+ "Export request not found": {
+  "fr": "Demande d'export introuvable",
+  "nl": "Exportaanvraag niet gevonden"
+ },
+ "Exporting {0} contacts needs a partner's approval (limit {1}). Request approval first.": {
+  "fr": "Exporter {0} contacts nécessite l'approbation d'un associé (limite {1}). Demandez d'abord l'approbation.",
+  "nl": "{0} contacten exporteren vereist goedkeuring van een partner (limiet {1}). Vraag eerst goedkeuring."
+ },
+ "Fee fields are hidden from this role": {
+  "fr": "Les champs d'honoraires sont masqués pour ce rôle",
+  "nl": "Honorariumvelden zijn verborgen voor deze rol"
+ },
+ "Finding not found": {
+  "fr": "Vulnérabilité introuvable",
+  "nl": "Bevinding niet gevonden"
+ },
+ "Give a rationale for every buyer": {
+  "fr": "Justifiez chaque acquéreur",
+  "nl": "Geef een motivering voor elke koper"
+ },
+ "Give a rationale for the buyer": {
+  "fr": "Justifiez l'acquéreur",
+  "nl": "Geef een motivering voor de koper"
+ },
+ "Give both the record type and id, or neither": {
+  "fr": "Indiquez le type et l'identifiant de la fiche, ou aucun des deux",
+  "nl": "Geef zowel het recordtype als het id, of geen van beide"
+ },
+ "Give the date to revisit this opportunity": {
+  "fr": "Indiquez la date à laquelle revoir cette opportunité",
+  "nl": "Geef de datum om deze opportuniteit opnieuw te bekijken"
+ },
+ "Give the fixed success fee": {
+  "fr": "Indiquez la commission de succès fixe",
+  "nl": "Geef de vaste succesfee"
+ },
+ "Give the reason for the decision": {
+  "fr": "Indiquez le motif de la décision",
+  "nl": "Geef de reden van de beslissing"
+ },
+ "Give the reason the buyer declined": {
+  "fr": "Indiquez pourquoi l'acquéreur a décliné",
+  "nl": "Geef de reden waarom de koper afhaakte"
+ },
+ "Give the success fee percentage": {
+  "fr": "Indiquez le pourcentage de la commission de succès",
+  "nl": "Geef het percentage van de succesfee"
+ },
+ "Hello {0},\n\nAn account was created for you in the CRM ({1}) with the role {2}.\nUse the invitation email to set your password and two-factor authentication.": {
+  "fr": "Bonjour {0},\n\nUn compte a été créé pour vous dans le CRM ({1}) avec le rôle {2}.\nUtilisez l'e-mail d'invitation pour définir votre mot de passe et l'authentification à deux facteurs.",
+  "nl": "Beste {0},\n\nEr is een account voor u aangemaakt in de CRM ({1}) met de rol {2}.\nGebruik de uitnodigingsmail om uw wachtwoord en tweestapsverificatie in te stellen."
+ },
+ "If an account exists for this email, we sent a link to reset the password. It is valid for 30 minutes.": {
+  "fr": "Si un compte existe pour cette adresse, nous avons envoyé un lien de réinitialisation. Il est valable 30 minutes.",
+  "nl": "Als er een account bestaat voor dit e-mailadres, hebben we een link gestuurd om het wachtwoord opnieuw in te stellen. Hij is 30 minuten geldig."
+ },
+ "Import not found.": {
+  "fr": "Import introuvable.",
+  "nl": "Import niet gevonden."
+ },
+ "Import of {0} finished": {
+  "fr": "Import de {0} terminé",
+  "nl": "Import van {0} voltooid"
+ },
+ "Import {0} not found": {
+  "fr": "Import {0} introuvable",
+  "nl": "Import {0} niet gevonden"
+ },
+ "In use: rename or deactivate it instead": {
+  "fr": "Utilisée : renommez-la ou désactivez-la plutôt",
+  "nl": "In gebruik: hernoem of deactiveer ze in plaats daarvan"
+ },
+ "Insufficient credits.": {
+  "fr": "Crédits insuffisants.",
+  "nl": "Onvoldoende krediet."
+ },
+ "Invalid authentication code": {
+  "fr": "Code d'authentification invalide",
+  "nl": "Ongeldige authenticatiecode"
+ },
+ "Invalid email or password": {
+  "fr": "Adresse e-mail ou mot de passe invalide",
+  "nl": "Ongeldig e-mailadres of wachtwoord"
+ },
+ "Invalid enterprise number: the checksum does not match": {
+  "fr": "Numéro d'entreprise invalide : la somme de contrôle ne correspond pas",
+  "nl": "Ongeldig ondernemingsnummer: het controlegetal klopt niet"
+ },
+ "Invalid inbound webhook secret": {
+  "fr": "Secret du webhook entrant invalide",
+  "nl": "Ongeldig geheim voor inkomende webhook"
+ },
+ "Invalid or expired API token": {
+  "fr": "Jeton API invalide ou expiré",
+  "nl": "Ongeldig of verlopen API-token"
+ },
+ "Invalid phone number": {
+  "fr": "Numéro de téléphone invalide",
+  "nl": "Ongeldig telefoonnummer"
+ },
+ "Invalid request. Please check your input and try again.": {
+  "fr": "Requête invalide. Vérifiez votre saisie et réessayez.",
+  "nl": "Ongeldige aanvraag. Controleer uw invoer en probeer opnieuw."
+ },
+ "Invoice not found.": {
+  "fr": "Facture introuvable.",
+  "nl": "Factuur niet gevonden."
+ },
+ "Invoice {0} not found": {
+  "fr": "Facture {0} introuvable",
+  "nl": "Factuur {0} niet gevonden"
+ },
+ "Keep or anonymise an inactive contact": {
+  "fr": "Conserver ou anonymiser un contact inactif",
+  "nl": "Een inactief contact bewaren of anonimiseren"
+ },
+ "Legal hold not found": {
+  "fr": "Conservation légale introuvable",
+  "nl": "Juridische bewaring niet gevonden"
+ },
+ "Lehman tier bounds must ascend": {
+  "fr": "Les tranches Lehman doivent être croissantes",
+  "nl": "De Lehman-schijven moeten oplopen"
+ },
+ "Lehman tiers must end with an open band (no upper bound)": {
+  "fr": "Les tranches Lehman doivent se terminer par une tranche ouverte (sans plafond)",
+  "nl": "De Lehman-schijven moeten eindigen met een open schijf (zonder bovengrens)"
+ },
+ "Link not found": {
+  "fr": "Lien introuvable",
+  "nl": "Link niet gevonden"
+ },
+ "Link not found.": {
+  "fr": "Lien introuvable.",
+  "nl": "Link niet gevonden."
+ },
+ "Log the date the NDA was sent": {
+  "fr": "Indiquez la date d'envoi du NDA",
+  "nl": "Noteer de datum waarop de NDA verstuurd werd"
+ },
+ "Maintenance must run outside business hours (8:00-20:00 Brussels time, Monday to Friday).": {
+  "fr": "La maintenance doit avoir lieu en dehors des heures de bureau (8:00-20:00 heure de Bruxelles, du lundi au vendredi).",
+  "nl": "Onderhoud moet buiten de kantooruren gebeuren (8:00-20:00 Brusselse tijd, maandag tot vrijdag)."
+ },
+ "Map a column to: {0}": {
+  "fr": "Associez une colonne à : {0}",
+  "nl": "Koppel een kolom aan: {0}"
+ },
+ "Merge not found.": {
+  "fr": "Fusion introuvable.",
+  "nl": "Samenvoeging niet gevonden."
+ },
+ "Merge {0} not found": {
+  "fr": "Fusion {0} introuvable",
+  "nl": "Samenvoeging {0} niet gevonden"
+ },
+ "Milestone not found": {
+  "fr": "Jalon introuvable",
+  "nl": "Mijlpaal niet gevonden"
+ },
+ "Milestone not found.": {
+  "fr": "Jalon introuvable.",
+  "nl": "Mijlpaal niet gevonden."
+ },
+ "Missing deals.edit_staffed": {
+  "fr": "Autorisation deals.edit_staffed manquante",
+  "nl": "Recht deals.edit_staffed ontbreekt"
+ },
+ "Missing deals.read_staffed": {
+  "fr": "Autorisation deals.read_staffed manquante",
+  "nl": "Recht deals.read_staffed ontbreekt"
+ },
+ "Missing {0}": {
+  "fr": "Autorisation {0} manquante",
+  "nl": "Recht {0} ontbreekt"
+ },
+ "NDA signed follows from the NDA's signed date: log it on the NDA": {
+  "fr": "NDA signé découle de la date de signature du NDA : indiquez-la sur le NDA",
+  "nl": "NDA ondertekend volgt uit de ondertekeningsdatum: noteer die op de NDA"
+ },
+ "Name the document link label": {
+  "fr": "Nommez le libellé du lien de document",
+  "nl": "Geef het label van de documentlink"
+ },
+ "Name the milestone": {
+  "fr": "Nommez le jalon",
+  "nl": "Geef de mijlpaal een naam"
+ },
+ "New login location or device": {
+  "fr": "Nouvel emplacement ou appareil de connexion",
+  "nl": "Nieuwe aanmeldlocatie of nieuw toestel"
+ },
+ "New task on {0}": {
+  "fr": "Nouvelle tâche sur {0}",
+  "nl": "Nieuwe taak op {0}"
+ },
+ "New task: {0}": {
+  "fr": "Nouvelle tâche : {0}",
+  "nl": "Nieuwe taak: {0}"
+ },
+ "No KBO/BCE adapter is configured": {
+  "fr": "Aucun connecteur BCE/KBO n'est configuré",
+  "nl": "Er is geen KBO/BCE-koppeling ingesteld"
+ },
+ "No NBB adapter is configured": {
+  "fr": "Aucun connecteur BNB n'est configuré",
+  "nl": "Er is geen NBB-koppeling ingesteld"
+ },
+ "No deal has this code name": {
+  "fr": "Aucun dossier ne porte ce nom de code",
+  "nl": "Geen deal heeft deze codenaam"
+ },
+ "No letter template with that name": {
+  "fr": "Aucun modèle de lettre de ce nom",
+  "nl": "Geen briefsjabloon met die naam"
+ },
+ "No open deal has this code name": {
+  "fr": "Aucun dossier ouvert ne porte ce nom de code",
+  "nl": "Geen lopende deal heeft deze codenaam"
+ },
+ "No sender address": {
+  "fr": "Aucune adresse d'expéditeur",
+  "nl": "Geen afzenderadres"
+ },
+ "Nobody approves their own export": {
+  "fr": "Personne n'approuve son propre export",
+  "nl": "Niemand keurt zijn eigen export goed"
+ },
+ "Not allowed on this user": {
+  "fr": "Non autorisé pour cet utilisateur",
+  "nl": "Niet toegestaan voor deze gebruiker"
+ },
+ "Not authenticated": {
+  "fr": "Non authentifié",
+  "nl": "Niet aangemeld"
+ },
+ "Not found": {
+  "fr": "Introuvable",
+  "nl": "Niet gevonden"
+ },
+ "Not found.": {
+  "fr": "Introuvable.",
+  "nl": "Niet gevonden."
+ },
+ "Not invited": {
+  "fr": "Non invité",
+  "nl": "Niet uitgenodigd"
+ },
+ "Not on the team": {
+  "fr": "Pas dans l'équipe",
+  "nl": "Niet in het team"
+ },
+ "Not sent to the sender's own logging address": {
+  "fr": "Non envoyé à l'adresse d'archivage de l'expéditeur",
+  "nl": "Niet verstuurd naar het eigen logadres van de afzender"
+ },
+ "One of these records is on a deal you cannot access. Ask Compliance to merge them.": {
+  "fr": "L'une de ces fiches est liée à un dossier auquel vous n'avez pas accès. Demandez à la compliance de les fusionner.",
+  "nl": "Een van deze records hoort bij een deal waartoe u geen toegang hebt. Vraag Compliance ze samen te voegen."
+ },
+ "One of your buyers on {0} has had no activity for 14 days.": {
+  "fr": "L'un de vos acquéreurs sur {0} n'a eu aucune activité depuis 14 jours.",
+  "nl": "Een van uw kopers op {0} heeft al 14 dagen geen activiteit."
+ },
+ "Only a company with a Belgian enterprise number has NBB filed accounts": {
+  "fr": "Seule une société avec un numéro d'entreprise belge a des comptes déposés à la BNB",
+  "nl": "Enkel een onderneming met een Belgisch ondernemingsnummer heeft jaarrekeningen bij de NBB"
+ },
+ "Only a partner on the deal closes it": {
+  "fr": "Seul un associé du dossier peut le clôturer",
+  "nl": "Enkel een partner op de deal sluit hem af"
+ },
+ "Only a partner on the deal reopens it": {
+  "fr": "Seul un associé du dossier peut le rouvrir",
+  "nl": "Enkel een partner op de deal heropent hem"
+ },
+ "Only an admin breaks the glass": {
+  "fr": "Seul un administrateur peut utiliser l'accès d'urgence",
+  "nl": "Enkel een beheerder gebruikt noodtoegang"
+ },
+ "Only back-office or a partner on the deal edits its fees": {
+  "fr": "Seuls le back-office ou un associé du dossier modifient ses honoraires",
+  "nl": "Enkel back-office of een partner op de deal wijzigt de honoraria"
+ },
+ "Only back-office records invoices": {
+  "fr": "Seul le back-office enregistre les factures",
+  "nl": "Enkel back-office registreert facturen"
+ },
+ "Only buyers the client approved can be contacted": {
+  "fr": "Seuls les acquéreurs approuvés par le client peuvent être contactés",
+  "nl": "Enkel kopers die de klant goedkeurde mogen gecontacteerd worden"
+ },
+ "Only buyers the client approved can be sent an NDA": {
+  "fr": "Seuls les acquéreurs approuvés par le client peuvent recevoir un NDA",
+  "nl": "Enkel kopers die de klant goedkeurde kunnen een NDA ontvangen"
+ },
+ "Only closed deals with a tombstone allowed can be credentials": {
+  "fr": "Seuls les dossiers clôturés avec tombstone autorisé peuvent servir de références",
+  "nl": "Enkel afgesloten deals met toegestane tombstone kunnen referenties zijn"
+ },
+ "Only compliance does this": {
+  "fr": "Seule la compliance peut le faire",
+  "nl": "Enkel compliance doet dit"
+ },
+ "Only https links are accepted": {
+  "fr": "Seuls les liens https sont acceptés",
+  "nl": "Enkel https-links worden aanvaard"
+ },
+ "Only the assignee or creator completes a task": {
+  "fr": "Seul le destinataire ou le créateur termine une tâche",
+  "nl": "Enkel de uitvoerder of maker voltooit een taak"
+ },
+ "Only the author edits an activity": {
+  "fr": "Seul l'auteur modifie une activité",
+  "nl": "Enkel de auteur bewerkt een activiteit"
+ },
+ "Only the author or an admin deletes an activity": {
+  "fr": "Seul l'auteur ou un administrateur supprime une activité",
+  "nl": "Enkel de auteur of een beheerder verwijdert een activiteit"
+ },
+ "Only the deal partner or director manages the team": {
+  "fr": "Seul l'associé ou le directeur du dossier gère l'équipe",
+  "nl": "Enkel de partner of director van de deal beheert het team"
+ },
+ "Only the deal partner or director records the client's approval": {
+  "fr": "Seul l'associé ou le directeur du dossier enregistre l'approbation du client",
+  "nl": "Enkel de partner of director van de deal registreert de goedkeuring van de klant"
+ },
+ "Only the deal team exports a deal": {
+  "fr": "Seule l'équipe du dossier peut l'exporter",
+  "nl": "Enkel het dealteam exporteert een deal"
+ },
+ "Only the owner confirms Won": {
+  "fr": "Seul le responsable confirme Gagnée",
+  "nl": "Enkel de eigenaar bevestigt Gewonnen"
+ },
+ "Only the owner deletes a filter": {
+  "fr": "Seul le propriétaire supprime un filtre",
+  "nl": "Enkel de eigenaar verwijdert een filter"
+ },
+ "Only the owner does this": {
+  "fr": "Seul le responsable peut le faire",
+  "nl": "Enkel de eigenaar doet dit"
+ },
+ "Only the owner or compliance decides": {
+  "fr": "Seuls le responsable ou la compliance décident",
+  "nl": "Enkel de eigenaar of compliance beslist"
+ },
+ "Only the owner shares a filter": {
+  "fr": "Seul le propriétaire partage un filtre",
+  "nl": "Enkel de eigenaar deelt een filter"
+ },
+ "Opportunity not found.": {
+  "fr": "Opportunité introuvable.",
+  "nl": "Opportuniteit niet gevonden."
+ },
+ "Opportunity {0} not found": {
+  "fr": "Opportunité {0} introuvable",
+  "nl": "Opportuniteit {0} niet gevonden"
+ },
+ "Pick two different records": {
+  "fr": "Choisissez deux fiches différentes",
+  "nl": "Kies twee verschillende records"
+ },
+ "Picklist value not found.": {
+  "fr": "Valeur de liste introuvable.",
+  "nl": "Lijstwaarde niet gevonden."
+ },
+ "Picklist value {0} not found": {
+  "fr": "Valeur de liste {0} introuvable",
+  "nl": "Lijstwaarde {0} niet gevonden"
+ },
+ "Preview the import before confirming": {
+  "fr": "Prévisualisez l'import avant de confirmer",
+  "nl": "Bekijk de import voor u bevestigt"
+ },
+ "Rate limit exceeded: 100 requests per minute per API client.": {
+  "fr": "Limite dépassée : 100 requêtes par minute par client API.",
+  "nl": "Limiet overschreden: 100 aanvragen per minuut per API-client."
+ },
+ "Reconnect with {0}": {
+  "fr": "Reprendre contact avec {0}",
+  "nl": "Opnieuw contact opnemen met {0}"
+ },
+ "Record on a deal the caller cannot access": {
+  "fr": "Fiche liée à un dossier inaccessible",
+  "nl": "Record op een deal zonder toegang"
+ },
+ "Reset your CRM password": {
+  "fr": "Réinitialisez votre mot de passe CRM",
+  "nl": "Stel uw CRM-wachtwoord opnieuw in"
+ },
+ "Review not found": {
+  "fr": "Revue introuvable",
+  "nl": "Review niet gevonden"
+ },
+ "Revisit the opportunity on {0}": {
+  "fr": "Revoir l'opportunité sur {0}",
+  "nl": "Opportuniteit op {0} opnieuw bekijken"
+ },
+ "Role with ID {0} not found": {
+  "fr": "Rôle {0} introuvable",
+  "nl": "Rol {0} niet gevonden"
+ },
+ "Saved filter {0} not found": {
+  "fr": "Filtre enregistré {0} introuvable",
+  "nl": "Opgeslagen filter {0} niet gevonden"
+ },
+ "Say why the deal is reopened": {
+  "fr": "Indiquez pourquoi le dossier est rouvert",
+  "nl": "Zeg waarom de deal heropend wordt"
+ },
+ "Say why the deal is unfrozen": {
+  "fr": "Indiquez pourquoi le dossier est dégelé",
+  "nl": "Zeg waarom de deal ontdooid wordt"
+ },
+ "Say why the deal moves back a stage": {
+  "fr": "Indiquez pourquoi le dossier recule d'une étape",
+  "nl": "Zeg waarom de deal een fase teruggaat"
+ },
+ "Say why the deal was aborted": {
+  "fr": "Indiquez pourquoi le dossier a été abandonné",
+  "nl": "Zeg waarom de deal werd afgebroken"
+ },
+ "Say why the fees changed after engagement": {
+  "fr": "Indiquez pourquoi les honoraires ont changé après la mission",
+  "nl": "Zeg waarom de honoraria na de opdracht wijzigden"
+ },
+ "Say why the opportunity was lost": {
+  "fr": "Indiquez pourquoi l'opportunité a été perdue",
+  "nl": "Zeg waarom de opportuniteit verloren ging"
+ },
+ "Sender is not a CRM user": {
+  "fr": "L'expéditeur n'est pas un utilisateur du CRM",
+  "nl": "Afzender is geen CRM-gebruiker"
+ },
+ "Set both dates or neither": {
+  "fr": "Indiquez les deux dates ou aucune",
+  "nl": "Vul beide datums in of geen"
+ },
+ "Set your password and two-factor authentication within 72 hours:\n{0}/accept-invitation?token={1}\n\nThe link works once. If it has expired, ask your administrator to resend it.": {
+  "fr": "Définissez votre mot de passe et l'authentification à deux facteurs dans les 72 heures :\n{0}/accept-invitation?token={1}\n\nLe lien ne fonctionne qu'une fois. S'il a expiré, demandez à votre administrateur de le renvoyer.",
+  "nl": "Stel binnen 72 uur uw wachtwoord en tweestapsverificatie in:\n{0}/accept-invitation?token={1}\n\nDe link werkt één keer. Is hij verlopen, vraag dan uw beheerder hem opnieuw te sturen."
+ },
+ "Someone asked to join {0}. Open the request to review it.": {
+  "fr": "Quelqu'un demande à rejoindre {0}. Ouvrez la demande pour l'examiner.",
+  "nl": "Iemand vraagt toegang tot {0}. Open de aanvraag om ze te beoordelen."
+ },
+ "Someone changed this deal since you opened it. Reload it and try again.": {
+  "fr": "Quelqu'un a modifié ce dossier depuis que vous l'avez ouvert. Rechargez-le et réessayez.",
+  "nl": "Iemand wijzigde deze deal sinds u hem opende. Herlaad hem en probeer opnieuw."
+ },
+ "Someone changed this deal since you opened it. Review the newer version and try again.": {
+  "fr": "Quelqu'un a modifié ce dossier depuis que vous l'avez ouvert. Consultez la nouvelle version et réessayez.",
+  "nl": "Iemand wijzigde deze deal sinds u hem opende. Bekijk de nieuwere versie en probeer opnieuw."
+ },
+ "Something went wrong. Please try again.": {
+  "fr": "Une erreur s'est produite. Veuillez réessayer.",
+  "nl": "Er ging iets mis. Probeer het opnieuw."
+ },
+ "Task not found.": {
+  "fr": "Tâche introuvable.",
+  "nl": "Taak niet gevonden."
+ },
+ "Task {0} not found": {
+  "fr": "Tâche {0} introuvable",
+  "nl": "Taak {0} niet gevonden"
+ },
+ "Template not found": {
+  "fr": "Modèle introuvable",
+  "nl": "Sjabloon niet gevonden"
+ },
+ "The Admin role must keep roles.manage and users.manage": {
+  "fr": "Le rôle Admin doit conserver roles.manage et users.manage",
+  "nl": "De rol Admin moet roles.manage en users.manage behouden"
+ },
+ "The NBB is unavailable: enter the figures manually": {
+  "fr": "La BNB est indisponible : saisissez les chiffres manuellement",
+  "nl": "De NBB is niet bereikbaar: voer de cijfers manueel in"
+ },
+ "The access must end in the future": {
+  "fr": "L'accès doit se terminer dans le futur",
+  "nl": "De toegang moet in de toekomst eindigen"
+ },
+ "The buyer is not on this deal": {
+  "fr": "L'acquéreur ne fait pas partie de ce dossier",
+  "nl": "De koper hoort niet bij deze deal"
+ },
+ "The code name must not contain the client or target name": {
+  "fr": "Le nom de code ne doit pas contenir le nom du client ou de la cible",
+  "nl": "De codenaam mag de naam van de klant of het doelwit niet bevatten"
+ },
+ "The conflict review of {0} has waited {1} working days for a decision.": {
+  "fr": "La revue de conflits de {0} attend une décision depuis {1} jours ouvrables.",
+  "nl": "De conflictreview van {0} wacht al {1} werkdagen op een beslissing."
+ },
+ "The deal is closed": {
+  "fr": "Le dossier est clôturé",
+  "nl": "De deal is afgesloten"
+ },
+ "The deal is frozen": {
+  "fr": "Le dossier est gelé",
+  "nl": "De deal is bevroren"
+ },
+ "The file is not a readable Excel workbook (.xlsx)": {
+  "fr": "Le fichier n'est pas un classeur Excel lisible (.xlsx)",
+  "nl": "Het bestand is geen leesbare Excel-werkmap (.xlsx)"
+ },
+ "The import has not finished": {
+  "fr": "L'import n'est pas terminé",
+  "nl": "De import is niet klaar"
+ },
+ "The last Admin cannot be removed.": {
+  "fr": "Le dernier administrateur ne peut pas être retiré.",
+  "nl": "De laatste beheerder kan niet worden verwijderd."
+ },
+ "The lead partner must hold the Partner role": {
+  "fr": "L'associé responsable doit avoir le rôle Associé",
+  "nl": "De leidende partner moet de rol Partner hebben"
+ },
+ "The mobile timeout cannot be longer than the desktop timeout.": {
+  "fr": "Le délai mobile ne peut pas dépasser le délai sur ordinateur.",
+  "nl": "De mobiele time-out mag niet langer zijn dan die op de computer."
+ },
+ "The new owner must be another active user.": {
+  "fr": "Le nouveau responsable doit être un autre utilisateur actif.",
+  "nl": "De nieuwe eigenaar moet een andere actieve gebruiker zijn."
+ },
+ "The owner already sees it": {
+  "fr": "Le responsable la voit déjà",
+  "nl": "De eigenaar ziet ze al"
+ },
+ "The owner must be on the deal team": {
+  "fr": "Le responsable doit faire partie de l'équipe du dossier",
+  "nl": "De eigenaar moet in het dealteam zitten"
+ },
+ "The password must not contain your name or email.": {
+  "fr": "Le mot de passe ne doit pas contenir votre nom ou votre e-mail.",
+  "nl": "Het wachtwoord mag uw naam of e-mailadres niet bevatten."
+ },
+ "The password of {0} was changed. If this was not you, contact your administrator now.": {
+  "fr": "Le mot de passe de {0} a été modifié. Si ce n'était pas vous, contactez immédiatement votre administrateur.",
+  "nl": "Het wachtwoord van {0} werd gewijzigd. Was u dit niet, neem dan nu contact op met uw beheerder."
+ },
+ "The period ends before it starts": {
+  "fr": "La période se termine avant de commencer",
+  "nl": "De periode eindigt voor ze begint"
+ },
+ "The range ends before it starts": {
+  "fr": "La période se termine avant de commencer",
+  "nl": "De periode eindigt voor ze begint"
+ },
+ "The requested resource was not found.": {
+  "fr": "La ressource demandée est introuvable.",
+  "nl": "De gevraagde gegevens werden niet gevonden."
+ },
+ "The requested role was not found.": {
+  "fr": "Le rôle demandé est introuvable.",
+  "nl": "De gevraagde rol werd niet gevonden."
+ },
+ "The service cannot be back before the recovery started.": {
+  "fr": "Le service ne peut pas être rétabli avant le début de la reprise.",
+  "nl": "De dienst kan niet hersteld zijn voor het herstel begon."
+ },
+ "The sheet is empty": {
+  "fr": "La feuille est vide",
+  "nl": "Het blad is leeg"
+ },
+ "The window must end after it starts.": {
+  "fr": "La fenêtre doit se terminer après son début.",
+  "nl": "Het venster moet na de start eindigen."
+ },
+ "This account is locked for 15 minutes after too many failed attempts. Ask an administrator to unlock it.": {
+  "fr": "Ce compte est verrouillé pendant 15 minutes après trop de tentatives échouées. Demandez à un administrateur de le déverrouiller.",
+  "nl": "Dit account is 15 minuten vergrendeld na te veel mislukte pogingen. Vraag een beheerder het te ontgrendelen."
+ },
+ "This account was anonymised and cannot be reactivated.": {
+  "fr": "Ce compte a été anonymisé et ne peut pas être réactivé.",
+  "nl": "Dit account werd geanonimiseerd en kan niet opnieuw geactiveerd worden."
+ },
+ "This activity was deleted more than 30 days ago and can no longer be restored.": {
+  "fr": "Cette activité a été supprimée il y a plus de 30 jours et ne peut plus être restaurée.",
+  "nl": "Deze activiteit werd meer dan 30 dagen geleden verwijderd en kan niet meer hersteld worden."
+ },
+ "This code name is already in use.": {
+  "fr": "Ce nom de code est déjà utilisé.",
+  "nl": "Deze codenaam is al in gebruik."
+ },
+ "This colleague already sees the opportunity.": {
+  "fr": "Ce collègue voit déjà l'opportunité.",
+  "nl": "Deze collega ziet de opportuniteit al."
+ },
+ "This company is already a counterparty of the deal": {
+  "fr": "Cette société est déjà une contrepartie du dossier",
+  "nl": "Deze onderneming is al een tegenpartij van de deal"
+ },
+ "This deal cannot leave its stage yet.": {
+  "fr": "Ce dossier ne peut pas encore quitter son étape.",
+  "nl": "Deze deal kan zijn fase nog niet verlaten."
+ },
+ "This deal has no conflict review waiting": {
+  "fr": "Ce dossier n'a pas de revue de conflits en attente",
+  "nl": "Deze deal heeft geen wachtende conflictreview"
+ },
+ "This deal is closed and read-only: a partner must reopen it first.": {
+  "fr": "Ce dossier est clôturé et en lecture seule : un associé doit d'abord le rouvrir.",
+  "nl": "Deze deal is afgesloten en alleen-lezen: een partner moet hem eerst heropenen."
+ },
+ "This deal is frozen after a sanctions hit: only compliance can unfreeze it.": {
+  "fr": "Ce dossier est gelé suite à un résultat de sanctions : seule la compliance peut le dégeler.",
+  "nl": "Deze deal is bevroren na een sanctietreffer: enkel compliance kan hem ontdooien."
+ },
+ "This deal is not closed": {
+  "fr": "Ce dossier n'est pas clôturé",
+  "nl": "Deze deal is niet afgesloten"
+ },
+ "This deal is not frozen": {
+  "fr": "Ce dossier n'est pas gelé",
+  "nl": "Deze deal is niet bevroren"
+ },
+ "This import was already confirmed": {
+  "fr": "Cet import a déjà été confirmé",
+  "nl": "Deze import werd al bevestigd"
+ },
+ "This link would create a loop in the group": {
+  "fr": "Ce lien créerait une boucle dans le groupe",
+  "nl": "Deze koppeling zou een lus in de groep maken"
+ },
+ "This merge was done more than 30 days ago, or was already undone.": {
+  "fr": "Cette fusion date de plus de 30 jours ou a déjà été annulée.",
+  "nl": "Deze samenvoeging is meer dan 30 dagen oud of werd al ongedaan gemaakt."
+ },
+ "This opportunity is already won.": {
+  "fr": "Cette opportunité est déjà gagnée.",
+  "nl": "Deze opportuniteit is al gewonnen."
+ },
+ "This opportunity is closed": {
+  "fr": "Cette opportunité est clôturée",
+  "nl": "Deze opportuniteit is afgesloten"
+ },
+ "This parent would create a loop in the group": {
+  "fr": "Cette société mère créerait une boucle dans le groupe",
+  "nl": "Deze moederonderneming zou een lus in de groep maken"
+ },
+ "This password appears in a known data breach. Choose another.": {
+  "fr": "Ce mot de passe figure dans une fuite de données connue. Choisissez-en un autre.",
+  "nl": "Dit wachtwoord komt voor in een bekend datalek. Kies een ander."
+ },
+ "This person leads deals: the new owner must be a Partner.": {
+  "fr": "Cette personne dirige des dossiers : le nouveau responsable doit être Associé.",
+  "nl": "Deze persoon leidt deals: de nieuwe eigenaar moet Partner zijn."
+ },
+ "This request is already decided": {
+  "fr": "Cette demande est déjà tranchée",
+  "nl": "Over deze aanvraag is al beslist"
+ },
+ "This resource already exists.": {
+  "fr": "Cette ressource existe déjà.",
+  "nl": "Dit bestaat al."
+ },
+ "This review is already done": {
+  "fr": "Cette revue est déjà terminée",
+  "nl": "Deze review is al afgerond"
+ },
+ "This stage already has that exit criterion.": {
+  "fr": "Cette étape a déjà ce critère de sortie.",
+  "nl": "Deze fase heeft dit exitcriterium al."
+ },
+ "This template already has a version in that language": {
+  "fr": "Ce modèle a déjà une version dans cette langue",
+  "nl": "Dit sjabloon heeft al een versie in die taal"
+ },
+ "This user does not exist or has no role": {
+  "fr": "Cet utilisateur n'existe pas ou n'a pas de rôle",
+  "nl": "Deze gebruiker bestaat niet of heeft geen rol"
+ },
+ "This user has already accepted the invitation.": {
+  "fr": "Cet utilisateur a déjà accepté l'invitation.",
+  "nl": "Deze gebruiker heeft de uitnodiging al aanvaard."
+ },
+ "This user is already active.": {
+  "fr": "Cet utilisateur est déjà actif.",
+  "nl": "Deze gebruiker is al actief."
+ },
+ "This user is already deactivated.": {
+  "fr": "Cet utilisateur est déjà désactivé.",
+  "nl": "Deze gebruiker is al gedeactiveerd."
+ },
+ "This user is already on the deal team.": {
+  "fr": "Cet utilisateur fait déjà partie de l'équipe du dossier.",
+  "nl": "Deze gebruiker zit al in het dealteam."
+ },
+ "This user is not on the deal team.": {
+  "fr": "Cet utilisateur ne fait pas partie de l'équipe du dossier.",
+  "nl": "Deze gebruiker zit niet in het dealteam."
+ },
+ "This user was never deactivated.": {
+  "fr": "Cet utilisateur n'a jamais été désactivé.",
+  "nl": "Deze gebruiker werd nooit gedeactiveerd."
+ },
+ "This value is in use: rename or deactivate it instead.": {
+  "fr": "Cette valeur est utilisée : renommez-la ou désactivez-la plutôt.",
+  "nl": "Deze waarde is in gebruik: hernoem of deactiveer ze in plaats daarvan."
+ },
+ "Too many reset requests. Try again in an hour.": {
+  "fr": "Trop de demandes de réinitialisation. Réessayez dans une heure.",
+  "nl": "Te veel aanvragen. Probeer het over een uur opnieuw."
+ },
+ "Type at least {0} characters": {
+  "fr": "Saisissez au moins {0} caractères",
+  "nl": "Typ minstens {0} tekens"
+ },
+ "Undo window closed": {
+  "fr": "Le délai d'annulation est dépassé",
+  "nl": "De termijn om ongedaan te maken is verstreken"
+ },
+ "Unknown assignee": {
+  "fr": "Destinataire inconnu",
+  "nl": "Onbekende uitvoerder"
+ },
+ "Unknown calendar feed": {
+  "fr": "Flux de calendrier inconnu",
+  "nl": "Onbekende agendafeed"
+ },
+ "Unknown fields: {0}": {
+  "fr": "Champs inconnus : {0}",
+  "nl": "Onbekende velden: {0}"
+ },
+ "Unknown merge fields: {0}": {
+  "fr": "Champs de fusion inconnus : {0}",
+  "nl": "Onbekende samenvoegvelden: {0}"
+ },
+ "Unknown permissions: {0}": {
+  "fr": "Autorisations inconnues : {0}",
+  "nl": "Onbekende rechten: {0}"
+ },
+ "Unknown role.": {
+  "fr": "Rôle inconnu.",
+  "nl": "Onbekende rol."
+ },
+ "Unknown {0} {1}": {
+  "fr": "{0} {1} inconnu",
+  "nl": "Onbekende {0} {1}"
+ },
+ "Unmatched email {0} not found": {
+  "fr": "E-mail non rattaché {0} introuvable",
+  "nl": "Niet-gekoppelde e-mail {0} niet gevonden"
+ },
+ "Use an https link": {
+  "fr": "Utilisez un lien https",
+  "nl": "Gebruik een https-link"
+ },
+ "Use at least {0} characters.": {
+  "fr": "Utilisez au moins {0} caractères.",
+  "nl": "Gebruik minstens {0} tekens."
+ },
+ "User not found.": {
+  "fr": "Utilisateur introuvable.",
+  "nl": "Gebruiker niet gevonden."
+ },
+ "User with ID {0} not found": {
+  "fr": "Utilisateur {0} introuvable",
+  "nl": "Gebruiker {0} niet gevonden"
+ },
+ "User with email '{0}' not found": {
+  "fr": "Utilisateur avec l'e-mail '{0}' introuvable",
+  "nl": "Gebruiker met e-mailadres '{0}' niet gevonden"
+ },
+ "User {0} is not on the team": {
+  "fr": "L'utilisateur {0} ne fait pas partie de l'équipe",
+  "nl": "Gebruiker {0} zit niet in het team"
+ },
+ "Wall-crossing request on {0}": {
+  "fr": "Demande de wall-crossing sur {0}",
+  "nl": "Wall-crossingaanvraag op {0}"
+ },
+ "Welcome to the CRM": {
+  "fr": "Bienvenue dans le CRM",
+  "nl": "Welkom in de CRM"
+ },
+ "You already asked for this deal": {
+  "fr": "Vous avez déjà demandé ce dossier",
+  "nl": "U vroeg al toegang tot deze deal"
+ },
+ "You are already on this deal": {
+  "fr": "Vous faites déjà partie de ce dossier",
+  "nl": "U zit al op deze deal"
+ },
+ "You are invited to the CRM": {
+  "fr": "Vous êtes invité dans le CRM",
+  "nl": "U bent uitgenodigd in de CRM"
+ },
+ "You can work on {0} until {1}.": {
+  "fr": "Vous pouvez travailler sur {0} jusqu'au {1}.",
+  "nl": "U kunt aan {0} werken tot {1}."
+ },
+ "You don't have permission for this action on this deal.": {
+  "fr": "Vous n'avez pas l'autorisation pour cette action sur ce dossier.",
+  "nl": "U hebt geen toestemming voor deze actie op deze deal."
+ },
+ "You don't have permission for this action.": {
+  "fr": "Vous n'avez pas l'autorisation pour cette action.",
+  "nl": "U hebt geen toestemming voor deze actie."
+ },
+ "You have 1 overdue task": {
+  "fr": "Vous avez 1 tâche en retard",
+  "nl": "U hebt 1 achterstallige taak"
+ },
+ "You have a new task on {0}, due {1}.": {
+  "fr": "Vous avez une nouvelle tâche sur {0}, à échéance le {1}.",
+  "nl": "U hebt een nieuwe taak op {0}, te doen tegen {1}."
+ },
+ "You have {0} overdue tasks": {
+  "fr": "Vous avez {0} tâches en retard",
+  "nl": "U hebt {0} achterstallige taken"
+ },
+ "You now have access to {0} as {1}.": {
+  "fr": "Vous avez désormais accès à {0} en tant que {1}.",
+  "nl": "U hebt nu toegang tot {0} als {1}."
+ },
+ "You used this password recently. Choose another.": {
+  "fr": "Vous avez utilisé ce mot de passe récemment. Choisissez-en un autre.",
+  "nl": "U gebruikte dit wachtwoord recent. Kies een ander."
+ },
+ "You were added to the deal team of {0}": {
+  "fr": "Vous avez été ajouté à l'équipe du dossier {0}",
+  "nl": "U werd toegevoegd aan het dealteam van {0}"
+ },
+ "You were invited to an opportunity": {
+  "fr": "Vous avez été invité à une opportunité",
+  "nl": "U werd uitgenodigd voor een opportuniteit"
+ },
+ "Your CRM password was changed": {
+  "fr": "Votre mot de passe CRM a été modifié",
+  "nl": "Uw CRM-wachtwoord werd gewijzigd"
+ },
+ "Your account has no role. Ask an administrator for access.": {
+  "fr": "Votre compte n'a pas de rôle. Demandez l'accès à un administrateur.",
+  "nl": "Uw account heeft geen rol. Vraag toegang aan een beheerder."
+ },
+ "Your current password is not correct.": {
+  "fr": "Votre mot de passe actuel est incorrect.",
+  "nl": "Uw huidige wachtwoord is niet juist."
+ },
+ "Your request to join {0} was rejected: {1}": {
+  "fr": "Votre demande pour rejoindre {0} a été refusée : {1}",
+  "nl": "Uw aanvraag om aan {0} deel te nemen werd geweigerd: {1}"
+ },
+ "Your role sees the aggregated dashboards only.": {
+  "fr": "Votre rôle ne voit que les tableaux de bord agrégés.",
+  "nl": "Uw rol ziet enkel de geaggregeerde dashboards."
+ },
+ "Your session has ended. Sign in again.": {
+  "fr": "Votre session a pris fin. Reconnectez-vous.",
+  "nl": "Uw sessie is beëindigd. Meld u opnieuw aan."
+ },
+ "Your sign-in expired. Start again.": {
+  "fr": "Votre connexion a expiré. Recommencez.",
+  "nl": "Uw aanmelding is verlopen. Begin opnieuw."
+ },
+ "enterprise_number applies to Belgian companies; use vat_or_registry_number": {
+  "fr": "Le numéro d'entreprise s'applique aux sociétés belges ; utilisez le numéro de TVA ou de registre",
+  "nl": "Het ondernemingsnummer geldt voor Belgische ondernemingen; gebruik het btw- of registernummer"
+ },
+ "enterprise_number is required for a Belgian company": {
+  "fr": "Le numéro d'entreprise est requis pour une société belge",
+  "nl": "Het ondernemingsnummer is verplicht voor een Belgische onderneming"
+ },
+ "eur_rate is required for figures not in EUR": {
+  "fr": "Le taux de change en EUR est requis pour les chiffres hors EUR",
+  "nl": "De EUR-koers is verplicht voor cijfers die niet in EUR zijn"
+ },
+ "name and type cannot be cleared": {
+  "fr": "Le nom et le type ne peuvent pas être effacés",
+  "nl": "Naam en type kunnen niet worden gewist"
+ },
+ "name is required": {
+  "fr": "Le nom est requis",
+  "nl": "Naam is verplicht"
+ },
+ "{0} asks to export {1} contacts: {2}": {
+  "fr": "{0} demande à exporter {1} contacts : {2}",
+  "nl": "{0} vraagt {1} contacten te exporteren: {2}"
+ },
+ "{0} closed. Record the success-fee invoice on the deal.": {
+  "fr": "{0} est clôturé. Enregistrez la facture de commission de succès sur le dossier.",
+  "nl": "{0} is afgesloten. Registreer de succesfeefactuur op de deal."
+ },
+ "{0} has not confirmed the {1} team for {2} within 14 days.": {
+  "fr": "{0} n'a pas confirmé l'équipe {1} pour {2} dans les 14 jours.",
+  "nl": "{0} heeft het team van {1} voor {2} niet binnen 14 dagen bevestigd."
+ },
+ "{0} is required": {
+  "fr": "{0} est requis",
+  "nl": "{0} is verplicht"
+ },
+ "{0} is required to close as won": {
+  "fr": "{0} est requis pour clôturer en gagné",
+  "nl": "{0} is verplicht om als gewonnen af te sluiten"
+ },
+ "{0} must not exceed {1}": {
+  "fr": "{0} ne doit pas dépasser {1}",
+  "nl": "{0} mag {1} niet overschrijden"
+ },
+ "{0} needs a signed NDA first": {
+  "fr": "{0} nécessite d'abord un NDA signé",
+  "nl": "{0} vereist eerst een ondertekende NDA"
+ },
+ "{0} opened {1} read-only for 4 hours. Reason: {2}": {
+  "fr": "{0} a ouvert {1} en lecture seule pour 4 heures. Motif : {2}",
+  "nl": "{0} opende {1} alleen-lezen voor 4 uur. Reden: {2}"
+ },
+ "{0} was locked for 15 minutes after {1} failed or denied login attempts.": {
+  "fr": "{0} a été verrouillé pendant 15 minutes après {1} tentatives de connexion échouées ou refusées.",
+  "nl": "{0} werd 15 minuten vergrendeld na {1} mislukte of geweigerde aanmeldpogingen."
+ },
+ "{0} {1} has had no interaction for {2} years. Decide whether to keep or anonymise the contact.": {
+  "fr": "{0} {1} n'a eu aucune interaction depuis {2} ans. Décidez de conserver ou d'anonymiser le contact.",
+  "nl": "{0} {1} had al {2} jaar geen interactie. Beslis of u het contact bewaart of anonimiseert."
+ },
+ "{0} {1} is marked Do not contact and cannot be used for buyer outreach": {
+  "fr": "{0} {1} est marqué Ne pas contacter et ne peut pas être sollicité comme acquéreur",
+  "nl": "{0} {1} staat op Niet contacteren en kan niet voor kopersbenadering gebruikt worden"
+ },
+ "{0} {1} is not an active {2} value": {
+  "fr": "{0} {1} n'est pas une valeur {2} active",
+  "nl": "{0} {1} is geen actieve {2}-waarde"
+ },
+ "{0} {1} not found": {
+  "fr": "{0} {1} introuvable",
+  "nl": "{0} {1} niet gevonden"
+ },
+ "{0} {1}s created, {2} duplicates skipped, {3} rows with errors.": {
+  "fr": "{0} {1}(s) créé(s), {2} doublons ignorés, {3} lignes en erreur.",
+  "nl": "{0} {1}(s) aangemaakt, {2} dubbels overgeslagen, {3} rijen met fouten."
+ },
+ "{0}, due {1}.": {
+  "fr": "{0}, à échéance le {1}.",
+  "nl": "{0}, te doen tegen {1}."
+ },
+ "{0}: NDA pending for more than {1} days": {
+  "fr": "{0} : NDA en attente depuis plus de {1} jours",
+  "nl": "{0}: NDA staat al meer dan {1} dagen open"
+ },
+ "{0}: a buyer has had no activity for 14 days": {
+  "fr": "{0} : un acquéreur sans activité depuis 14 jours",
+  "nl": "{0}: een koper heeft al 14 dagen geen activiteit"
+ },
+ "{0}: a milestone is due on {1}": {
+  "fr": "{0} : un jalon arrive à échéance le {1}",
+  "nl": "{0}: een mijlpaal valt op {1}"
+ },
+ "{0}: invoice the success fee": {
+  "fr": "{0} : facturer la commission de succès",
+  "nl": "{0}: succesfee factureren"
+ }
+}

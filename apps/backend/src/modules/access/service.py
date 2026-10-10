@@ -48,7 +48,6 @@ from .schemas import (
 DEFAULT_ACCESS = timedelta(days=30)
 BREAK_GLASS_FOR = timedelta(hours=4)
 REVIEW_WINDOW = timedelta(days=14)
-APPROVAL_TASK = "Approve wall-crossing request on {code_name}"
 # Who the requester joins the team as: no team-management rights, no closing rights.
 CROSSING_ROLE = TeamRole.OTHER
 
@@ -191,7 +190,7 @@ class AccessService:
             approvers.setdefault(compliance.id, (None, None))
         approvers.pop(context.user_id, None)
 
-        title = APPROVAL_TASK.format(code_name=mandate.code_name)
+        title = f"Approve wall-crossing request on {mandate.code_name}"
         for user_id, (on_behalf_of, delegation_id) in approvers.items():
             user = await db.get(User, user_id)
             assert user is not None

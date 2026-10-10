@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...infrastructure.auth.setup import auth as crud_auth
 from ...infrastructure.config.settings import settings
 from ...infrastructure.email import EmailMessage, get_email_sender
+from ...infrastructure.i18n.localize import localize
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import DomainError, RoleNotFoundError, UserExistsError, UserNotFoundError, ValidationError
 from ..role.models import Role
@@ -42,8 +43,8 @@ def _digest(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-async def _send(to: str, subject: str, body: str) -> None:
-    await get_email_sender().send(EmailMessage(to=to, subject=subject, body=body))
+async def _send(to: str, subject: str, body: str, language: str | None = None) -> None:
+    await get_email_sender().send(EmailMessage(to=to, subject=localize(subject, language), body=localize(body, language)))
 
 
 class AccountService:
@@ -120,6 +121,7 @@ class AccountService:
             f"Set your password and two-factor authentication within 72 hours:\n"
             f"{settings.APP_URL}/accept-invitation?token={token}\n\n"
             "The link works once. If it has expired, ask your administrator to resend it.",
+            user.language,
         )
 
     async def resend_invitation(self, db: AsyncSession, user_id: int, context: AuditContext) -> None:
@@ -206,6 +208,7 @@ class AccountService:
                 "Reset your CRM password",
                 f"Choose a new password within 30 minutes:\n{settings.APP_URL}/reset-password?token={token}\n\n"
                 "The link works once. If you did not ask for it, ignore this email.",
+                user.language,
             )
 
     async def _after_password_change(
@@ -219,6 +222,7 @@ class AccountService:
             user.email,
             "Your CRM password was changed",
             f"The password of {user.email} was changed. If this was not you, contact your administrator now.",
+            user.language,
         )
 
     async def reset_password(self, db: AsyncSession, token: str, password: str, context: AuditContext) -> None:

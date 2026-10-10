@@ -49,7 +49,14 @@ async def _load_user(db: AsyncSession, user_id: Any) -> dict[str, Any] | None:
     return await crud_users.get(db=db, id=user_id, is_deleted=False, schema_to_select=UserRead)
 
 
+def _remember_language(request: Request, user: dict[str, Any] | None) -> None:
+    # The error localizer (infrastructure/i18n/middleware.py) answers in this language (NFR-04).
+    if user is not None:
+        request.state.language = user.get("language")
+
+
 async def get_current_user(
+    request: Request,
     principal: Annotated[Principal | None, Depends(get_optional_principal)],
     db: Annotated[AsyncSession, Depends(async_session)],
 ) -> dict[str, Any]:
@@ -59,13 +66,17 @@ async def get_current_user(
     user = await _load_user(db, principal.user_id)
     if user is None:
         raise UnauthorizedException("Not authenticated")
+    _remember_language(request, user)
     return user
 
 
 async def get_optional_user(
+    request: Request,
     principal: Annotated[Principal | None, Depends(get_optional_principal)],
     db: Annotated[AsyncSession, Depends(async_session)],
 ) -> dict[str, Any] | None:
     if principal is None:
         return None
-    return await _load_user(db, principal.user_id)
+    user = await _load_user(db, principal.user_id)
+    _remember_language(request, user)
+    return user

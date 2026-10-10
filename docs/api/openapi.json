@@ -3325,6 +3325,166 @@
         "title": "DelegationRead",
         "type": "object"
       },
+      "DrillCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "backup_taken_at": {
+            "format": "date-time",
+            "title": "Backup Taken At",
+            "type": "string"
+          },
+          "data_verified": {
+            "title": "Data Verified",
+            "type": "boolean"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DrillKind"
+          },
+          "notes": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Notes",
+            "type": "string"
+          },
+          "service_restored_at": {
+            "format": "date-time",
+            "title": "Service Restored At",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "backup_taken_at",
+          "started_at",
+          "service_restored_at",
+          "data_verified"
+        ],
+        "title": "DrillCreate",
+        "type": "object"
+      },
+      "DrillKind": {
+        "enum": [
+          "restore_test",
+          "disaster_recovery"
+        ],
+        "title": "DrillKind",
+        "type": "string"
+      },
+      "DrillRead": {
+        "properties": {
+          "backup_taken_at": {
+            "format": "date-time",
+            "title": "Backup Taken At",
+            "type": "string"
+          },
+          "data_loss_hours": {
+            "title": "Data Loss Hours",
+            "type": "number"
+          },
+          "data_verified": {
+            "title": "Data Verified",
+            "type": "boolean"
+          },
+          "failures": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Failures",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DrillKind"
+          },
+          "logged_at": {
+            "format": "date-time",
+            "title": "Logged At",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "recovery_hours": {
+            "title": "Recovery Hours",
+            "type": "number"
+          },
+          "service_restored_at": {
+            "format": "date-time",
+            "title": "Service Restored At",
+            "type": "string"
+          },
+          "started_at": {
+            "format": "date-time",
+            "title": "Started At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "backup_taken_at",
+          "started_at",
+          "service_restored_at",
+          "data_verified",
+          "data_loss_hours",
+          "recovery_hours",
+          "passed",
+          "failures",
+          "logged_at",
+          "notes"
+        ],
+        "title": "DrillRead",
+        "type": "object"
+      },
+      "DrillStatus": {
+        "properties": {
+          "last_passed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Passed At"
+          },
+          "restore_test_due": {
+            "title": "Restore Test Due",
+            "type": "boolean"
+          },
+          "rpo_hours": {
+            "title": "Rpo Hours",
+            "type": "integer"
+          },
+          "rto_hours": {
+            "title": "Rto Hours",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "restore_test_due",
+          "last_passed_at",
+          "rpo_hours",
+          "rto_hours"
+        ],
+        "title": "DrillStatus",
+        "type": "object"
+      },
       "EmploymentRead": {
         "properties": {
           "company_id": {
@@ -3430,7 +3590,9 @@
           "access.review_overdue",
           "buyer.idle",
           "buyer.nda_pending",
-          "opportunity.invited"
+          "opportunity.invited",
+          "maintenance.scheduled",
+          "security.finding_overdue"
         ],
         "title": "EventKind",
         "type": "string"
@@ -3949,6 +4111,158 @@
         ],
         "title": "FinancingCertainty",
         "type": "string"
+      },
+      "FindingCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "reference": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Reference",
+            "type": "string"
+          },
+          "reported_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reported At"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "source": {
+            "$ref": "#/components/schemas/FindingSource"
+          },
+          "title": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "severity",
+          "title"
+        ],
+        "title": "FindingCreate",
+        "type": "object"
+      },
+      "FindingRead": {
+        "properties": {
+          "due_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "fixed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixed At"
+          },
+          "fixed_in_time": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fixed In Time"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "reference": {
+            "title": "Reference",
+            "type": "string"
+          },
+          "reported_at": {
+            "format": "date-time",
+            "title": "Reported At",
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "source": {
+            "$ref": "#/components/schemas/FindingSource"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FindingStatus"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source",
+          "severity",
+          "title",
+          "reference",
+          "status",
+          "reported_at",
+          "due_at",
+          "fixed_at",
+          "fixed_in_time"
+        ],
+        "title": "FindingRead",
+        "type": "object"
+      },
+      "FindingSource": {
+        "enum": [
+          "pentest",
+          "zap",
+          "other"
+        ],
+        "title": "FindingSource",
+        "type": "string"
+      },
+      "FindingStatus": {
+        "enum": [
+          "open",
+          "fixed",
+          "accepted"
+        ],
+        "title": "FindingStatus",
+        "type": "string"
+      },
+      "FindingUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/FindingStatus"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "FindingUpdate",
+        "type": "object"
       },
       "ForecastMonth": {
         "properties": {
@@ -5792,6 +6106,70 @@
         ],
         "title": "LostReason",
         "type": "string"
+      },
+      "MaintenanceCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "ends_at": {
+            "format": "date-time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "starts_at",
+          "ends_at",
+          "reason"
+        ],
+        "title": "MaintenanceCreate",
+        "type": "object"
+      },
+      "MaintenanceRead": {
+        "properties": {
+          "announced_at": {
+            "format": "date-time",
+            "title": "Announced At",
+            "type": "string"
+          },
+          "ends_at": {
+            "format": "date-time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "starts_at",
+          "ends_at",
+          "reason",
+          "announced_at"
+        ],
+        "title": "MaintenanceRead",
+        "type": "object"
       },
       "MandateClose": {
         "properties": {
@@ -8735,6 +9113,29 @@
         "title": "RegisterPrefill",
         "type": "object"
       },
+      "ReleaseGate": {
+        "properties": {
+          "open_blocking": {
+            "title": "Open Blocking",
+            "type": "integer"
+          },
+          "overdue": {
+            "title": "Overdue",
+            "type": "integer"
+          },
+          "releasable": {
+            "title": "Releasable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "releasable",
+          "open_blocking",
+          "overdue"
+        ],
+        "title": "ReleaseGate",
+        "type": "object"
+      },
       "ReportRequest": {
         "properties": {
           "template_name": {
@@ -9607,6 +10008,17 @@
         ],
         "title": "SetPassword",
         "type": "object"
+      },
+      "Severity": {
+        "enum": [
+          "critical",
+          "high",
+          "medium",
+          "low",
+          "info"
+        ],
+        "title": "Severity",
+        "type": "string"
       },
       "ShareUpdate": {
         "properties": {
@@ -10786,6 +11198,11 @@
             "title": "Is Deleted",
             "type": "boolean"
           },
+          "language": {
+            "default": "en",
+            "title": "Language",
+            "type": "string"
+          },
           "last_name": {
             "anyOf": [
               {
@@ -10896,6 +11313,22 @@
               }
             ],
             "title": "Email"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "enum": [
+                  "en",
+                  "fr",
+                  "nl"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
           },
           "name": {
             "anyOf": [
@@ -20262,6 +20695,416 @@
         ]
       }
     },
+    "/api/v1/operations/maintenance-windows": {
+      "post": {
+        "operationId": "announce_maintenance_api_v1_operations_maintenance_windows_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "ends_at": "2026-10-10T09:00:00Z",
+                "reason": "reason",
+                "starts_at": "2026-10-10T09:00:00Z"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MaintenanceCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "announced_at": "2026-10-10T09:00:00Z",
+                  "ends_at": "2026-10-10T09:00:00Z",
+                  "id": 1,
+                  "reason": "reason",
+                  "starts_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Announce planned maintenance to every user; at least 48 h ahead and outside business hours",
+        "tags": [
+          "Operations"
+        ]
+      }
+    },
+    "/api/v1/operations/maintenance-windows/upcoming": {
+      "get": {
+        "operationId": "upcoming_maintenance_api_v1_operations_maintenance_windows_upcoming_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "announced_at": "2026-10-10T09:00:00Z",
+                    "ends_at": "2026-10-10T09:00:00Z",
+                    "id": 1,
+                    "reason": "reason",
+                    "starts_at": "2026-10-10T09:00:00Z"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MaintenanceRead"
+                  },
+                  "title": "Response Upcoming Maintenance Api V1 Operations Maintenance Windows Upcoming Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Planned maintenance not yet over",
+        "tags": [
+          "Operations"
+        ]
+      }
+    },
+    "/api/v1/operations/recovery-drills": {
+      "get": {
+        "operationId": "list_drills_api_v1_operations_recovery_drills_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "backup_taken_at": "2026-10-10T09:00:00Z",
+                    "data_loss_hours": 25000.0,
+                    "data_verified": true,
+                    "failures": [
+                      "text"
+                    ],
+                    "id": 1,
+                    "kind": "restore_test",
+                    "logged_at": "2026-10-10T09:00:00Z",
+                    "notes": "notes",
+                    "passed": true,
+                    "recovery_hours": 25000.0,
+                    "service_restored_at": "2026-10-10T09:00:00Z",
+                    "started_at": "2026-10-10T09:00:00Z"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DrillRead"
+                  },
+                  "title": "Response List Drills Api V1 Operations Recovery Drills Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Logged recovery drills, newest first",
+        "tags": [
+          "Operations"
+        ]
+      },
+      "post": {
+        "operationId": "log_drill_api_v1_operations_recovery_drills_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "backup_taken_at": "2026-10-10T09:00:00Z",
+                "data_verified": true,
+                "kind": "restore_test",
+                "notes": "",
+                "service_restored_at": "2026-10-10T09:00:00Z",
+                "started_at": "2026-10-10T09:00:00Z"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/DrillCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "backup_taken_at": "2026-10-10T09:00:00Z",
+                  "data_loss_hours": 25000.0,
+                  "data_verified": true,
+                  "failures": [
+                    "text"
+                  ],
+                  "id": 1,
+                  "kind": "restore_test",
+                  "logged_at": "2026-10-10T09:00:00Z",
+                  "notes": "notes",
+                  "passed": true,
+                  "recovery_hours": 25000.0,
+                  "service_restored_at": "2026-10-10T09:00:00Z",
+                  "started_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/DrillRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Log a restore test or disaster-recovery run; passes when RPO <= 24 h and RTO <= 8 h",
+        "tags": [
+          "Operations"
+        ]
+      }
+    },
+    "/api/v1/operations/recovery-drills/status": {
+      "get": {
+        "operationId": "drill_status_api_v1_operations_recovery_drills_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "last_passed_at": "2026-10-10T09:00:00Z",
+                  "restore_test_due": true,
+                  "rpo_hours": 1,
+                  "rto_hours": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/DrillStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Whether this quarter's restore test is due",
+        "tags": [
+          "Operations"
+        ]
+      }
+    },
+    "/api/v1/operations/release-gate": {
+      "get": {
+        "operationId": "release_gate_api_v1_operations_release_gate_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "open_blocking": 1,
+                  "overdue": 1,
+                  "releasable": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseGate"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Releasable only with no open high or critical finding (NFR-01 c3)",
+        "tags": [
+          "Operations"
+        ]
+      }
+    },
+    "/api/v1/operations/security-findings": {
+      "get": {
+        "operationId": "list_findings_api_v1_operations_security_findings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "due_at": "2026-10-10T09:00:00Z",
+                    "fixed_at": "2026-10-10T09:00:00Z",
+                    "fixed_in_time": true,
+                    "id": 1,
+                    "reference": "reference",
+                    "reported_at": "2026-10-10T09:00:00Z",
+                    "severity": "critical",
+                    "source": "pentest",
+                    "status": "open",
+                    "title": "title"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FindingRead"
+                  },
+                  "title": "Response List Findings Api V1 Operations Security Findings Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Security findings, newest first",
+        "tags": [
+          "Operations"
+        ]
+      },
+      "post": {
+        "operationId": "add_finding_api_v1_operations_security_findings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "reference": "",
+                "reported_at": "2026-10-10T09:00:00Z",
+                "severity": "critical",
+                "source": "pentest",
+                "title": "title"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/FindingCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "due_at": "2026-10-10T09:00:00Z",
+                  "fixed_at": "2026-10-10T09:00:00Z",
+                  "fixed_in_time": true,
+                  "id": 1,
+                  "reference": "reference",
+                  "reported_at": "2026-10-10T09:00:00Z",
+                  "severity": "critical",
+                  "source": "pentest",
+                  "status": "open",
+                  "title": "title"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/FindingRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record a penetration-test or scanner finding; high and critical are due in 30 days",
+        "tags": [
+          "Operations"
+        ]
+      }
+    },
+    "/api/v1/operations/security-findings/{finding_id}": {
+      "patch": {
+        "operationId": "update_finding_api_v1_operations_security_findings__finding_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "finding_id",
+            "required": true,
+            "schema": {
+              "title": "Finding Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "status": "open"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/FindingUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "due_at": "2026-10-10T09:00:00Z",
+                  "fixed_at": "2026-10-10T09:00:00Z",
+                  "fixed_in_time": true,
+                  "id": 1,
+                  "reference": "reference",
+                  "reported_at": "2026-10-10T09:00:00Z",
+                  "severity": "critical",
+                  "source": "pentest",
+                  "status": "open",
+                  "title": "title"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/FindingRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mark a finding fixed, accepted or open",
+        "tags": [
+          "Operations"
+        ]
+      }
+    },
     "/api/v1/origination/conflict-warning": {
       "get": {
         "operationId": "conflict_warning_api_v1_origination_conflict_warning_get",
@@ -23819,6 +24662,7 @@
                   "first_name": "text",
                   "id": 1,
                   "is_deleted": false,
+                  "language": "en",
                   "last_name": "text",
                   "name": "name",
                   "permissions": [
@@ -24004,6 +24848,7 @@
                   "first_name": "text",
                   "id": 1,
                   "is_deleted": false,
+                  "language": "en",
                   "last_name": "text",
                   "name": "name",
                   "permissions": [
@@ -24190,6 +25035,7 @@
                   "first_name": "text",
                   "id": 1,
                   "is_deleted": false,
+                  "language": "en",
                   "last_name": "text",
                   "name": "name",
                   "permissions": [
@@ -24248,6 +25094,7 @@
             "application/json": {
               "example": {
                 "email": "anna@firm.be",
+                "language": "en",
                 "name": "text",
                 "profile_image_url": "https://www.profileimageurl.com"
               },
@@ -24268,6 +25115,7 @@
                   "first_name": "text",
                   "id": 1,
                   "is_deleted": false,
+                  "language": "en",
                   "last_name": "text",
                   "name": "name",
                   "permissions": [
@@ -24730,6 +25578,7 @@
                   "first_name": "text",
                   "id": 1,
                   "is_deleted": false,
+                  "language": "en",
                   "last_name": "text",
                   "name": "name",
                   "permissions": [
@@ -24806,6 +25655,7 @@
                   "first_name": "text",
                   "id": 1,
                   "is_deleted": false,
+                  "language": "en",
                   "last_name": "text",
                   "name": "name",
                   "permissions": [
@@ -25067,6 +25917,30 @@
           }
         },
         "summary": "Health Check",
+        "tags": [
+          "System"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "description": "What the uptime probe calls (NFR-03): the app answers AND its database does.",
+        "operationId": "readiness_check_health_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": null,
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "description": "The database does not answer"
+          }
+        },
+        "summary": "Readiness Check",
         "tags": [
           "System"
         ]
