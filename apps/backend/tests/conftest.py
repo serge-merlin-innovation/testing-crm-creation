@@ -24,6 +24,7 @@ from pathlib import Path  # noqa: E402
 import pytest  # noqa: E402
 import pytest_asyncio  # noqa: E402
 from crudauth.ratelimit import MemoryRateLimiterBackend  # noqa: E402
+from crudauth.storage import get_session_storage  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
 from sqlalchemy.orm import sessionmaker  # noqa: E402
@@ -146,3 +147,13 @@ def isolated_login_limiter(monkeypatch: pytest.MonkeyPatch):
     # Every test client shares one IP and the limiter lives in process memory, so a lockout
     # left behind would throttle the other auth tests in this worker.
     monkeypatch.setattr(auth.runtime.lockout, "backend", MemoryRateLimiterBackend())
+
+
+@pytest.fixture(autouse=True)
+def isolated_session_store(monkeypatch: pytest.MonkeyPatch):
+    # Each test's database restarts user ids at 1, so sessions left in the shared in-memory store
+    # would belong to the next test's users and skew counts such as Log out everywhere.
+    manager = auth.sessions
+    monkeypatch.setattr(manager, "storage", get_session_storage(prefix=manager.storage.prefix))
+    if manager.csrf_storage is not None:
+        monkeypatch.setattr(manager, "csrf_storage", get_session_storage(prefix=manager.csrf_storage.prefix))
