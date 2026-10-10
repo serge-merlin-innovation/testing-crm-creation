@@ -5,7 +5,7 @@ from fastapi import APIRouter, Response
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
-from ..mandate.policy import EditGrant, ReadGrant
+from ..mandate.policy import EditGrant, ExportGrant, ReadGrant
 from .dependencies import BuyerServiceDep, InvestorProfileServiceDep
 from .schemas import (
     BuyerGrid,
@@ -166,7 +166,7 @@ async def add_buyers(
     description="Buyer, type, rationale and contact. Internal notes are never exported.",
     responses={**HIDDEN, 200: {"content": {XLSX: {}}}},
 )
-async def export_buyers(grant: ReadGrant, db: AsyncSessionDep, service: BuyerServiceDep, context: AuditContextDep) -> Response:
+async def export_buyers(grant: ExportGrant, db: AsyncSessionDep, service: BuyerServiceDep, context: AuditContextDep) -> Response:
     content = await service.export(db, grant, context)
     return Response(
         content,

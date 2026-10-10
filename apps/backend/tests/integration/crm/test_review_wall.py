@@ -7,6 +7,7 @@ import pytest
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
 from src.modules.role.permissions import RoleName
 from tests.integration.crm.deal_helpers import build_world, create_mandate
+from tests.integration.foundation.helpers import step_up
 
 pytestmark = pytest.mark.asyncio
 
@@ -63,3 +64,22 @@ async def test_audit_log_hides_deal_and_fee_rows_from_admin(world):
     assert "Falcon" not in str(await audit_rows(world.admin))
     assert await audit_rows(world.compliance, record_type="mandate")
     assert await audit_rows(world.compliance, record_type="fee_terms")
+
+
+async def break_glass(world, code_name: str = "Falcon") -> None:
+    response = await world.admin.client.post(
+        "/api/v1/break-glass/",
+        json={"code_name": code_name, "reason": "Fix corrupted EV"},
+        headers=step_up(world.admin.email, world.admin.headers),
+    )
+    assert response.status_code == 201, response.text
+
+
+# B3 (AUTHZ-08 c3): break-glass reads the buyer list but never exports it.
+async def test_break_glass_cannot_export_the_buyer_list(world):
+    mandate = await create_mandate(world, world.partner, world.client_id)
+    await break_glass(world)
+    url = f"/api/v1/mandates/{mandate['id']}/buyers"
+    assert (await world.admin.client.get(url, headers=world.admin.headers)).status_code == 200
+    exported = await world.admin.client.get(f"{url}/export", headers=world.admin.headers)
+    assert exported.status_code == 403, exported.text
