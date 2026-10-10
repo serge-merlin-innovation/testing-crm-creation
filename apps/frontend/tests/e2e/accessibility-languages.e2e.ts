@@ -106,7 +106,7 @@ function pagesFor(who: "admin" | "partner"): string[] {
   const listed = Object.entries(PAGE_AUDIENCE)
     .filter(([, audience]) => audience.kind !== "public")
     .map(([path]) => path);
-  const admin = ["/users", "/permissions", "/settings", "/picklists", "/templates", "/imports", "/stage-criteria", "/profile", "/overview", "/merge", "/exports", "/privacy", "/access", "/search"];
+  const admin = ["/users", "/permissions", "/settings", "/picklists", "/templates", "/imports", "/stage-criteria", "/profile", "/overview", "/merge", "/exports", "/privacy", "/access", "/search", "/audit"];
   if (who === "admin") {
     return listed.filter((path) => admin.includes(path));
   }

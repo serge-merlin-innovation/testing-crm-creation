@@ -14,6 +14,7 @@ export type NavigationItem = {
 const PRIMARY_NAVIGATION: NavigationItem[] = [
   { label: "nav.overview", href: "/overview", aggregate: true },
   { label: "nav.search", href: "/search" },
+  { label: "nav.tasks", href: "/tasks" },
   { label: "nav.deals", href: "/deals", requires: "deals.read_staffed" },
   { label: "nav.origination", href: "/origination", requires: "deals.read_staffed" },
   { label: "nav.fees", href: "/fees" },
@@ -33,6 +34,7 @@ const PRIMARY_NAVIGATION: NavigationItem[] = [
   { label: "nav.stageCriteria", href: "/stage-criteria" },
   { label: "nav.conflictReviews", href: "/conflict-reviews" },
   { label: "nav.access", href: "/access" },
+  { label: "nav.audit", href: "/audit", aggregate: true },
 ];
 
 const ACCOUNT_NAVIGATION: NavigationItem[] = [

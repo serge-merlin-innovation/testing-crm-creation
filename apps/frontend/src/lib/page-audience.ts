@@ -55,6 +55,8 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/win-loss": { kind: "permission", permission: "dashboard.firm" },
   "/conflict-reviews": { kind: "permission", permission: "conflicts.register" },
   "/access": { kind: "authenticated" },
+  "/tasks": { kind: "authenticated" },
+  "/audit": { kind: "permission", permission: "audit.read" },
 };
 
 const GATED_BY_DEFAULT: PageAudience = { kind: "authenticated" };
