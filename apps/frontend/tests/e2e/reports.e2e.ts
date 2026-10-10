@@ -55,7 +55,9 @@ async function seed(browser: Browser) {
   const company = await request.post("/api/v1/companies/", {
     headers,
     data: {
-      name: `Brightwater Foods ${RUN.toUpperCase()}r`,
+      // Random tokens only: a client name shared with another run's deal is a potential conflict (AUTHZ-05 c1),
+      // which would hold this deal in Conflict review.
+      name: `Client ${runId()}`,
       type: "target",
       country_id: countries.find((country) => country.code === "NL")!.id,
       vat_or_registry_number: `NLR-${RUN}`,
