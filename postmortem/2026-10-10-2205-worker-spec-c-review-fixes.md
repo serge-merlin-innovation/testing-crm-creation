@@ -38,3 +38,13 @@ Resumed a fixer that a server restart had killed. Checked the uncommitted AUD-01
 ## Worker postmortems
 
 none
+
+## Addendum: merge of feat/ma-crm bd66d1f
+
+### 4. A slice import cycle showed up only after the merge
+
+- Category: Automated checks
+- Severity: low
+- Evidence: My GDPR-02 commit added compliance → privacy. The merged base already had privacy → buyer → compliance, so `test_no_new_import_cycle_between_slices` failed only on the merged tree. I fixed it with a KYC-approved hook registered in main.py.
+- Suggested change: Run `tests/unit/modules/test_module_wiring.py` in the pre-commit hook. It takes seconds and catches the cycle on the branch that adds the edge.
+- Target: .husky/pre-commit
