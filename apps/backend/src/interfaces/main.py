@@ -15,6 +15,7 @@ from ..interfaces.api import router
 from ..interfaces.api.openapi import build_openapi
 from ..interfaces.api.versions import version_for
 from ..modules.api_access.dependencies import resolve_bearer
+from ..modules.buyer.jobs import register_jobs as register_buyer_jobs
 from ..modules.compliance.jobs import register_jobs as register_compliance_jobs
 from ..modules.compliance.service import install as install_compliance
 from ..modules.mandate.jobs import register_jobs as register_deal_jobs
@@ -28,6 +29,7 @@ settings = get_settings()
 register_task_jobs()
 register_deal_jobs()
 register_compliance_jobs()
+register_buyer_jobs()
 install_compliance()
 set_bearer_resolver(resolve_bearer)
 

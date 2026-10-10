@@ -194,6 +194,28 @@
         "title": "ActivityUpdate",
         "type": "object"
       },
+      "AddWarning": {
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/WarningReason"
+          }
+        },
+        "required": [
+          "company_id",
+          "name",
+          "reason"
+        ],
+        "title": "AddWarning",
+        "type": "object"
+      },
       "ApiClientCreate": {
         "examples": [
           {
@@ -414,6 +436,15 @@
         "title": "ApiTokenRead",
         "type": "object"
       },
+      "Approval": {
+        "enum": [
+          "pending",
+          "approved",
+          "excluded"
+        ],
+        "title": "Approval",
+        "type": "string"
+      },
       "AuditEntryRead": {
         "properties": {
           "action": {
@@ -586,6 +617,325 @@
           "client_secret"
         ],
         "title": "Body_oauth_token_api_v1_oauth_token_post",
+        "type": "object"
+      },
+      "BuyerGrid": {
+        "properties": {
+          "buyers": {
+            "items": {
+              "$ref": "#/components/schemas/BuyerRead"
+            },
+            "title": "Buyers",
+            "type": "array"
+          },
+          "can_approve": {
+            "title": "Can Approve",
+            "type": "boolean"
+          },
+          "funnel": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Funnel",
+            "type": "object"
+          }
+        },
+        "required": [
+          "buyers",
+          "funnel",
+          "can_approve"
+        ],
+        "title": "BuyerGrid",
+        "type": "object"
+      },
+      "BuyerItem": {
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "integer"
+          },
+          "rationale": {
+            "maxLength": 1000,
+            "title": "Rationale",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company_id",
+          "owner_id",
+          "rationale"
+        ],
+        "title": "BuyerItem",
+        "type": "object"
+      },
+      "BuyerRead": {
+        "properties": {
+          "approval": {
+            "$ref": "#/components/schemas/Approval"
+          },
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
+          },
+          "contact_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Name"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclineReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "nda": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NdaRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "integer"
+          },
+          "owner_name": {
+            "title": "Owner Name",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BuyerStatus"
+          },
+          "status_changed_at": {
+            "format": "date-time",
+            "title": "Status Changed At",
+            "type": "string"
+          },
+          "status_changed_by_name": {
+            "title": "Status Changed By Name",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "company_id",
+          "name",
+          "type",
+          "owner_id",
+          "owner_name",
+          "rationale",
+          "contact_id",
+          "contact_name",
+          "approval",
+          "status",
+          "status_changed_at",
+          "status_changed_by_name",
+          "decline_reason",
+          "notes",
+          "nda"
+        ],
+        "title": "BuyerRead",
+        "type": "object"
+      },
+      "BuyerStatus": {
+        "enum": [
+          "long_list",
+          "contacted",
+          "teaser_sent",
+          "nda_sent",
+          "nda_signed",
+          "im_sent",
+          "indicative_offer",
+          "management_meeting",
+          "binding_offer",
+          "declined"
+        ],
+        "title": "BuyerStatus",
+        "type": "string"
+      },
+      "BuyerUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "approval": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Approval"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contact Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "rationale": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rationale"
+          }
+        },
+        "title": "BuyerUpdate",
+        "type": "object"
+      },
+      "BuyersAdd": {
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Add even buyers with a conflict or on the client's exclusion list",
+            "title": "Confirm",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BuyerItem"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "BuyersAdd",
+        "type": "object"
+      },
+      "BuyersAdded": {
+        "properties": {
+          "added": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Added",
+            "type": "array"
+          },
+          "skipped": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Skipped",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/AddWarning"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "added",
+          "skipped",
+          "warnings"
+        ],
+        "title": "BuyersAdded",
         "type": "object"
       },
       "ChangePassword": {
@@ -1005,6 +1355,19 @@
         "title": "CompanyRead",
         "type": "object"
       },
+      "CompanyRef": {
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "company_id"
+        ],
+        "title": "CompanyRef",
+        "type": "object"
+      },
       "CompanyType": {
         "enum": [
           "target",
@@ -1279,6 +1642,33 @@
         ],
         "title": "ConflictStatus",
         "type": "string"
+      },
+      "ContactBuyerRole": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BuyerStatus"
+          }
+        },
+        "required": [
+          "mandate_id",
+          "code_name",
+          "company_id",
+          "status"
+        ],
+        "title": "ContactBuyerRole",
+        "type": "object"
       },
       "ContactCreate": {
         "properties": {
@@ -1787,6 +2177,16 @@
         "title": "DealStage",
         "type": "string"
       },
+      "DeclineReason": {
+        "enum": [
+          "price",
+          "fit",
+          "timing",
+          "no_response"
+        ],
+        "title": "DeclineReason",
+        "type": "string"
+      },
       "EmploymentRead": {
         "properties": {
           "company_id": {
@@ -1858,10 +2258,36 @@
           "task.assigned",
           "task.overdue_digest",
           "milestone.due",
-          "conflict.review_overdue"
+          "conflict.review_overdue",
+          "buyer.idle",
+          "buyer.nda_pending"
         ],
         "title": "EventKind",
         "type": "string"
+      },
+      "ExclusionRead": {
+        "properties": {
+          "added_at": {
+            "format": "date-time",
+            "title": "Added At",
+            "type": "string"
+          },
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company_id",
+          "name",
+          "added_at"
+        ],
+        "title": "ExclusionRead",
+        "type": "object"
       },
       "FigureRead": {
         "properties": {
@@ -2269,6 +2695,265 @@
           "status"
         ],
         "title": "ImportRow",
+        "type": "object"
+      },
+      "InvestorProfileRead": {
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "country_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Country Ids",
+            "type": "array"
+          },
+          "declines": {
+            "items": {
+              "$ref": "#/components/schemas/PastDecline"
+            },
+            "title": "Declines",
+            "type": "array"
+          },
+          "ev_ebitda_max": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Ebitda Max"
+          },
+          "ev_ebitda_min": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Ebitda Min"
+          },
+          "has_profile": {
+            "title": "Has Profile",
+            "type": "boolean"
+          },
+          "non_solicit_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Non Solicit End"
+          },
+          "outdated": {
+            "title": "Outdated",
+            "type": "boolean"
+          },
+          "portfolio": {
+            "items": {
+              "$ref": "#/components/schemas/PortfolioEntity"
+            },
+            "title": "Portfolio",
+            "type": "array"
+          },
+          "sector_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Sector Ids",
+            "type": "array"
+          },
+          "stake": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Stake"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "standstill_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standstill End"
+          },
+          "ticket_max": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticket Max"
+          },
+          "ticket_min": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ticket Min"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "company_id",
+          "has_profile",
+          "sector_ids",
+          "country_ids",
+          "ticket_min",
+          "ticket_max",
+          "ev_ebitda_min",
+          "ev_ebitda_max",
+          "stake",
+          "updated_at",
+          "outdated",
+          "portfolio",
+          "declines",
+          "standstill_end",
+          "non_solicit_end"
+        ],
+        "title": "InvestorProfileRead",
+        "type": "object"
+      },
+      "InvestorProfileUpdate": {
+        "properties": {
+          "country_ids": {
+            "default": [],
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 100,
+            "title": "Country Ids",
+            "type": "array"
+          },
+          "ev_ebitda_max": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,6}|(?=[\\d.]{1,9}0*$)\\d{0,6}\\.\\d{0,2}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "EV / EBITDA",
+            "title": "Ev Ebitda Max"
+          },
+          "ev_ebitda_min": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,6}|(?=[\\d.]{1,9}0*$)\\d{0,6}\\.\\d{0,2}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "EV / EBITDA",
+            "title": "Ev Ebitda Min"
+          },
+          "sector_ids": {
+            "default": [],
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 50,
+            "title": "Sector Ids",
+            "type": "array"
+          },
+          "stake": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Stake"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ticket_max": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "EUR millions",
+            "title": "Ticket Max"
+          },
+          "ticket_min": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "EUR millions",
+            "title": "Ticket Min"
+          }
+        },
+        "title": "InvestorProfileUpdate",
         "type": "object"
       },
       "InvitationRead": {
@@ -3242,6 +3927,195 @@
         "title": "MilestoneUpdate",
         "type": "object"
       },
+      "NdaRead": {
+        "properties": {
+          "agreed_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreed Date"
+          },
+          "document_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Url"
+          },
+          "markup_received_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Markup Received Date"
+          },
+          "non_solicit_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Non Solicit End"
+          },
+          "sent_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent Date"
+          },
+          "signed_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signed Date"
+          },
+          "standstill_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standstill End"
+          }
+        },
+        "required": [
+          "sent_date",
+          "markup_received_date",
+          "agreed_date",
+          "signed_date",
+          "document_url",
+          "standstill_end",
+          "non_solicit_end"
+        ],
+        "title": "NdaRead",
+        "type": "object"
+      },
+      "NdaUpdate": {
+        "properties": {
+          "agreed_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agreed Date"
+          },
+          "document_url": {
+            "anyOf": [
+              {
+                "format": "uri",
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Url"
+          },
+          "markup_received_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Markup Received Date"
+          },
+          "non_solicit_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Non Solicit End"
+          },
+          "sent_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent Date"
+          },
+          "signed_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signed Date"
+          },
+          "standstill_end": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standstill End"
+          }
+        },
+        "title": "NdaUpdate",
+        "type": "object"
+      },
       "NoteCreate": {
         "properties": {
           "body": {
@@ -3640,6 +4514,34 @@
         "title": "PasswordPolicyUpdate",
         "type": "object"
       },
+      "PastDecline": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "declined_at": {
+            "format": "date-time",
+            "title": "Declined At",
+            "type": "string"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/DeclineReason"
+          }
+        },
+        "required": [
+          "mandate_id",
+          "code_name",
+          "reason",
+          "declined_at"
+        ],
+        "title": "PastDecline",
+        "type": "object"
+      },
       "PermissionMatrix": {
         "properties": {
           "columns": {
@@ -3848,6 +4750,24 @@
           }
         },
         "title": "PicklistValueUpdate",
+        "type": "object"
+      },
+      "PortfolioEntity": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PortfolioEntity",
         "type": "object"
       },
       "PreferenceRead": {
@@ -4478,6 +5398,83 @@
           "stage"
         ],
         "title": "StageMove",
+        "type": "object"
+      },
+      "Stake": {
+        "enum": [
+          "majority",
+          "minority",
+          "both"
+        ],
+        "title": "Stake",
+        "type": "string"
+      },
+      "StatusChange": {
+        "properties": {
+          "buyer_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Buyer Ids",
+            "type": "array"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeclineReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/BuyerStatus"
+          }
+        },
+        "required": [
+          "buyer_ids",
+          "status"
+        ],
+        "title": "StatusChange",
+        "type": "object"
+      },
+      "Suggestion": {
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "matched": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company_id",
+          "name",
+          "type",
+          "score",
+          "matched"
+        ],
+        "title": "Suggestion",
         "type": "object"
       },
       "TaskCreate": {
@@ -5352,6 +6349,14 @@
         ],
         "title": "WallCrossingRead",
         "type": "object"
+      },
+      "WarningReason": {
+        "enum": [
+          "conflict",
+          "client_exclusion"
+        ],
+        "title": "WarningReason",
+        "type": "string"
       }
     },
     "securitySchemes": {
@@ -6862,6 +7867,161 @@
         ]
       }
     },
+    "/api/v1/companies/{company_id}/exclusions": {
+      "get": {
+        "operationId": "get_exclusions_api_v1_companies__company_id__exclusions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "title": "Company Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "added_at": "2026-10-10T09:00:00Z",
+                    "company_id": 1,
+                    "name": "name"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExclusionRead"
+                  },
+                  "title": "Response Get Exclusions Api V1 Companies  Company Id  Exclusions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The client's exclusion list",
+        "tags": [
+          "Buyers"
+        ]
+      },
+      "post": {
+        "operationId": "add_exclusion_api_v1_companies__company_id__exclusions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "title": "Company Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "company_id": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/CompanyRef"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "added_at": "2026-10-10T09:00:00Z",
+                  "company_id": 1,
+                  "name": "name"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ExclusionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add a company the client does not want approached",
+        "tags": [
+          "Buyers"
+        ]
+      }
+    },
+    "/api/v1/companies/{company_id}/exclusions/{excluded_id}": {
+      "delete": {
+        "operationId": "remove_exclusion_api_v1_companies__company_id__exclusions__excluded_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "title": "Company Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "excluded_id",
+            "required": true,
+            "schema": {
+              "title": "Excluded Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove from the exclusion list",
+        "tags": [
+          "Buyers"
+        ]
+      }
+    },
     "/api/v1/companies/{company_id}/financials": {
       "get": {
         "operationId": "get_financials_api_v1_companies__company_id__financials_get",
@@ -7106,6 +8266,264 @@
         "summary": "Ids of every company in the group",
         "tags": [
           "Companies"
+        ]
+      }
+    },
+    "/api/v1/companies/{company_id}/investor-profile": {
+      "get": {
+        "description": "Declines list only closed deals the caller can read. `outdated` flags criteria unchanged for 12 months.",
+        "operationId": "get_profile_api_v1_companies__company_id__investor_profile_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "title": "Company Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "company_id": 1,
+                  "country_ids": [
+                    1
+                  ],
+                  "declines": [
+                    {
+                      "code_name": "code_name",
+                      "declined_at": "2026-10-10T09:00:00Z",
+                      "mandate_id": 1,
+                      "reason": "price"
+                    }
+                  ],
+                  "ev_ebitda_max": "text",
+                  "ev_ebitda_min": "text",
+                  "has_profile": true,
+                  "non_solicit_end": "2026-10-10",
+                  "outdated": true,
+                  "portfolio": [
+                    {
+                      "id": 1,
+                      "name": "name"
+                    }
+                  ],
+                  "sector_ids": [
+                    1
+                  ],
+                  "stake": "majority",
+                  "standstill_end": "2026-10-10",
+                  "ticket_max": "text",
+                  "ticket_min": "text",
+                  "updated_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/InvestorProfileRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "A buyer's investment criteria, portfolio, past declines and NDA restrictions",
+        "tags": [
+          "Buyers"
+        ]
+      },
+      "put": {
+        "description": "Ticket size in EUR millions.",
+        "operationId": "put_profile_api_v1_companies__company_id__investor_profile_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "title": "Company Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "country_ids": [],
+                "ev_ebitda_max": 25000.0,
+                "ev_ebitda_min": 25000.0,
+                "sector_ids": [],
+                "stake": "majority",
+                "ticket_max": 25000.0,
+                "ticket_min": 25000.0
+              },
+              "schema": {
+                "$ref": "#/components/schemas/InvestorProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "company_id": 1,
+                  "country_ids": [
+                    1
+                  ],
+                  "declines": [
+                    {
+                      "code_name": "code_name",
+                      "declined_at": "2026-10-10T09:00:00Z",
+                      "mandate_id": 1,
+                      "reason": "price"
+                    }
+                  ],
+                  "ev_ebitda_max": "text",
+                  "ev_ebitda_min": "text",
+                  "has_profile": true,
+                  "non_solicit_end": "2026-10-10",
+                  "outdated": true,
+                  "portfolio": [
+                    {
+                      "id": 1,
+                      "name": "name"
+                    }
+                  ],
+                  "sector_ids": [
+                    1
+                  ],
+                  "stake": "majority",
+                  "standstill_end": "2026-10-10",
+                  "ticket_max": "text",
+                  "ticket_min": "text",
+                  "updated_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/InvestorProfileRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set a buyer's investment criteria (CO-04)",
+        "tags": [
+          "Buyers"
+        ]
+      }
+    },
+    "/api/v1/companies/{company_id}/portfolio": {
+      "post": {
+        "description": "The portfolio company joins the fund's group as a subsidiary.",
+        "operationId": "link_portfolio_api_v1_companies__company_id__portfolio_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "title": "Company Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "company_id": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/CompanyRef"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "company_id": 1,
+                  "country_ids": [
+                    1
+                  ],
+                  "declines": [
+                    {
+                      "code_name": "code_name",
+                      "declined_at": "2026-10-10T09:00:00Z",
+                      "mandate_id": 1,
+                      "reason": "price"
+                    }
+                  ],
+                  "ev_ebitda_max": "text",
+                  "ev_ebitda_min": "text",
+                  "has_profile": true,
+                  "non_solicit_end": "2026-10-10",
+                  "outdated": true,
+                  "portfolio": [
+                    {
+                      "id": 1,
+                      "name": "name"
+                    }
+                  ],
+                  "sector_ids": [
+                    1
+                  ],
+                  "stake": "majority",
+                  "standstill_end": "2026-10-10",
+                  "ticket_max": "text",
+                  "ticket_min": "text",
+                  "updated_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/InvestorProfileRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Link a portfolio company to a PE fund",
+        "tags": [
+          "Buyers"
         ]
       }
     },
@@ -7493,6 +8911,61 @@
         "summary": "Update a contact; a new company keeps the old role as history",
         "tags": [
           "Contacts"
+        ]
+      }
+    },
+    "/api/v1/contacts/{contact_id}/buyer-roles": {
+      "get": {
+        "description": "Only deals the caller is staffed on (AUTHZ-02 c5).",
+        "operationId": "contact_buyer_roles_api_v1_contacts__contact_id__buyer_roles_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "code_name": "code_name",
+                    "company_id": 1,
+                    "mandate_id": 1,
+                    "status": "long_list"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ContactBuyerRole"
+                  },
+                  "title": "Response Contact Buyer Roles Api V1 Contacts  Contact Id  Buyer Roles Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Where a contact is a buyer",
+        "tags": [
+          "Buyers"
         ]
       }
     },
@@ -7921,6 +9394,533 @@
         "summary": "Edit a deal",
         "tags": [
           "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/buyers": {
+      "get": {
+        "operationId": "get_buyers_api_v1_mandates__mandate_id__buyers_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "buyers": [
+                    {
+                      "approval": "pending",
+                      "company_id": 1,
+                      "contact_id": 1,
+                      "contact_name": "text",
+                      "decline_reason": null,
+                      "id": 1,
+                      "name": "name",
+                      "nda": null,
+                      "notes": "text",
+                      "owner_id": 1,
+                      "owner_name": "owner_name",
+                      "rationale": "rationale",
+                      "status": "long_list",
+                      "status_changed_at": "2026-10-10T09:00:00Z",
+                      "status_changed_by_name": "status_changed_by_name",
+                      "type": "type"
+                    }
+                  ],
+                  "can_approve": true,
+                  "funnel": {
+                    "key": 1
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerGrid"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The buyer grid with funnel counts",
+        "tags": [
+          "Buyers"
+        ]
+      },
+      "post": {
+        "description": "Already listed buyers are skipped. Conflicts and client exclusions come back as warnings and are added only with `confirm: true`. A Do not contact contact is refused.",
+        "operationId": "add_buyers_api_v1_mandates__mandate_id__buyers_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "confirm": false,
+                "items": [
+                  {
+                    "company_id": 1,
+                    "contact_id": 1,
+                    "owner_id": 1,
+                    "rationale": "rationale"
+                  }
+                ]
+              },
+              "schema": {
+                "$ref": "#/components/schemas/BuyersAdd"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "added": [
+                    1
+                  ],
+                  "skipped": [
+                    1
+                  ],
+                  "warnings": [
+                    {
+                      "company_id": 1,
+                      "name": "name",
+                      "reason": "conflict"
+                    }
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BuyersAdded"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add buyers to the list in bulk",
+        "tags": [
+          "Buyers"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/buyers/export": {
+      "get": {
+        "description": "Buyer, type, rationale and contact. Internal notes are never exported.",
+        "operationId": "export_buyers_api_v1_mandates__mandate_id__buyers_export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": null,
+                "schema": {}
+              },
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export the buyer list for client approval (Excel)",
+        "tags": [
+          "Buyers"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/buyers/status": {
+      "post": {
+        "description": "Every selected buyer gets the same date. Declined needs a reason; IM sent and later need a signed NDA.",
+        "operationId": "set_status_api_v1_mandates__mandate_id__buyers_status_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "buyer_ids": [
+                  1
+                ],
+                "decline_reason": "price",
+                "status": "long_list"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/StatusChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "buyers": [
+                    {
+                      "approval": "pending",
+                      "company_id": 1,
+                      "contact_id": 1,
+                      "contact_name": "text",
+                      "decline_reason": null,
+                      "id": 1,
+                      "name": "name",
+                      "nda": null,
+                      "notes": "text",
+                      "owner_id": 1,
+                      "owner_name": "owner_name",
+                      "rationale": "rationale",
+                      "status": "long_list",
+                      "status_changed_at": "2026-10-10T09:00:00Z",
+                      "status_changed_by_name": "status_changed_by_name",
+                      "type": "type"
+                    }
+                  ],
+                  "can_approve": true,
+                  "funnel": {
+                    "key": 1
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerGrid"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change the status of one or many buyers",
+        "tags": [
+          "Buyers"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/buyers/suggestions": {
+      "get": {
+        "description": "Investor profiles ranked by fit with the target's sector, geography and size (BUY-01).",
+        "operationId": "get_suggestions_api_v1_mandates__mandate_id__buyers_suggestions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "company_id": 1,
+                    "matched": [
+                      "text"
+                    ],
+                    "name": "name",
+                    "score": 1,
+                    "type": "type"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Suggestion"
+                  },
+                  "title": "Response Get Suggestions Api V1 Mandates  Mandate Id  Buyers Suggestions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Suggest buyers",
+        "tags": [
+          "Buyers"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/buyers/{buyer_id}": {
+      "patch": {
+        "operationId": "update_buyer_api_v1_mandates__mandate_id__buyers__buyer_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "buyer_id",
+            "required": true,
+            "schema": {
+              "title": "Buyer Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "approval": "pending",
+                "contact_id": 1,
+                "notes": "text",
+                "owner_id": 1,
+                "rationale": "text"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/BuyerUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "approval": "pending",
+                  "company_id": 1,
+                  "contact_id": 1,
+                  "contact_name": "text",
+                  "decline_reason": "price",
+                  "id": 1,
+                  "name": "name",
+                  "nda": {
+                    "agreed_date": "2026-10-10",
+                    "document_url": "text",
+                    "markup_received_date": "2026-10-10",
+                    "non_solicit_end": "2026-10-10",
+                    "sent_date": "2026-10-10",
+                    "signed_date": "2026-10-10",
+                    "standstill_end": "2026-10-10"
+                  },
+                  "notes": "text",
+                  "owner_id": 1,
+                  "owner_name": "owner_name",
+                  "rationale": "rationale",
+                  "status": "long_list",
+                  "status_changed_at": "2026-10-10T09:00:00Z",
+                  "status_changed_by_name": "status_changed_by_name",
+                  "type": "type"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit a buyer, or record the client's Approved / Excluded",
+        "tags": [
+          "Buyers"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/buyers/{buyer_id}/nda": {
+      "put": {
+        "description": "The buyer moves to NDA signed only when the signed date is set.",
+        "operationId": "put_nda_api_v1_mandates__mandate_id__buyers__buyer_id__nda_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "buyer_id",
+            "required": true,
+            "schema": {
+              "title": "Buyer Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "agreed_date": "2026-10-10",
+                "document_url": "https://vdr.example.com/falcon",
+                "markup_received_date": "2026-10-10",
+                "non_solicit_end": "2026-10-10",
+                "sent_date": "2026-10-10",
+                "signed_date": "2026-10-10",
+                "standstill_end": "2026-10-10"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/NdaUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "agreed_date": "2026-10-10",
+                  "document_url": "text",
+                  "markup_received_date": "2026-10-10",
+                  "non_solicit_end": "2026-10-10",
+                  "sent_date": "2026-10-10",
+                  "signed_date": "2026-10-10",
+                  "standstill_end": "2026-10-10"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/NdaRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Log the NDA's dates and link",
+        "tags": [
+          "Buyers"
         ]
       }
     },

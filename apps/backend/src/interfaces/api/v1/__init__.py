@@ -12,6 +12,9 @@ from ....modules.api_access.routes import clients_router as api_clients_router
 from ....modules.api_access.routes import oauth_router
 from ....modules.api_access.routes import tokens_router as api_tokens_router
 from ....modules.audit.routes import router as audit_router
+from ....modules.buyer.routes import companies_router as buyer_companies_router
+from ....modules.buyer.routes import contacts_router as buyer_contacts_router
+from ....modules.buyer.routes import router as buyers_router
 from ....modules.company.routes import router as companies_router
 from ....modules.compliance.routes import reviews_router as conflict_reviews_router
 from ....modules.compliance.routes import router as compliance_router
@@ -36,6 +39,9 @@ router.include_router(contacts_router, prefix="/contacts")
 router.include_router(picklists_router, prefix="/picklists")
 router.include_router(mandates_router, prefix="/mandates")
 router.include_router(compliance_router, prefix="/mandates")
+router.include_router(buyers_router, prefix="/mandates")
+router.include_router(buyer_companies_router, prefix="/companies")
+router.include_router(buyer_contacts_router, prefix="/contacts")
 router.include_router(conflict_reviews_router, prefix="/conflict-reviews")
 router.include_router(criteria_router, prefix="/stage-criteria")
 router.include_router(notifications_router, prefix="/notifications")

@@ -16,7 +16,7 @@ from src.interfaces.main import app
 from src.modules.mandate.policy import ReadGrant
 from src.modules.mandate.policy import served_routes as served_routes_of
 from src.modules.role.permissions import RoleName
-from tests.integration.crm.deal_helpers import build_world, create_mandate
+from tests.integration.crm.deal_helpers import build_world, create_mandate, seed_buyers
 
 pytestmark = pytest.mark.asyncio
 
@@ -148,6 +148,34 @@ ENDPOINTS: list[Endpoint] = [
         hidden_from_unstaffed(member=FORBIDDEN, lead=FORBIDDEN, compliance=422),
         body=lambda ctx: {"reason": "Cleared"},
     ),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/buyers", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/buyers/suggestions", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/buyers/export", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/buyers",
+        hidden_from_unstaffed(member=OK, lead=OK),
+        body=lambda ctx: {"items": [{"company_id": ctx["buyer_company_id"], "owner_id": ctx["lead_id"], "rationale": "Fit"}]},
+    ),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/buyers/status",
+        hidden_from_unstaffed(member=OK, lead=OK),
+        body=lambda ctx: {"buyer_ids": [ctx["buyer_id"]], "status": "declined", "decline_reason": "fit"},
+    ),
+    # Only the partner or a director records the client's approval.
+    Endpoint(
+        "PATCH",
+        "/api/v1/mandates/{mandate_id}/buyers/{buyer_id}",
+        hidden_from_unstaffed(member=FORBIDDEN, lead=OK),
+        body=lambda ctx: {"approval": "approved"},
+    ),
+    Endpoint(
+        "PUT",
+        "/api/v1/mandates/{mandate_id}/buyers/{buyer_id}/nda",
+        hidden_from_unstaffed(member=OK, lead=OK),
+        body=lambda ctx: {"sent_date": "2026-10-01"},
+    ),
 ]
 
 # Under /mandates but about no existing deal: creating one, and picking its lead partner.
@@ -233,9 +261,14 @@ async def test_deal_access_matrix(world, endpoint: Endpoint, persona: str):
         return (await lead.client.get(f"/api/v1/mandates/{mandate_id}", headers=lead.headers)).json()["version"]
 
     version = await current_version()
-    context = {"version": lambda: version, "spare_user_id": spare.id, "company_id": world.client_id}
+    buyers = await seed_buyers(world, lead, mandate_id)
+    context = {"version": lambda: version, "spare_user_id": spare.id, "company_id": world.client_id, **buyers}
     path = endpoint.path.format(
-        mandate_id=mandate_id, user_id=victim.id, link_id=link.json()["id"], milestone_id=milestone.json()["id"]
+        mandate_id=mandate_id,
+        user_id=victim.id,
+        link_id=link.json()["id"],
+        milestone_id=milestone.json()["id"],
+        buyer_id=buyers["buyer_id"],
     )
     caller = world.people[persona]
     response = await caller.client.request(

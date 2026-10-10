@@ -97,3 +97,21 @@ async def create_mandate(world: World, partner: Actor, client_id: int, **overrid
     )
     assert response.status_code == 201, response.text
     return response.json()
+
+
+async def seed_buyers(world: World, lead: Actor, mandate_id: int) -> dict:
+    """An approved buyer on the deal, and a second buyer company not yet listed: the matrix context for buyer routes."""
+    listed = await world.company("Listed Buyer Capital", "financial_investor")
+    spare = await world.company("Spare Buyer Capital", "financial_investor")
+    added = await lead.client.post(
+        f"/api/v1/mandates/{mandate_id}/buyers",
+        json={"items": [{"company_id": listed, "owner_id": lead.id, "rationale": "Fit"}]},
+        headers=lead.headers,
+    )
+    assert added.status_code == 200, added.text
+    buyer_id = added.json()["added"][0]
+    approved = await lead.client.patch(
+        f"/api/v1/mandates/{mandate_id}/buyers/{buyer_id}", json={"approval": "approved"}, headers=lead.headers
+    )
+    assert approved.status_code == 200, approved.text
+    return {"buyer_id": buyer_id, "buyer_company_id": spare, "lead_id": lead.id}

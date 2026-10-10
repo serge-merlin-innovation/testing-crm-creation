@@ -19,6 +19,8 @@ class EventKind(StrEnum):
     TASK_OVERDUE_DIGEST = "task.overdue_digest"
     MILESTONE_DUE = "milestone.due"
     CONFLICT_REVIEW_OVERDUE = "conflict.review_overdue"
+    BUYER_IDLE = "buyer.idle"
+    NDA_PENDING = "buyer.nda_pending"
 
 
 DEFAULT_CHANNEL = Channel.BOTH
