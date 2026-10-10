@@ -106,3 +106,23 @@ async def test_exclusion_list_is_for_the_client_deal_team_only(world):
         assert removed.status_code == 404
     rows = (await world.partner.client.get(url, headers=world.partner.headers)).json()
     assert [row["company_id"] for row in rows] == [rival]
+
+
+# Review S4 (ROLE-01 c2, AUTHZ-02 c8): staffing grants read whatever the role; edits still need the permission.
+@pytest.mark.parametrize("persona", ["admin", "compliance"])
+async def test_a_staffed_admin_or_compliance_user_reads_their_deal(world, persona):
+    member = getattr(world, persona)
+    mandate = await create_mandate(world, world.partner, world.client_id)
+    url = f"/api/v1/mandates/{mandate['id']}"
+    assert (await member.client.get(url, headers=member.headers)).status_code == 404
+    await staff(world, mandate["id"], member)
+
+    read = await member.client.get(url, headers=member.headers)
+    assert read.status_code == 200, read.text
+    assert read.json()["can_edit"] is False
+    listed = (await member.client.get("/api/v1/mandates/", headers=member.headers)).json()
+    assert "Falcon" in str(listed)
+    edit = await member.client.patch(
+        url, json={"version": read.json()["version"], "estimated_ev": "1"}, headers=member.headers
+    )
+    assert edit.status_code == 403, edit.text
