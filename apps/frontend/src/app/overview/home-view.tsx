@@ -37,7 +37,13 @@ export function HomeView({ records, messages }: { records: boolean; messages: Me
   const data = home.data;
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold">{messages["home.title"]}</h1>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <h1>{messages["home.title"]}</h1>
+          </CardTitle>
+        </CardHeader>
+      </Card>
       {data?.is_new ? (
         <Card>
           <CardHeader>
@@ -69,9 +75,11 @@ export function HomeView({ records, messages }: { records: boolean; messages: Me
             {data && data.deals_by_stage.length === 0 ? <p>{messages["home.none"]}</p> : null}
             {(data?.deals_by_stage ?? []).map((group) => (
               <section key={group.stage} aria-label={stageLabel(group.stage)} className="flex flex-col gap-1">
-                <h3 className="font-medium">
-                  {stageLabel(group.stage)} <Badge variant="outline">{group.deals.length}</Badge>
-                </h3>
+                <CardTitle>
+                  <h3>
+                    {stageLabel(group.stage)} <Badge variant="outline">{group.deals.length}</Badge>
+                  </h3>
+                </CardTitle>
                 {group.deals.map((deal) => (
                   <Link key={deal.id} href={`/deals/${deal.id}`}>
                     {deal.code_name}

@@ -62,7 +62,9 @@ export function WinLossView({ messages }: { messages: Messages }) {
             <dd>{data.average_duration_days ?? "-"}</dd>
           </dl>
         ) : null}
-        <h2 className="font-medium">{messages["winLoss.lostReasons"]}</h2>
+        <CardTitle>
+          <h2>{messages["winLoss.lostReasons"]}</h2>
+        </CardTitle>
         <ul className="list-disc pl-6">
           {(data?.top_lost_reasons ?? []).map((row) => (
             <li key={row.reason}>

@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -341,7 +341,7 @@ export function BuyersTab({ mandate, messages }: { mandate: Mandate; messages: M
                     </TableCell>
                     <TableCell>
                       <p>{buyer.name}</p>
-                      <p className="text-muted-foreground text-sm">{buyer.rationale}</p>
+                      <FieldDescription>{buyer.rationale}</FieldDescription>
                     </TableCell>
                     <TableCell>{buyer.owner_name}</TableCell>
                     <TableCell>
@@ -367,12 +367,12 @@ export function BuyersTab({ mandate, messages }: { mandate: Mandate; messages: M
                         {messages[STATUS_LABEL[buyer.status]]}
                         {buyer.decline_reason ? ` (${messages[DECLINE_LABEL[buyer.decline_reason]]})` : ""}
                       </p>
-                      <p className="text-muted-foreground text-sm">
+                      <FieldDescription>
                         {fillTemplate(messages["buyers.changed"], {
                           date: buyer.status_changed_at.slice(0, 10),
                           name: buyer.status_changed_by_name,
                         })}
-                      </p>
+                      </FieldDescription>
                     </TableCell>
                     <TableCell>
                       {link ? (
@@ -446,7 +446,11 @@ export function BuyersTab({ mandate, messages }: { mandate: Mandate; messages: M
               {messages["buyers.apply"]}
             </Button>
           </div>
-          {localBlock ? <p className="text-muted-foreground text-sm">{messages[localBlock]}</p> : null}
+          {localBlock ? (
+            <Alert>
+              <AlertDescription>{messages[localBlock]}</AlertDescription>
+            </Alert>
+          ) : null}
         </FieldGroup>
       ) : null}
       {error ? (

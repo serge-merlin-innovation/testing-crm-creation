@@ -6,7 +6,7 @@ import { LoginForm } from "@/app/login/login-form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { DEFAULT_AUTHENTICATED_PATH, LOGIN_PATH } from "@/lib/auth-routing";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -99,7 +99,7 @@ export function AcceptInvitationForm({ token, messages }: { token: string; messa
                     onChange={(event) => setConfirm(event.target.value)}
                   />
                 </Field>
-                <p className="text-muted-foreground text-sm">{messages["account.resetDescription"]}</p>
+                <FieldDescription>{messages["account.resetDescription"]}</FieldDescription>
                 {error ? (
                   <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>

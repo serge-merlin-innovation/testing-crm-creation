@@ -6,7 +6,7 @@ import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -110,16 +110,18 @@ export function OriginationView({ messages, canCreate }: { messages: Messages; c
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <p className="text-muted-foreground text-sm">
+          <CardDescription>
             {messages["origination.weighted"]}: {formatAmount(weightedEv(rows), languageOf(messages))}
-          </p>
+          </CardDescription>
           {rows.length === 0 ? <p>{messages["origination.empty"]}</p> : null}
           <div className="grid gap-4 md:grid-cols-4">
             {OPPORTUNITY_STAGES.map((stage) => (
               <section key={stage} aria-label={messages[stageLabelKey(stage)]} className="flex flex-col gap-2">
-                <h2 className="text-sm font-medium">
-                  {messages[stageLabelKey(stage)]} <Badge variant="secondary">{columns[stage].length}</Badge>
-                </h2>
+                <CardTitle>
+                  <h2>
+                    {messages[stageLabelKey(stage)]} <Badge variant="secondary">{columns[stage].length}</Badge>
+                  </h2>
+                </CardTitle>
                 <Table>
                   <TableHeader>
                     <TableRow>

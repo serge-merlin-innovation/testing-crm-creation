@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { fieldErrors, readDetail } from "@/lib/deals";
@@ -578,7 +578,7 @@ function FeeDraftCard({
                 <AlertDescription>{errors.form}</AlertDescription>
               </Alert>
             ) : null}
-            {saved ? <p className="text-muted-foreground text-sm">{messages["origination.draftSaved"]}</p> : null}
+            {saved ? <FieldDescription>{messages["origination.draftSaved"]}</FieldDescription> : null}
             {canEdit ? <Button type="submit">{messages["origination.saveFeeDraft"]}</Button> : null}
           </FieldGroup>
         </form>

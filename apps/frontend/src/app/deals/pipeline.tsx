@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -205,9 +205,11 @@ export function Pipeline({ messages, search }: { messages: Messages; search: str
                   drop(stage, Number(event.dataTransfer.getData("text/plain")));
                 }}
               >
-                <h2 className="text-sm font-medium">
-                  {stageLabel(stage)} <Badge variant="outline">{columns[stage]?.length ?? 0}</Badge>
-                </h2>
+                <CardTitle>
+                  <h2>
+                    {stageLabel(stage)} <Badge variant="outline">{columns[stage]?.length ?? 0}</Badge>
+                  </h2>
+                </CardTitle>
                 {(columns[stage] ?? []).map((deal) => (
                   <Card
                     key={deal.id}
@@ -225,7 +227,9 @@ export function Pipeline({ messages, search }: { messages: Messages; search: str
                         </Button>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="text-muted-foreground text-xs">{deal.lead_partner_name}</CardContent>
+                    <CardContent>
+                      <CardDescription>{deal.lead_partner_name}</CardDescription>
+                    </CardContent>
                   </Card>
                 ))}
               </section>
