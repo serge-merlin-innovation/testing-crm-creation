@@ -12,6 +12,7 @@ from sqlalchemy.orm import aliased
 
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import CompanyNotFoundError, DealForbiddenError, ValidationError
+from ..common.spreadsheet import safe_row
 from ..company.models import Company
 from ..compliance.service import ConflictService
 from ..contact.models import Contact
@@ -629,11 +630,13 @@ class BuyerService:
         sheet = book.active
         assert sheet is not None
         sheet.title = "Buyers"
-        sheet.append(["Buyer", "Type", "Rationale", "Contact"])
+        sheet.append(safe_row(["Buyer", "Type", "Rationale", "Contact"]))
         for row in grid["buyers"]:
             if row["approval"] == Approval.EXCLUDED.value:
                 continue
-            sheet.append([row["name"], TYPE_LABELS.get(row["type"], row["type"]), row["rationale"], row["contact_name"] or ""])
+            sheet.append(
+                safe_row([row["name"], TYPE_LABELS.get(row["type"], row["type"]), row["rationale"], row["contact_name"] or ""])
+            )
         self.audit.record(
             db,
             context,

@@ -6,6 +6,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..common.spreadsheet import safe_dict
 from ..role.models import Role
 from ..security.models import UserSecurity
 from ..user.models import User
@@ -64,11 +65,13 @@ def to_csv(rows: list[dict[str, Any]]) -> str:
     writer.writeheader()
     for row in rows:
         writer.writerow(
-            {
-                **row,
-                "role": row["role_name"],
-                "last_login_at": row["last_login_at"].isoformat() if row["last_login_at"] else "",
-                "dormant": "yes" if row["dormant"] else "no",
-            }
+            safe_dict(
+                {
+                    **row,
+                    "role": row["role_name"],
+                    "last_login_at": row["last_login_at"].isoformat() if row["last_login_at"] else "",
+                    "dormant": "yes" if row["dormant"] else "no",
+                }
+            )
         )
     return buffer.getvalue()

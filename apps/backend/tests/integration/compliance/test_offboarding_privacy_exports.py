@@ -415,3 +415,13 @@ async def test_every_export_logs_user_time_filter_and_row_count(world):
     assert entry.created_at == NOW
     assert entry.new_values["filter"] == {"q": "Bulk"}
     assert entry.new_values["rows"] == 3
+
+
+# Security review S12: a contact name that starts like a formula is quoted in the CSV.
+async def test_contact_export_quotes_formula_like_values(world):
+    await contact(world.partner, first="=HYPERLINK(evil)", last="@Attack")
+
+    body = (await world.partner.client.get("/api/v1/exports/contacts")).text
+
+    assert "'=HYPERLINK(evil)" in body
+    assert "'@Attack" in body

@@ -17,6 +17,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..audit.service import AuditContext, AuditService
+from ..common.spreadsheet import safe_row
 from ..fee.models import FeeTerms, Invoice
 from ..fee.schemas import FeeTermsValues, InvoiceType, LehmanTier, SuccessFeeKind
 from ..fee.service import net_fee
@@ -348,17 +349,21 @@ class ReportingService:
         sheet = book.active
         assert sheet is not None
         sheet.title = "Fee forecast"
-        sheet.append(["Month", "Retainers (EUR)", "Success fees (EUR)", "Forecast (EUR)", "Invoiced (EUR)", "Paid (EUR)"])
+        sheet.append(
+            safe_row(["Month", "Retainers (EUR)", "Success fees (EUR)", "Forecast (EUR)", "Invoiced (EUR)", "Paid (EUR)"])
+        )
         for row in forecast["months"]:
             sheet.append(
-                [
-                    row["month"],
-                    float(row["retainers"]),
-                    float(row["success_fees"]),
-                    float(row["forecast_total"]),
-                    float(row["actual_invoiced"]),
-                    float(row["actual_paid"]),
-                ]
+                safe_row(
+                    [
+                        row["month"],
+                        float(row["retainers"]),
+                        float(row["success_fees"]),
+                        float(row["forecast_total"]),
+                        float(row["actual_invoiced"]),
+                        float(row["actual_paid"]),
+                    ]
+                )
             )
         self.audit.record(
             db, context, "export", record_type="fee_terms", new_values={"kind": "fee_forecast", "rows": len(forecast["months"])}
