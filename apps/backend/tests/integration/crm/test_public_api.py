@@ -211,11 +211,21 @@ async def test_deal_access_matrix_holds_over_api_tokens(world, endpoint):
         json={"name": "Teaser", "planned_date": "2026-11-01"},
         headers=world.partner.headers,
     )
+    back_office = await world.actor("bo", RoleName.COMPLIANCE)
+    invoice = await back_office.client.post(
+        f"/api/v1/mandates/{mandate['id']}/invoices",
+        json={"type": "retainer", "amount": "5000", "sent_date": "2026-09-01"},
+        headers=back_office.headers,
+    )
     version = (await world.partner.client.get(f"/api/v1/mandates/{mandate['id']}", headers=world.partner.headers)).json()[
         "version"
     ]
     path = endpoint.path.format(
-        mandate_id=mandate["id"], user_id=world.analyst.id, link_id=link.json()["id"], milestone_id=milestone.json()["id"]
+        mandate_id=mandate["id"],
+        user_id=world.analyst.id,
+        link_id=link.json()["id"],
+        milestone_id=milestone.json()["id"],
+        invoice_id=invoice.json()["id"],
     )
     context = {"version": lambda: version, "spare_user_id": spare.id, "company_id": world.client_id}
 

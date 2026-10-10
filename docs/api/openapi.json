@@ -2253,6 +2253,230 @@
         "title": "ExportPreview",
         "type": "object"
       },
+      "FeeTermsRead": {
+        "properties": {
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "engaged": {
+            "title": "Engaged",
+            "type": "boolean"
+          },
+          "expected_fee": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Expected Fee",
+            "type": "string"
+          },
+          "final_fee": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Fee"
+          },
+          "lehman_tiers": {
+            "items": {
+              "$ref": "#/components/schemas/LehmanTier-Output"
+            },
+            "title": "Lehman Tiers",
+            "type": "array"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          },
+          "minimum_fee": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Minimum Fee",
+            "type": "string"
+          },
+          "retainer_monthly": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Retainer Monthly",
+            "type": "string"
+          },
+          "retainers_creditable": {
+            "title": "Retainers Creditable",
+            "type": "boolean"
+          },
+          "retainers_paid": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Retainers Paid",
+            "type": "string"
+          },
+          "success_fee_fixed": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Fee Fixed"
+          },
+          "success_fee_kind": {
+            "$ref": "#/components/schemas/SuccessFeeKind"
+          },
+          "success_fee_percent": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Fee Percent"
+          }
+        },
+        "required": [
+          "mandate_id",
+          "code_name",
+          "retainer_monthly",
+          "success_fee_kind",
+          "success_fee_percent",
+          "success_fee_fixed",
+          "minimum_fee",
+          "lehman_tiers",
+          "retainers_creditable",
+          "retainers_paid",
+          "expected_fee",
+          "final_fee",
+          "engaged",
+          "can_edit"
+        ],
+        "title": "FeeTermsRead",
+        "type": "object"
+      },
+      "FeeTermsValues": {
+        "properties": {
+          "amended_letter_url": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Amended engagement letter, required with the reason",
+            "title": "Amended Letter Url"
+          },
+          "change_reason": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required for a change after engagement",
+            "title": "Change Reason"
+          },
+          "lehman_tiers": {
+            "items": {
+              "$ref": "#/components/schemas/LehmanTier-Input"
+            },
+            "title": "Lehman Tiers",
+            "type": "array"
+          },
+          "minimum_fee": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,15}0*$)\\d{0,12}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "description": "EUR",
+            "title": "Minimum Fee"
+          },
+          "retainer_monthly": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,15}0*$)\\d{0,12}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "default": "0",
+            "description": "EUR",
+            "title": "Retainer Monthly"
+          },
+          "retainers_creditable": {
+            "default": false,
+            "title": "Retainers Creditable",
+            "type": "boolean"
+          },
+          "success_fee_fixed": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "minimum": 0.0,
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,15}0*$)\\d{0,12}\\.\\d{0,2}0*$)",
+                    "type": "string"
+                  }
+                ],
+                "description": "EUR"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Fee Fixed"
+          },
+          "success_fee_kind": {
+            "$ref": "#/components/schemas/SuccessFeeKind",
+            "default": "percent"
+          },
+          "success_fee_percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,7}0*$)\\d{0,3}\\.\\d{0,3}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Fee Percent"
+          }
+        },
+        "title": "FeeTermsValues",
+        "type": "object"
+      },
       "FigureRead": {
         "properties": {
           "eur_rate": {
@@ -3040,6 +3264,124 @@
         "title": "InvitationRead",
         "type": "object"
       },
+      "InvoiceCreate": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,12}|(?=[\\d.]{1,15}0*$)\\d{0,12}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "description": "EUR",
+            "title": "Amount"
+          },
+          "paid_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Date"
+          },
+          "sent_date": {
+            "format": "date",
+            "title": "Sent Date",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/InvoiceType"
+          }
+        },
+        "required": [
+          "type",
+          "amount",
+          "sent_date"
+        ],
+        "title": "InvoiceCreate",
+        "type": "object"
+      },
+      "InvoiceRead": {
+        "properties": {
+          "amount": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          },
+          "paid_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Date"
+          },
+          "sent_date": {
+            "format": "date",
+            "title": "Sent Date",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/InvoiceType"
+          }
+        },
+        "required": [
+          "id",
+          "mandate_id",
+          "type",
+          "amount",
+          "sent_date",
+          "paid_date"
+        ],
+        "title": "InvoiceRead",
+        "type": "object"
+      },
+      "InvoiceType": {
+        "enum": [
+          "retainer",
+          "success_fee"
+        ],
+        "title": "InvoiceType",
+        "type": "string"
+      },
+      "InvoiceUpdate": {
+        "properties": {
+          "paid_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Paid Date"
+          }
+        },
+        "title": "InvoiceUpdate",
+        "type": "object"
+      },
       "KycRead": {
         "properties": {
           "approved_at": {
@@ -3269,6 +3611,73 @@
           "released_at"
         ],
         "title": "LegalHoldRead",
+        "type": "object"
+      },
+      "LehmanTier-Input": {
+        "properties": {
+          "percent": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,7}0*$)\\d{0,3}\\.\\d{0,3}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Percent"
+          },
+          "up_to": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Upper EV bound in EUR thousands; null = no bound",
+            "title": "Up To"
+          }
+        },
+        "required": [
+          "percent"
+        ],
+        "title": "LehmanTier",
+        "type": "object"
+      },
+      "LehmanTier-Output": {
+        "properties": {
+          "percent": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,7}0*$)\\d{0,3}\\.\\d{0,3}0*$)",
+            "title": "Percent",
+            "type": "string"
+          },
+          "up_to": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Upper EV bound in EUR thousands; null = no bound",
+            "title": "Up To"
+          }
+        },
+        "required": [
+          "percent"
+        ],
+        "title": "LehmanTier",
         "type": "object"
       },
       "LoggingAddressRead": {
@@ -6081,6 +6490,15 @@
         ],
         "title": "StageMove",
         "type": "object"
+      },
+      "SuccessFeeKind": {
+        "enum": [
+          "percent",
+          "fixed",
+          "lehman"
+        ],
+        "title": "SuccessFeeKind",
+        "type": "string"
       },
       "TaskCreate": {
         "properties": {
@@ -10333,6 +10751,133 @@
         ]
       }
     },
+    "/api/v1/fees/": {
+      "get": {
+        "description": "Back-office sees every deal's fees. `min_expected_fee` (EUR) filters; it is offered only to fee readers.",
+        "operationId": "list_fees_api_v1_fees__get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "min_expected_fee",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Expected Fee"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "can_edit": true,
+                    "code_name": "code_name",
+                    "engaged": true,
+                    "expected_fee": "expected_fee",
+                    "final_fee": "text",
+                    "lehman_tiers": [
+                      {
+                        "percent": "percent",
+                        "up_to": null
+                      }
+                    ],
+                    "mandate_id": 1,
+                    "minimum_fee": "minimum_fee",
+                    "retainer_monthly": "retainer_monthly",
+                    "retainers_creditable": true,
+                    "retainers_paid": "retainers_paid",
+                    "success_fee_fixed": "text",
+                    "success_fee_kind": "percent",
+                    "success_fee_percent": "text"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FeeTermsRead"
+                  },
+                  "title": "Response List Fees Api V1 Fees  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fee terms of the deals I may read (fees.read)",
+        "tags": [
+          "Fees"
+        ]
+      }
+    },
+    "/api/v1/fees/export": {
+      "get": {
+        "operationId": "export_fees_api_v1_fees_export_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "min_expected_fee",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Expected Fee"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export fee terms as CSV (fees.read); the export is audited",
+        "tags": [
+          "Fees"
+        ]
+      }
+    },
     "/api/v1/imports/": {
       "post": {
         "description": "Returns the file's columns, the fields to map them to, and a suggested mapping.",
@@ -10871,6 +11416,40 @@
           }
         },
         "summary": "Create a mandate under a code name",
+        "tags": [
+          "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/filters": {
+      "get": {
+        "description": "Fee filters appear only for roles that see fee fields (AUTHZ-06); they apply on GET /fees/.",
+        "operationId": "offered_filters_api_v1_mandates_filters_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "key": [
+                    "text"
+                  ]
+                },
+                "schema": {
+                  "additionalProperties": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "title": "Response Offered Filters Api V1 Mandates Filters Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "The deal filters offered to me",
         "tags": [
           "Mandates"
         ]
@@ -11445,6 +12024,162 @@
         ]
       }
     },
+    "/api/v1/mandates/{mandate_id}/fees": {
+      "get": {
+        "operationId": "get_fees_api_v1_mandates__mandate_id__fees_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "can_edit": true,
+                  "code_name": "code_name",
+                  "engaged": true,
+                  "expected_fee": "expected_fee",
+                  "final_fee": "text",
+                  "lehman_tiers": [
+                    {
+                      "percent": "percent",
+                      "up_to": "text"
+                    }
+                  ],
+                  "mandate_id": 1,
+                  "minimum_fee": "minimum_fee",
+                  "retainer_monthly": "retainer_monthly",
+                  "retainers_creditable": true,
+                  "retainers_paid": "retainers_paid",
+                  "success_fee_fixed": "text",
+                  "success_fee_kind": "percent",
+                  "success_fee_percent": "text"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/FeeTermsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Fee fields are hidden from your role"
+          },
+          "404": {
+            "description": "Not found, or a deal you may not read"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "A deal's fee terms and expected fee",
+        "tags": [
+          "Fees"
+        ]
+      },
+      "put": {
+        "description": "After the engagement letter is linked, a change needs `change_reason` and `amended_letter_url`.",
+        "operationId": "put_fees_api_v1_mandates__mandate_id__fees_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "amended_letter_url": "text",
+                "change_reason": "text",
+                "lehman_tiers": [
+                  {
+                    "percent": 25000.0,
+                    "up_to": 25000.0
+                  }
+                ],
+                "minimum_fee": "0",
+                "retainer_monthly": "0",
+                "retainers_creditable": false,
+                "success_fee_fixed": 25000.0,
+                "success_fee_kind": "percent",
+                "success_fee_percent": 25000.0
+              },
+              "schema": {
+                "$ref": "#/components/schemas/FeeTermsValues"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "can_edit": true,
+                  "code_name": "code_name",
+                  "engaged": true,
+                  "expected_fee": "expected_fee",
+                  "final_fee": "text",
+                  "lehman_tiers": [
+                    {
+                      "percent": "percent",
+                      "up_to": "text"
+                    }
+                  ],
+                  "mandate_id": 1,
+                  "minimum_fee": "minimum_fee",
+                  "retainer_monthly": "retainer_monthly",
+                  "retainers_creditable": true,
+                  "retainers_paid": "retainers_paid",
+                  "success_fee_fixed": "text",
+                  "success_fee_kind": "percent",
+                  "success_fee_percent": "text"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/FeeTermsRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Fee fields are hidden from your role"
+          },
+          "404": {
+            "description": "Not found, or a deal you may not read"
+          },
+          "422": {
+            "description": "Invalid terms, or a post-engagement change without reason or letter"
+          }
+        },
+        "summary": "Set a deal's fee terms (back-office, or a partner on the deal)",
+        "tags": [
+          "Fees"
+        ]
+      }
+    },
     "/api/v1/mandates/{mandate_id}/history": {
       "get": {
         "operationId": "get_history_api_v1_mandates__mandate_id__history_get",
@@ -11502,6 +12237,217 @@
         "summary": "Who changed what, when",
         "tags": [
           "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/invoices": {
+      "get": {
+        "operationId": "list_invoices_api_v1_mandates__mandate_id__invoices_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "amount": "amount",
+                    "id": 1,
+                    "mandate_id": 1,
+                    "paid_date": "2026-10-10",
+                    "sent_date": "2026-10-10",
+                    "type": "retainer"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InvoiceRead"
+                  },
+                  "title": "Response List Invoices Api V1 Mandates  Mandate Id  Invoices Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Fee fields are hidden from your role"
+          },
+          "404": {
+            "description": "Not found, or a deal you may not read"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Invoices on a deal",
+        "tags": [
+          "Fees"
+        ]
+      },
+      "post": {
+        "description": "A success-fee invoice completes the invoice task raised at closing.",
+        "operationId": "record_invoice_api_v1_mandates__mandate_id__invoices_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "amount": 25000.0,
+                "paid_date": "2026-10-10",
+                "sent_date": "2026-10-10",
+                "type": "retainer"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "amount": "amount",
+                  "id": 1,
+                  "mandate_id": 1,
+                  "paid_date": "2026-10-10",
+                  "sent_date": "2026-10-10",
+                  "type": "retainer"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Fee fields are hidden from your role"
+          },
+          "404": {
+            "description": "Not found, or a deal you may not read"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record an invoice (back-office)",
+        "tags": [
+          "Fees"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/invoices/{invoice_id}": {
+      "patch": {
+        "operationId": "update_invoice_api_v1_mandates__mandate_id__invoices__invoice_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invoice_id",
+            "required": true,
+            "schema": {
+              "title": "Invoice Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "paid_date": "2026-10-10"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "amount": "amount",
+                  "id": 1,
+                  "mandate_id": 1,
+                  "paid_date": "2026-10-10",
+                  "sent_date": "2026-10-10",
+                  "type": "retainer"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Fee fields are hidden from your role"
+          },
+          "404": {
+            "description": "Not found, or a deal you may not read"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mark an invoice paid (back-office)",
+        "tags": [
+          "Fees"
         ]
       }
     },
@@ -12234,6 +13180,88 @@
           }
         },
         "summary": "Move a deal to another stage",
+        "tags": [
+          "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/summary": {
+      "get": {
+        "description": "Compliance / back-office read it on deals they are not staffed on (ROLE-01). Never editable here.",
+        "operationId": "get_mandate_summary_api_v1_mandates__mandate_id__summary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "can_close": true,
+                  "can_edit": true,
+                  "can_manage_team": true,
+                  "can_reopen": true,
+                  "client_id": 1,
+                  "client_name": "client_name",
+                  "closed_at": "2026-10-10T09:00:00Z",
+                  "code_name": "code_name",
+                  "conflict_status": "clear",
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "estimated_ev": "estimated_ev",
+                  "frozen": true,
+                  "id": 1,
+                  "lead_partner_id": 1,
+                  "lead_partner_name": "lead_partner_name",
+                  "outcome": {
+                    "abort_reason": "text",
+                    "buyer": "text",
+                    "closing_date": "2026-10-10",
+                    "ev_ebitda": "text",
+                    "final_ev": "text",
+                    "tombstone_allowed": true
+                  },
+                  "sector_id": 1,
+                  "stage": "conflict_review",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
+                  "stages": [
+                    "conflict_review"
+                  ],
+                  "target_id": 1,
+                  "target_name": "text",
+                  "type": "sell_side",
+                  "updated_at": "2026-10-10T09:00:00Z",
+                  "version": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MandateRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not on the deal team (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read-only deal summary (team, or back-office on any deal)",
         "tags": [
           "Mandates"
         ]

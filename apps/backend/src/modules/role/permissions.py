@@ -14,6 +14,9 @@ class Permission(StrEnum):
     DEALS_READ_SUMMARY = "deals.read_summary"
     DEAL_TEAM_ASSIGN = "deal_team.assign"
     BUYERS_MANAGE = "buyers.manage"
+    # Field visibility (AUTHZ-06): without fees.read no fee, retainer, success-fee or invoice field
+    # reaches the caller through any route, export or filter.
+    FEES_READ = "fees.read"
     FEES_EDIT_OWN_DEALS = "fees.edit_own_deals"
     FEES_EDIT = "fees.edit"
     INVOICES_MANAGE = "invoices.manage"
@@ -48,6 +51,7 @@ DEFAULT_ROLES: dict[RoleName, tuple[str, frozenset[Permission]]] = {
             {
                 Permission.MANDATES_CREATE,
                 Permission.CONFLICTS_APPROVE,
+                Permission.FEES_READ,
                 Permission.FEES_EDIT_OWN_DEALS,
                 Permission.DASHBOARD_FIRM,
                 Permission.DASHBOARD_AGGREGATED,
@@ -78,6 +82,7 @@ DEFAULT_ROLES: dict[RoleName, tuple[str, frozenset[Permission]]] = {
             {
                 Permission.CONFLICTS_REGISTER,
                 Permission.KYC_MANAGE,
+                Permission.FEES_READ,
                 Permission.FEES_EDIT,
                 Permission.INVOICES_MANAGE,
                 Permission.DEALS_READ_SUMMARY,

@@ -21,6 +21,8 @@ from ....modules.data_export.routes import router as data_export_router
 from ....modules.data_import.routes import router as imports_router
 from ....modules.email_logging.routes import interactions_router
 from ....modules.email_logging.routes import router as email_logging_router
+from ....modules.fee.routes import deal_router as deal_fees_router
+from ....modules.fee.routes import router as fees_router
 from ....modules.mandate.routes import criteria_router
 from ....modules.mandate.routes import router as mandates_router
 from ....modules.merge.routes import router as merges_router
@@ -46,6 +48,8 @@ router.include_router(companies_router, prefix="/companies")
 router.include_router(contacts_router, prefix="/contacts")
 router.include_router(picklists_router, prefix="/picklists")
 router.include_router(mandates_router, prefix="/mandates")
+router.include_router(deal_fees_router, prefix="/mandates")
+router.include_router(fees_router, prefix="/fees")
 router.include_router(compliance_router, prefix="/mandates")
 router.include_router(conflict_reviews_router, prefix="/conflict-reviews")
 router.include_router(criteria_router, prefix="/stage-criteria")

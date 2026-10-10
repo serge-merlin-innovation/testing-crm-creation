@@ -144,3 +144,7 @@ class UndoWindowClosedError(ResourceExistsError):
 
 class ImportNotFoundError(ResourceNotFoundError):
     pass
+
+
+class InvoiceNotFoundError(ResourceNotFoundError):
+    pass

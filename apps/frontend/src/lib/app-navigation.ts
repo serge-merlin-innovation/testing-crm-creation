@@ -12,6 +12,7 @@ const PRIMARY_NAVIGATION: NavigationItem[] = [
   { label: "nav.overview", href: "/overview" },
   { label: "nav.search", href: "/search" },
   { label: "nav.deals", href: "/deals", requires: "deals.read_staffed" },
+  { label: "nav.fees", href: "/fees" },
   { label: "nav.companies", href: "/companies" },
   { label: "nav.contacts", href: "/contacts" },
   { label: "nav.analytics", href: "/analytics" },

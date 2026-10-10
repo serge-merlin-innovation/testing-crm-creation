@@ -20,6 +20,7 @@ from .exceptions import (
     GroupLoopError,
     ImportNotFoundError,
     InsufficientCreditsError,
+    InvoiceNotFoundError,
     LastAdminError,
     LastLeadPartnerError,
     MandateExistsError,
@@ -96,6 +97,7 @@ EXCEPTION_MAPPING: dict[type[DomainError], Callable[[str], HTTPException]] = {
         status_code=409, detail="This merge was done more than 30 days ago, or was already undone."
     ),
     ImportNotFoundError: lambda message: NotFoundException(detail="Import not found."),
+    InvoiceNotFoundError: lambda message: NotFoundException(detail="Invoice not found."),
     RestoreWindowClosedError: lambda message: HTTPException(
         status_code=409, detail="This activity was deleted more than 30 days ago and can no longer be restored."
     ),

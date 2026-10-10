@@ -43,6 +43,7 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/privacy": { kind: "authenticated" },
   "/exports": { kind: "authenticated" },
   "/stage-criteria": { kind: "permission", permission: "settings.manage" },
+  "/fees": { kind: "permission", permission: "fees.read" },
   "/conflict-reviews": { kind: "permission", permission: "conflicts.register" },
 };
 
