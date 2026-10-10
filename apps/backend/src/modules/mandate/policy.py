@@ -302,3 +302,7 @@ SummaryGrant = Annotated[DealGrant, Depends(_summary_dependency)]
 ComplianceGrant = Annotated[DealGrant, deal_access(DealAction.COMPLIANCE)]
 ExportGrant = Annotated[DealGrant, deal_access(DealAction.EXPORT)]
 ComplianceReadGrant = Annotated[DealGrant, deal_access(DealAction.COMPLIANCE_READ)]
+
+
+async def visible_deal_ids(db: AsyncSession, user: dict[str, Any], now: datetime) -> list[int]:
+    return list(await DealPolicy(now).visible_mandate_ids(db, user))

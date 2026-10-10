@@ -1,4 +1,5 @@
-"""Which audit rows a reader may see (ROLE-01 c2, AUTHZ-02, AUTHZ-06).
+"""Which audit rows a reader may see (ROLE-01 c2, AUTHZ-02, AUTHZ-06). Registered with the audit slice
+from interfaces/main.py, so audit, which every slice writes to, depends on no deal slice.
 
 Deal rows carry deal content in their values, so they follow the deal wall: a reader sees the rows of
 deals and opportunities they may read, fee rows only with fees.read, and compliance sees every row.
@@ -9,12 +10,12 @@ from typing import Any
 from sqlalchemy import String, and_, cast, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..audit.models import AuditEntry
 from ..mandate.policy import DealPolicy
-from ..origination.models import Opportunity
-from ..origination.service import visible as visible_opportunities
 from ..role.authorization import has_permission, is_compliance
 from ..role.permissions import Permission
-from .models import AuditEntry
+from .models import Opportunity
+from .service import visible as visible_opportunities
 
 MANDATE_RECORDS = ("mandate",)
 FEE_RECORDS = ("fee_terms",)
