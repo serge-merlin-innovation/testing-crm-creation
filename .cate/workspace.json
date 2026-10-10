@@ -1,0 +1,116 @@
+{
+  "version": 1,
+  "name": "Projects",
+  "color": "",
+  "dockState": {
+    "zones": {
+      "left": {
+        "position": "left",
+        "visible": false,
+        "size": 260,
+        "layout": null
+      },
+      "right": {
+        "position": "right",
+        "visible": false,
+        "size": 260,
+        "layout": null
+      },
+      "bottom": {
+        "position": "bottom",
+        "visible": false,
+        "size": 240,
+        "layout": null
+      },
+      "center": {
+        "position": "center",
+        "visible": true,
+        "size": 0,
+        "layout": {
+          "type": "tabs",
+          "id": "aa313754-3e58-404d-b969-a658868a5889",
+          "panelIds": [
+            "18e45745-5195-4e8e-b774-6b7b2ca2d2ad",
+            "b0081ada-7bf1-46ae-8c34-51c4790d87a5"
+          ],
+          "activeIndex": 0
+        }
+      }
+    }
+  },
+  "panels": {
+    "465d83d5-e28f-4159-b37b-ae006fb40212": {
+      "type": "terminal",
+      "title": "Terminal 2"
+    },
+    "18f9cfd9-cbab-4584-b738-18df3564962f": {
+      "type": "terminal",
+      "title": "Terminal 1"
+    },
+    "18e45745-5195-4e8e-b774-6b7b2ca2d2ad": {
+      "type": "canvas",
+      "title": "Canvas"
+    },
+    "b0081ada-7bf1-46ae-8c34-51c4790d87a5": {
+      "type": "editor",
+      "title": "SKILL.md",
+      "filePath": ".jcode/skills/diagnosing-bugs/SKILL.md"
+    }
+  },
+  "canvases": {
+    "18e45745-5195-4e8e-b774-6b7b2ca2d2ad": {
+      "id": "18e45745-5195-4e8e-b774-6b7b2ca2d2ad",
+      "canvasNodes": {
+        "7e2f6bc5-0c66-44c6-bc26-ffdc6fb8703e": {
+          "id": "7e2f6bc5-0c66-44c6-bc26-ffdc6fb8703e",
+          "origin": {
+            "x": 885.3053534487397,
+            "y": 104.15537795452715
+          },
+          "size": {
+            "width": 978.3987041987004,
+            "height": 851.1982722649341
+          },
+          "zOrder": 23,
+          "creationIndex": 4,
+          "animationState": "idle",
+          "dockLayout": {
+            "type": "tabs",
+            "id": "df6d030a-522e-4464-b062-ea6e8a65da7c",
+            "panelIds": [
+              "465d83d5-e28f-4159-b37b-ae006fb40212"
+            ],
+            "activeIndex": 0
+          }
+        },
+        "60ca03ba-3da2-4bcd-8e43-2487ff0fe121": {
+          "id": "60ca03ba-3da2-4bcd-8e43-2487ff0fe121",
+          "origin": {
+            "x": -95.11881058795123,
+            "y": 104.15537795452717
+          },
+          "size": {
+            "width": 978.3987041987004,
+            "height": 851.1982722649341
+          },
+          "zOrder": 22,
+          "creationIndex": 5,
+          "animationState": "idle",
+          "dockLayout": {
+            "type": "tabs",
+            "id": "dd28f2a6-55bd-421e-9fc5-c3e3e9e9c303",
+            "panelIds": [
+              "18f9cfd9-cbab-4584-b738-18df3564962f"
+            ],
+            "activeIndex": 0
+          }
+        }
+      },
+      "zoomLevel": 0.7037770235681154,
+      "viewportOffset": {
+        "x": -83.3448305510035,
+        "y": 114.67094485408194
+      }
+    }
+  }
+}

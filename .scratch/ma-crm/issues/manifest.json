@@ -1,0 +1,177 @@
+[
+  {
+    "key": 1,
+    "title": "Foundation: email-only login, one role per user, permission matrix and append-only audit log",
+    "blocked": [],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/01.md"
+  },
+  {
+    "key": 2,
+    "title": "Two-factor login, lockout and suspicious-login alerts",
+    "blocked": [
+      1
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/02.md"
+  },
+  {
+    "key": 3,
+    "title": "Session timeout, logout everywhere and mobile access",
+    "blocked": [
+      2
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/03.md"
+  },
+  {
+    "key": 4,
+    "title": "User onboarding by invitation, password policy and password reset",
+    "blocked": [
+      2
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/04.md"
+  },
+  {
+    "key": 5,
+    "title": "Companies, contacts and reference data",
+    "blocked": [
+      1
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/05.md"
+  },
+  {
+    "key": 6,
+    "title": "Mandates with code names, deal team and the Chinese wall",
+    "blocked": [
+      1,
+      5
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/06.md"
+  },
+  {
+    "key": 7,
+    "title": "Activities, private notes, tasks and notification preferences",
+    "blocked": [
+      6
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/07.md"
+  },
+  {
+    "key": 8,
+    "title": "Pipeline board, configurable stage gates, milestones and closing",
+    "blocked": [
+      6,
+      7
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/08.md"
+  },
+  {
+    "key": 9,
+    "title": "Conflict check on new mandates and KYC / engagement letter gate",
+    "blocked": [
+      8
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/09.md"
+  },
+  {
+    "key": 10,
+    "title": "Fees, field-level restrictions and invoices",
+    "blocked": [
+      8,
+      7
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/10.md"
+  },
+  {
+    "key": 11,
+    "title": "Wall-crossing requests, delegation, break-glass and quarterly access review",
+    "blocked": [
+      9,
+      7
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/11.md"
+  },
+  {
+    "key": 12,
+    "title": "Origination pipeline: opportunities, pitches and win/lose",
+    "blocked": [
+      9,
+      10
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/12.md"
+  },
+  {
+    "key": 13,
+    "title": "Investor profiles, buyer long list, buyer status grid and NDA tracking",
+    "blocked": [
+      8,
+      9
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/13.md"
+  },
+  {
+    "key": 14,
+    "title": "Offers and bid comparison, templates, process letters, funnel and client report",
+    "blocked": [
+      13,
+      10
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/14.md"
+  },
+  {
+    "key": 15,
+    "title": "Email logging by BCC/forward and private calendar feed",
+    "blocked": [
+      8,
+      7
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/15.md"
+  },
+  {
+    "key": 16,
+    "title": "Global search, relationship holders, merge duplicates and Excel import",
+    "blocked": [
+      7
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/16.md"
+  },
+  {
+    "key": 17,
+    "title": "Home page, firm pipeline dashboard, fee forecast and win/loss report",
+    "blocked": [
+      10,
+      12
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/17.md"
+  },
+  {
+    "key": 18,
+    "title": "Public API with personal tokens and OAuth client credentials",
+    "blocked": [
+      6
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/18.md"
+  },
+  {
+    "key": 19,
+    "title": "Offboarding with ownership hand-over, GDPR rights and export controls",
+    "blocked": [
+      4,
+      7,
+      18
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/19.md"
+  },
+  {
+    "key": 20,
+    "title": "Production readiness: languages, accessibility, security, performance and availability",
+    "blocked": [
+      3,
+      11,
+      14,
+      15,
+      16,
+      17,
+      19
+    ],
+    "file": "/Users/serge/Projects/testing-crm-creation/.scratch/ma-crm/issues/20.md"
+  }
+]
