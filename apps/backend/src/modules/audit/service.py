@@ -75,6 +75,7 @@ class AuditService:
         record_type: str | None = None,
         record_id: str | None = None,
         action: str | None = None,
+        scope: Any = None,
         offset: int = 0,
         limit: int = 50,
     ) -> dict[str, Any]:
@@ -87,6 +88,8 @@ class AuditService:
             conditions.append(AuditEntry.record_id == record_id)
         if action is not None:
             conditions.append(AuditEntry.action == action)
+        if scope is not None:
+            conditions.append(scope)
 
         total = (await db.execute(select(func.count()).select_from(AuditEntry).where(*conditions))).scalar_one()
         rows = (
