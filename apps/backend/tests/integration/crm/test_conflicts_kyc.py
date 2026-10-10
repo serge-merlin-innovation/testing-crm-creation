@@ -116,9 +116,15 @@ async def test_closed_deals_count_for_24_months(world):
 
     assert (await decide(world.compliance, recent["id"], "reject")).status_code == 200
 
+    # Falcon was rejected, so aborted, 40 days ago: it still counts. Heron closed 740 days ago: it does not.
     set_clock(FrozenClock(NOW + timedelta(days=740)))
     stale = await create_mandate(world, world.partner, world.client_id, code_name="Osprey")
-    assert stale["conflict_status"] == "clear"
+    assert stale["conflict_status"] == "review"
+    assert [hit["other_code_name"] for hit in (await conflicts(world, stale["id"])).json()] == ["Falcon"]
+
+    set_clock(FrozenClock(NOW + timedelta(days=700 + 740)))
+    later = await create_mandate(world, world.partner, world.client_id, code_name="Plover")
+    assert [hit["other_code_name"] for hit in (await conflicts(world, later["id"])).json()] == ["Osprey"]
 
 
 # AUTHZ-05 c2 + DEAL-01 c4: a hit keeps the deal in Conflict review, invisible to all but compliance and the creator;
@@ -215,11 +221,24 @@ async def test_unrelated_names_are_not_flagged(world):
     assert mandate["conflict_status"] == "clear"
 
 
-# AUTHZ-05 (decision 16): the same company as client of two mandates is a repeat client, not two sides.
-async def test_a_repeat_client_is_not_a_conflict(world):
+# AUTHZ-05 c1: a repeat client is a potential conflict that compliance reviews.
+async def test_a_repeat_client_is_flagged_for_review(world):
     await create_mandate(world, world.other, world.client_id, code_name="Heron")
     mandate = await create_mandate(world, world.partner, world.client_id, code_name="Falcon")
-    assert mandate["conflict_status"] == "clear"
+    assert mandate["conflict_status"] == "review"
+    hits = (await conflicts(world, mandate["id"])).json()
+    assert [(h["role"], h["other_role"], h["other_code_name"]) for h in hits] == [("client", "client", "Heron")]
+
+
+# AUTHZ-05 c1: the same counterparty in two processes is a potential conflict that compliance reviews.
+async def test_the_same_counterparty_in_two_processes_is_flagged_for_review(world):
+    bidder = await company(world, "Quasar Capital")
+    seller = await company(world, "Northwind Trading")
+    await create_mandate(world, world.other, seller, code_name="Heron", counterparty_ids=[bidder])
+    mandate = await create_mandate(world, world.partner, world.target_id, code_name="Falcon", counterparty_ids=[bidder])
+    assert mandate["conflict_status"] == "review"
+    hits = (await conflicts(world, mandate["id"])).json()
+    assert [(h["role"], h["other_role"]) for h in hits] == [("counterparty", "counterparty")]
 
 
 # AUTHZ-05 c5: after 5 working days undecided, the lead partner and compliance are reminded, once.

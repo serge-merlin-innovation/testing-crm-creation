@@ -48,7 +48,9 @@ async def post(actor, path: str, body: dict):
 
 async def deal(world, code: str, lead=None, mandate_type: str = "sell_side", ev: str = "25000") -> int:
     lead = lead or world.partner
-    mandate = await create_mandate(world, lead, world.client_id, code_name=code, type=mandate_type, estimated_ev=ev)
+    # Each deal its own client: a shared client would be a potential conflict and hide the deal (AUTHZ-05 c1).
+    client_id = await world.company(code[::-1].capitalize())
+    mandate = await create_mandate(world, lead, client_id, code_name=code, type=mandate_type, estimated_ev=ev)
     return mandate["id"]
 
 

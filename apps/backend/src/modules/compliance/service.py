@@ -52,11 +52,6 @@ def _blank(text: str | None) -> bool:
     return text is None or not text.strip()
 
 
-def is_conflict(role: str, other_role: str) -> bool:
-    """Same company, same side twice (a repeat client, a bidder in two processes) is not advising both sides."""
-    return not (role == other_role and role in ("client", "counterparty"))
-
-
 async def _users_with(db: AsyncSession, permission: Permission) -> list[User]:
     users = (await db.execute(select(User).where(User.is_deleted.is_(False), User.role_id.is_not(None)))).scalars()
     return [user for user in users if permission.value in (user.permissions or [])]
@@ -98,7 +93,8 @@ class ConflictService:
     async def find_hits(
         self, db: AsyncSession, mandate: Mandate, parties: list[tuple[int, str]], now: datetime
     ) -> list[ConflictHit]:
-        """Hits for `parties` [(company_id, role on this deal)] against active and recently closed deals."""
+        """Hits for `parties` [(company_id, role on this deal)] against active deals and those closed or aborted
+        in the window. Every shared company is a potential conflict, a repeat client included: compliance decides."""
         others = self._parties()
         hits: dict[tuple[int, int], ConflictHit] = {}
         for company_id, role in parties:
@@ -110,7 +106,6 @@ class ConflictService:
                     .join(Company, Company.id == others.c.company_id)
                     .where(
                         Mandate.id != mandate.id,
-                        Mandate.conflict_status != ConflictStatus.REJECTED.value,
                         or_(Mandate.closed_at.is_(None), Mandate.closed_at >= now - HISTORY_WINDOW),
                         or_(
                             Company.id == member.id,
@@ -124,7 +119,7 @@ class ConflictService:
                 )
                 for other_mandate_id, matched_id, other_role in (await db.execute(matches)).all():
                     key = (company_id, other_mandate_id)
-                    if key in hits or not is_conflict(role, other_role):
+                    if key in hits:
                         continue
                     hits[key] = ConflictHit(
                         review_id=0,
