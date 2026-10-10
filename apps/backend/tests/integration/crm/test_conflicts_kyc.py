@@ -133,6 +133,9 @@ async def test_a_conflict_hides_the_deal_from_everyone_but_compliance_and_the_cr
         assert (await get(outsider, f"/api/v1/mandates/{mid}")).status_code == 404
         listed = await get(outsider, "/api/v1/mandates/?q=falcon")
         assert "Falcon" not in listed.text
+        searched = await get(outsider, "/api/v1/search/?q=falcon")
+        assert searched.status_code == 200, searched.text
+        assert searched.json()["deals"] == []
 
     mine = await get(world.partner, "/api/v1/mandates/?q=falcon")
     assert [deal["code_name"] for deal in mine.json()] == ["Falcon"]
@@ -142,6 +145,9 @@ async def test_a_conflict_hides_the_deal_from_everyone_but_compliance_and_the_cr
 
     listed = await get(world.compliance, "/api/v1/mandates/?q=falcon")
     assert [deal["code_name"] for deal in listed.json()] == ["Falcon"]
+    for insider in (world.partner, world.compliance):
+        searched = await get(insider, "/api/v1/search/?q=falcon")
+        assert [deal["code_name"] for deal in searched.json()["deals"]] == ["Falcon"]
     reviews = (await get(world.compliance, "/api/v1/conflict-reviews/")).json()
     assert [review["code_name"] for review in reviews] == ["Falcon"]
     assert [hit["other_code_name"] for hit in (await conflicts(world, mid)).json()] == ["Heron"]
