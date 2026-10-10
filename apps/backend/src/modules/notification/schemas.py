@@ -19,6 +19,11 @@ class EventKind(StrEnum):
     TASK_OVERDUE_DIGEST = "task.overdue_digest"
     MILESTONE_DUE = "milestone.due"
     CONFLICT_REVIEW_OVERDUE = "conflict.review_overdue"
+    ACCESS_REQUESTED = "access.requested"
+    ACCESS_APPROVED = "access.approved"
+    ACCESS_REJECTED = "access.rejected"
+    BREAK_GLASS = "access.break_glass"
+    ACCESS_REVIEW_OVERDUE = "access.review_overdue"
 
 
 DEFAULT_CHANNEL = Channel.BOTH

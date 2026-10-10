@@ -21,7 +21,7 @@ from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..common.exceptions import DealClosedError, DealForbiddenError, DealFrozenError, DealNotFoundError
 from ..role.authorization import has_permission
 from ..role.permissions import Permission
-from .models import DealTeamMember, Mandate
+from .models import DealTeamMember, EmergencyAccess, Mandate
 from .schemas import ConflictStatus
 
 
@@ -34,6 +34,8 @@ class DealAction(StrEnum):
     COMPLIANCE = "compliance"
     # Reading compliance data: compliance, or anyone who may read the deal.
     COMPLIANCE_READ = "compliance_read"
+    # Taking deal data out of the CRM: staffed members only, never break-glass (AUTHZ-08 c3).
+    EXPORT = "export"
 
 
 ACTION_PERMISSION = {
@@ -55,6 +57,8 @@ class DealGrant:
     # None for compliance reading a long-closed deal they were never staffed on.
     membership: DealTeamMember | None
     user: dict[str, Any]
+    # Admin break-glass (AUTHZ-08): read-only, no exports.
+    emergency: bool = False
 
     @property
     def is_closed(self) -> bool:
@@ -111,6 +115,11 @@ class DealPolicy:
     def _compliance_window(self) -> Any:
         return and_(Mandate.closed_at.is_not(None), Mandate.closed_at <= self.now - COMPLIANCE_AFTER_CLOSE)
 
+    def _emergency(self, user: dict[str, Any]) -> Any:
+        return select(EmergencyAccess.mandate_id).where(
+            EmergencyAccess.user_id == user["id"], EmergencyAccess.expires_at > self.now
+        )
+
     def _not_hidden_from(self, user: dict[str, Any]) -> Any:
         return or_(~in_conflict_hiding(), Mandate.created_by == user["id"])
 
@@ -124,6 +133,7 @@ class DealPolicy:
             conditions.append(self._compliance_window())
         if is_compliance(user):
             conditions.append(in_conflict_hiding())
+        conditions.append(Mandate.id.in_(self._emergency(user)))
         if not conditions:
             return query.where(Mandate.id.is_(None))
         return query.where(or_(*conditions))
@@ -151,6 +161,10 @@ class DealPolicy:
             return DealGrant(mandate=mandate, membership=row[1] if row else None, user=user)
         if row is not None and has_permission(user, Permission.DEALS_READ_STAFFED):
             grant = DealGrant(mandate=row[0], membership=row[1], user=user)
+        elif (emergency := await self._emergency_grant(db, user, mandate_id)) is not None:
+            if action != DealAction.READ:
+                raise DealForbiddenError("Break-glass access is read-only")
+            return emergency
         else:
             grant = await self._compliance_grant(db, user, mandate_id)
         if action in (DealAction.READ, DealAction.COMPLIANCE_READ):
@@ -158,7 +172,11 @@ class DealPolicy:
         if action == DealAction.COMPLIANCE:
             raise DealForbiddenError("Only compliance does this")
         if grant.membership is None:
+            if action == DealAction.EXPORT:
+                raise DealForbiddenError("Only the deal team exports a deal")
             raise DealForbiddenError("Compliance reads a closed deal, never edits it")
+        if action == DealAction.EXPORT:
+            return grant
         if action == DealAction.REOPEN:
             if not grant.is_closer:
                 raise DealForbiddenError("Only a partner on the deal reopens it")
@@ -173,6 +191,12 @@ class DealPolicy:
         elif action in ACTION_PERMISSION and not has_permission(user, ACTION_PERMISSION[action]):
             raise DealForbiddenError(f"Missing {ACTION_PERMISSION[action].value}")
         return grant
+
+    async def _emergency_grant(self, db: AsyncSession, user: dict[str, Any], mandate_id: int) -> DealGrant | None:
+        mandate = (
+            await db.execute(select(Mandate).where(Mandate.id == mandate_id, Mandate.id.in_(self._emergency(user))))
+        ).scalar_one_or_none()
+        return None if mandate is None else DealGrant(mandate=mandate, membership=None, user=user, emergency=True)
 
     async def _compliance_grant(self, db: AsyncSession, user: dict[str, Any], mandate_id: int) -> DealGrant:
         windows = []
@@ -248,4 +272,5 @@ EditGrant = Annotated[DealGrant, deal_access(DealAction.EDIT)]
 TeamGrant = Annotated[DealGrant, deal_access(DealAction.MANAGE_TEAM)]
 ReopenGrant = Annotated[DealGrant, deal_access(DealAction.REOPEN)]
 ComplianceGrant = Annotated[DealGrant, deal_access(DealAction.COMPLIANCE)]
+ExportGrant = Annotated[DealGrant, deal_access(DealAction.EXPORT)]
 ComplianceReadGrant = Annotated[DealGrant, deal_access(DealAction.COMPLIANCE_READ)]

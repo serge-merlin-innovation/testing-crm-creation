@@ -14,6 +14,7 @@ from ..infrastructure.security import validate_production_security
 from ..interfaces.api import router
 from ..interfaces.api.openapi import build_openapi
 from ..interfaces.api.versions import version_for
+from ..modules.access.jobs import register_jobs as register_access_jobs
 from ..modules.api_access.dependencies import resolve_bearer
 from ..modules.compliance.jobs import register_jobs as register_compliance_jobs
 from ..modules.compliance.service import install as install_compliance
@@ -28,6 +29,7 @@ settings = get_settings()
 register_task_jobs()
 register_deal_jobs()
 register_compliance_jobs()
+register_access_jobs()
 install_compliance()
 set_bearer_resolver(resolve_bearer)
 

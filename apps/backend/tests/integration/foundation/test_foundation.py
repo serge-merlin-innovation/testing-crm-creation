@@ -14,7 +14,7 @@ from src.modules.audit.models import AuditEntry
 from src.modules.role.models import Role
 from src.modules.role.permissions import DEFAULT_ROLES, Permission, RoleName
 
-from .helpers import login, make_user, role_id
+from .helpers import login, make_user, role_id, step_up
 
 pytestmark = pytest.mark.asyncio
 
@@ -212,7 +212,7 @@ async def test_role_change_applies_next_request_and_is_audited(client: AsyncClie
     response = await client.patch(
         f"/api/v1/users/{ana['id']}/role",
         json={"role_id": await role_id(seeded_db, RoleName.DIRECTOR)},
-        headers=csrf,
+        headers=step_up("admin@firm.be", csrf),
     )
 
     assert response.status_code == 200
@@ -231,7 +231,7 @@ async def test_removing_the_last_admin_is_blocked(client: AsyncClient, seeded_db
     demote = await client.patch(
         f"/api/v1/users/{admin['id']}/role",
         json={"role_id": await role_id(seeded_db, RoleName.PARTNER)},
-        headers=csrf,
+        headers=step_up("admin@firm.be", csrf),
     )
     deactivate = await client.delete(f"/api/v1/users/{admin['id']}", headers=csrf)
 
@@ -250,7 +250,7 @@ async def test_a_second_admin_can_be_demoted(client: AsyncClient, seeded_db: Asy
     response = await client.patch(
         f"/api/v1/users/{other['id']}/role",
         json={"role_id": await role_id(seeded_db, RoleName.PARTNER)},
-        headers=csrf,
+        headers=step_up("admin@firm.be", csrf),
     )
 
     assert response.status_code == 200
@@ -287,7 +287,9 @@ async def test_audit_entries_carry_user_time_ip_record_and_values(client: AsyncC
     hire_id = created.json()["id"]
     await client.patch(f"/api/v1/users/{hire_id}", json={"name": "New Name"}, headers=csrf)
     await client.patch(
-        f"/api/v1/users/{hire_id}/role", json={"role_id": await role_id(seeded_db, RoleName.ANALYST)}, headers=csrf
+        f"/api/v1/users/{hire_id}/role",
+        json={"role_id": await role_id(seeded_db, RoleName.ANALYST)},
+        headers=step_up("admin@firm.be", csrf),
     )
     await client.delete(f"/api/v1/users/{hire_id}", headers=csrf)
 

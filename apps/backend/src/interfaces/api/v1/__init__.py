@@ -3,6 +3,9 @@ from fastapi import APIRouter
 from ....infrastructure.auth.routes import router as auth_router
 from ....infrastructure.config.settings import EnvironmentOption, settings
 from ....infrastructure.testing import router as testing_router
+from ....modules.access.routes import break_glass_router, delegations_router
+from ....modules.access.routes import requests_router as access_requests_router
+from ....modules.access.routes import reviews_router as access_reviews_router
 from ....modules.account.routes import auth_router as account_auth_router
 from ....modules.account.routes import policy_router as password_policy_router
 from ....modules.account.routes import users_router as account_users_router
@@ -43,6 +46,10 @@ router.include_router(activities_router, prefix="/activities")
 router.include_router(notes_router, prefix="/notes")
 router.include_router(timeline_router, prefix="/timeline")
 router.include_router(tasks_router, prefix="/tasks")
+router.include_router(access_requests_router, prefix="/access-requests")
+router.include_router(delegations_router, prefix="/delegations")
+router.include_router(break_glass_router, prefix="/break-glass")
+router.include_router(access_reviews_router, prefix="/access-reviews")
 router.include_router(auth_router, prefix="/auth")
 router.include_router(account_auth_router, prefix="/auth")
 router.include_router(security_router)

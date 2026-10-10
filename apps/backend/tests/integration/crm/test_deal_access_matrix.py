@@ -63,6 +63,7 @@ ENDPOINTS: list[Endpoint] = [
         body=lambda ctx: {"version": ctx["version"](), "estimated_ev": "26000"},
     ),
     Endpoint("GET", "/api/v1/mandates/{mandate_id}/history", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/export", hidden_from_unstaffed(member=OK, lead=OK)),
     Endpoint("GET", "/api/v1/mandates/{mandate_id}/team", hidden_from_unstaffed(member=OK, lead=OK)),
     Endpoint("GET", "/api/v1/mandates/{mandate_id}/team/candidates", hidden_from_unstaffed(member=FORBIDDEN, lead=OK)),
     Endpoint(

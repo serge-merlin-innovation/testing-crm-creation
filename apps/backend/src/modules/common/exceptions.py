@@ -128,3 +128,11 @@ class RestoreWindowClosedError(ResourceExistsError):
 
 class TaskNotFoundError(ResourceNotFoundError):
     pass
+
+
+class AccessRequestNotFoundError(ResourceNotFoundError):
+    pass
+
+
+class AccessReviewNotFoundError(ResourceNotFoundError):
+    pass

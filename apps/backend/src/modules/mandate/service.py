@@ -1,3 +1,5 @@
+import csv
+import io
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 from decimal import Decimal
@@ -432,6 +434,24 @@ class MandateService:
         ]
         return {"can_manage": grant.can_manage_team, "members": members}
 
+    async def export_csv(self, db: AsyncSession, grant: DealGrant, now: datetime, context: AuditContext) -> str:
+        deal = await self.read(db, grant.mandate, grant)
+        team = await self.team(db, grant, now)
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow(["field", "value"])
+        for field in ("code_name", "type", "stage", "lead_partner_name", "client_name", "target_name", "estimated_ev"):
+            writer.writerow([field, deal[field] if deal[field] is not None else ""])
+        writer.writerow([])
+        writer.writerow(["team_member", "role", "expires_at"])
+        for member in team["members"]:
+            writer.writerow([member["name"], member["role"], member["expires_at"] or ""])
+        self.audit.record(
+            db, context, "export", record_type="mandate", record_id=grant.mandate.id, new_values={"format": "csv"}
+        )
+        await db.commit()
+        return buffer.getvalue()
+
     async def candidates(self, db: AsyncSession, grant: DealGrant) -> list[dict[str, Any]]:
         staffed = select(DealTeamMember.user_id).where(DealTeamMember.mandate_id == grant.mandate.id)
         users = (
@@ -478,9 +498,32 @@ class MandateService:
         team = await self.team(db, grant, now)
         return next(member for member in team["members"] if member["user_id"] == user.id)
 
-    async def remove_member(self, db: AsyncSession, grant: DealGrant, user_id: int, context: AuditContext) -> None:
+    async def staff_until(
+        self, db: AsyncSession, mandate: Mandate, user_id: int, role: TeamRole, expires_at: datetime, context: AuditContext
+    ) -> None:
+        """Brings a user over the wall until `expires_at` (AUTHZ-04). The caller commits."""
         assert context.user_id is not None
-        mandate = grant.mandate
+        user = await self._user(db, user_id)
+        existing = (
+            await db.execute(
+                select(DealTeamMember).where(DealTeamMember.mandate_id == mandate.id, DealTeamMember.user_id == user.id)
+            )
+        ).scalar_one_or_none()
+        now = context.clock.now()
+        if existing is not None:
+            if existing.expires_at is None or existing.expires_at > now:
+                raise TeamMemberExistsError("Already on the team")
+            await db.delete(existing)
+            await db.flush()
+        await self._staff(db, mandate, user, role, context.user_id, now, expires_at, context)
+
+    async def remove_member(self, db: AsyncSession, grant: DealGrant, user_id: int, context: AuditContext) -> None:
+        await self.remove_from(db, grant.mandate, user_id, context)
+        await db.commit()
+
+    async def remove_from(self, db: AsyncSession, mandate: Mandate, user_id: int, context: AuditContext) -> None:
+        """Takes a user off the wall. The caller commits."""
+        assert context.user_id is not None
         member = (
             await db.execute(
                 select(DealTeamMember).where(DealTeamMember.mandate_id == mandate.id, DealTeamMember.user_id == user_id)
@@ -522,7 +565,6 @@ class MandateService:
             record_id=mandate.id,
             old_values={"user_id": user_id, "role": member.role},
         )
-        await db.commit()
 
     async def wall_crossings(self, db: AsyncSession, mandate_id: int) -> list[dict[str, Any]]:
         subject, actor = aliased(User), aliased(User)
