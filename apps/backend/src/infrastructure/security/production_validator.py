@@ -1,6 +1,7 @@
 import re
 
 from ..config.settings import EnvironmentOption, Settings
+from ..geoip import GeoIp, UnknownGeoIp
 from ..logging import get_logger
 
 logger = get_logger()
@@ -262,3 +263,20 @@ class ProductionSecurityValidator:
 def validate_production_security(settings: Settings) -> None:
     validator = ProductionSecurityValidator(settings)
     validator.validate_production_security()
+
+
+def validate_geoip(settings: Settings, geoip: GeoIp) -> None:
+    """New-country alerts (AUTH-06 c1) need a geo-IP adapter. A named provider that is not wired is
+    a broken deploy; no provider at all is the accepted decision 7, said loudly at every start."""
+    if settings.ENVIRONMENT != EnvironmentOption.PRODUCTION:
+        return
+    if settings.GEOIP_PROVIDER and isinstance(geoip, UnknownGeoIp):
+        raise ProductionSecurityError(
+            f"GEOIP_PROVIDER is '{settings.GEOIP_PROVIDER}' but no geo-IP adapter is wired: every country "
+            "would read as unknown and new-country login alerts would never fire."
+        )
+    if not settings.GEOIP_PROVIDER:
+        logger.warning(
+            "PRODUCTION SECURITY WARNING: no GEOIP_PROVIDER, so new-country login alerts are OFF (AUTH-06 c1, "
+            "decision 7). Only new-device alerts are sent."
+        )

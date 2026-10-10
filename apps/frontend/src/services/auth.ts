@@ -1,7 +1,15 @@
 import { apiFetch, clearApiCsrfToken } from "./api";
 import { readString, readStringArray } from "../lib/json-field";
 
-export class AuthenticationError extends Error {}
+export class AuthenticationError extends Error {
+  /** A service fault or an unreachable backend: the same submission may work a moment later. */
+  constructor(
+    message: string,
+    readonly retryable = false,
+  ) {
+    super(message);
+  }
+}
 
 const SERVER_ERROR = "Something went wrong. Please try again.";
 
@@ -58,12 +66,13 @@ async function postLoginStep(path: string, init: RequestInit): Promise<LoginStep
       ...init,
     });
   } catch {
-    throw new AuthenticationError("We could not reach the backend.");
+    throw new AuthenticationError("We could not reach the backend.", true);
   }
 
   if (!response.ok) {
     throw new AuthenticationError(
       await passwordRefusal(response, "Check your details and try again."),
+      response.status >= 500,
     );
   }
 

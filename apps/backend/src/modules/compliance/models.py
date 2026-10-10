@@ -27,6 +27,8 @@ class ConflictReview(Base):
     id: Mapped[int] = mapped_column(primary_key=True, init=False)
     mandate_id: Mapped[int] = mapped_column(ForeignKey("mandates.id", ondelete="CASCADE"), index=True)
     opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # The stage a running deal left when a later counterparty hit sent it back to Conflict review; clearing returns it there.
+    resume_stage: Mapped[str | None] = mapped_column(String(32), default=None)
     decision: Mapped[str | None] = mapped_column(String(16), default=None)
     reason: Mapped[str | None] = mapped_column(String(1000), default=None)
     decided_by: Mapped[int | None] = mapped_column(

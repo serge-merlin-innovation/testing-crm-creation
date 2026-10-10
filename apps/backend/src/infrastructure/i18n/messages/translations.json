@@ -775,6 +775,10 @@
   "fr": "Définissez votre mot de passe et l'authentification à deux facteurs dans les 72 heures :\n{0}/accept-invitation?token={1}\n\nLe lien ne fonctionne qu'une fois. S'il a expiré, demandez à votre administrateur de le renvoyer.",
   "nl": "Stel binnen 72 uur uw wachtwoord en tweestapsverificatie in:\n{0}/accept-invitation?token={1}\n\nDe link werkt één keer. Is hij verlopen, vraag dan uw beheerder hem opnieuw te sturen."
  },
+ "Sign in from the CRM's own login page.": {
+  "fr": "Connectez-vous depuis la page de connexion du CRM.",
+  "nl": "Meld u aan via de aanmeldpagina van het CRM."
+ },
  "Someone asked to join {0}. Open the request to review it.": {
   "fr": "Quelqu'un demande à rejoindre {0}. Ouvrez la demande pour l'examiner.",
   "nl": "Iemand vraagt toegang tot {0}. Open de aanvraag om ze te beoordelen."

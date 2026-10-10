@@ -360,6 +360,17 @@ async def test_role_change_and_mass_export_need_a_fresh_code(world):
     assert no_code.headers["X-Step-Up"] == "required"
     assert (export_without.status_code, export_with.status_code) == (401, 200)
 
+    for actor, export in (
+        (world.partner, "/api/v1/exports/contacts"),
+        (world.compliance, "/api/v1/fees/export"),
+        (world.compliance, "/api/v1/reports/fee-forecast/export"),
+    ):
+        refused = await actor.client.get(export, headers=actor.headers)
+        assert refused.status_code == 401, export
+        assert refused.headers["X-Step-Up"] == "required"
+        allowed = await actor.client.get(export, headers={**actor.headers, **step_up(actor)})
+        assert allowed.status_code == 200, (export, allowed.text)
+
 
 async def test_guessing_code_names_is_throttled_per_user(world):
     for attempt in range(REQUESTS_PER_HOUR):

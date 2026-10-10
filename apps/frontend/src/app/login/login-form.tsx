@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { login, submitSecondFactor, type LoginStep } from "@/services/auth";
+import { AuthenticationError, login, submitSecondFactor, type LoginStep } from "@/services/auth";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,6 +53,7 @@ export function LoginForm({
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [loginError, setLoginError] = useState("");
+  const [retryable, setRetryable] = useState(false);
 
   function advance(next: LoginStep) {
     if (next.step !== "done") {
@@ -71,11 +72,13 @@ export function LoginForm({
 
   async function run(action: () => Promise<LoginStep>) {
     setLoginError("");
+    setRetryable(false);
     setIsBusy(true);
 
     try {
       advance(await action());
     } catch (error) {
+      setRetryable(!(error instanceof AuthenticationError) || error.retryable);
       setLoginError(
         error instanceof Error ? error.message : messages["login.unreachable"],
       );
@@ -84,13 +87,17 @@ export function LoginForm({
     }
   }
 
-  function signIn(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function submitPassword() {
     void run(async () => {
       const next = await login(email, password);
       setPassword("");
       return next;
     });
+  }
+
+  function signIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    submitPassword();
   }
 
   function verify(event: FormEvent<HTMLFormElement>) {
@@ -264,6 +271,11 @@ export function LoginForm({
               <Button type="submit" disabled={isBusy}>
                 {isBusy ? messages["login.submitting"] : messages["login.submit"]}
               </Button>
+              {retryable ? (
+                <Button type="button" variant="outline" onClick={submitPassword} disabled={isBusy}>
+                  {messages["login.retry"]}
+                </Button>
+              ) : null}
               <Button asChild variant="link">
                 <Link href="/reset-password">{messages["account.forgotLink"]}</Link>
               </Button>

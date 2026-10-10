@@ -15991,6 +15991,22 @@
               ],
               "title": "Q"
             }
+          },
+          {
+            "in": "header",
+            "name": "X-Step-Up-Code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Step-Up-Code"
+            }
           }
         ],
         "responses": {
@@ -16178,6 +16194,22 @@
                 }
               ],
               "title": "Min Expected Fee"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Step-Up-Code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Step-Up-Code"
             }
           }
         ],
@@ -22840,9 +22872,37 @@
     "/api/v1/reports/fee-forecast/export": {
       "get": {
         "operationId": "fee_forecast_export_api_v1_reports_fee_forecast_export_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Step-Up-Code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Step-Up-Code"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "The fee forecast as an Excel workbook (fees.read); the export is audited",

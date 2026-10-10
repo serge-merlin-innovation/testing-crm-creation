@@ -1,7 +1,7 @@
 "use client";
 
 import { ScrollRegion } from "@/components/scroll-region";
-import { Button } from "@/components/ui/button";
+import { StepUpExport } from "@/components/step-up-export";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -25,9 +25,7 @@ export function ForecastView({ messages }: { messages: Messages }) {
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div>
-          <Button asChild variant="outline">
-            <a href={EXPORT_PATH} download>{messages["forecast.export"]}</a>
-          </Button>
+          <StepUpExport path={EXPORT_PATH} filename="fee-forecast.xlsx" label={messages["forecast.export"]} messages={messages} />
         </div>
         <ScrollRegion label={messages["a11y.scrollRegion"]}>
           <Table>

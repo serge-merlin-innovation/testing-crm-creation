@@ -1,11 +1,14 @@
+import logging
 from unittest.mock import Mock
 
 import pytest
 
 from src.infrastructure.config.settings import EnvironmentOption, Settings
+from src.infrastructure.geoip import StaticGeoIp, UnknownGeoIp
 from src.infrastructure.security.production_validator import (
     ProductionSecurityError,
     ProductionSecurityValidator,
+    validate_geoip,
     validate_production_security,
 )
 
@@ -205,3 +208,26 @@ class TestProductionSecurityValidator:
         with pytest.raises(ProductionSecurityError) as exc_info:
             ProductionSecurityValidator(settings).validate_production_security()
         assert "TOTP_ENCRYPTION_KEY" in str(exc_info.value)
+
+
+# AUTH-06 c1 (decision 7): new-country alerts need a geo-IP adapter.
+class TestGeoIpReadiness:
+    def settings(self, provider: str, environment=EnvironmentOption.PRODUCTION):
+        return Mock(spec=Settings, GEOIP_PROVIDER=provider, ENVIRONMENT=environment)
+
+    def test_a_configured_provider_without_its_adapter_fails_startup(self):
+        with pytest.raises(ProductionSecurityError, match="GEOIP_PROVIDER"):
+            validate_geoip(self.settings("maxmind"), UnknownGeoIp())
+
+    def test_a_configured_provider_with_an_adapter_passes(self):
+        validate_geoip(self.settings("maxmind"), StaticGeoIp({}))
+
+    def test_no_provider_warns_that_new_country_alerts_are_off(self, caplog):
+        with caplog.at_level(logging.WARNING):
+            validate_geoip(self.settings(""), UnknownGeoIp())
+        assert "new-country login alerts are OFF" in caplog.text
+
+    def test_outside_production_nothing_is_said(self, caplog):
+        with caplog.at_level(logging.WARNING):
+            validate_geoip(self.settings("", EnvironmentOption.DEVELOPMENT), UnknownGeoIp())
+        assert "new-country" not in caplog.text

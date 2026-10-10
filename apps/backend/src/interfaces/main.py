@@ -13,9 +13,11 @@ from ..infrastructure.clock import get_clock
 from ..infrastructure.config.settings import get_settings
 from ..infrastructure.database import session as database_session
 from ..infrastructure.dependencies import AsyncSessionDep
+from ..infrastructure.geoip import get_geoip
 from ..infrastructure.i18n.middleware import LocalizeErrorsMiddleware
 from ..infrastructure.jobs import job_runner
 from ..infrastructure.security import validate_production_security
+from ..infrastructure.security.production_validator import validate_geoip
 from ..interfaces.api import router
 from ..interfaces.api.openapi import build_openapi
 from ..interfaces.api.versions import version_for
@@ -64,6 +66,7 @@ if not settings.BREACH_CHECK_ENABLED:
 async def lifespan_with_security(app: FastAPI) -> AsyncGenerator[None, None]:
     if settings.PRODUCTION_SECURITY_VALIDATION_ENABLED:
         validate_production_security(settings)
+        validate_geoip(settings, get_geoip())
 
     default_lifespan = lifespan_factory(settings, create_tables_on_startup=settings.CREATE_TABLES_ON_STARTUP)
 

@@ -18,7 +18,7 @@ from ..role.authorization import has_permission, require_permission
 from ..role.permissions import Permission
 from ..session.dependencies import get_session_service
 from ..user.models import User
-from .dependencies import SecurityServiceDep
+from .dependencies import SameOriginDep, SecurityServiceDep
 from .schemas import (
     LoginCompleted,
     SecondFactorRequired,
@@ -67,6 +67,7 @@ async def _open_session(
 
 @router.post(
     "/auth/login",
+    dependencies=[SameOriginDep],
     response_model=SecondFactorRequired | LoginCompleted,
     summary="Log in with email and password, first step",
     description="Checks the password, then asks for the TOTP code (or enrolment) unless this device is trusted.",
@@ -129,6 +130,7 @@ async def login(
 
 @router.post(
     "/auth/login/second-factor",
+    dependencies=[SameOriginDep],
     response_model=LoginCompleted,
     summary="Log in, second step: the TOTP or a recovery code",
     responses={401: {"description": "Wrong code or expired challenge"}, 423: {"description": "The account is locked"}},

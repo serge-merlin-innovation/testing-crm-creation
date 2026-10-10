@@ -50,11 +50,6 @@ def add_working_days(start: datetime, days: int) -> datetime:
     return current
 
 
-def is_conflict(role: str, other_role: str) -> bool:
-    """Same company, same side twice (a repeat client, a bidder in two processes) is not advising both sides."""
-    return not (role == other_role and role in ("client", "counterparty"))
-
-
 class ConflictService:
     def __init__(self, notifications: NotificationService | None = None, audit: AuditService | None = None) -> None:
         self.notifications = notifications or NotificationService(get_email_sender())
@@ -91,7 +86,8 @@ class ConflictService:
     async def find_hits(
         self, db: AsyncSession, mandate: Mandate, parties: list[tuple[int, str]], now: datetime
     ) -> list[ConflictHit]:
-        """Hits for `parties` [(company_id, role on this deal)] against active and recently closed deals."""
+        """Hits for `parties` [(company_id, role on this deal)] against active deals and those closed or aborted
+        in the window. Every shared company is a potential conflict, a repeat client included: compliance decides."""
         others = self._parties()
         hits: dict[tuple[int, int], ConflictHit] = {}
         for company_id, role in parties:
@@ -103,7 +99,6 @@ class ConflictService:
                     .join(Company, Company.id == others.c.company_id)
                     .where(
                         Mandate.id != mandate.id,
-                        Mandate.conflict_status != ConflictStatus.REJECTED.value,
                         or_(Mandate.closed_at.is_(None), Mandate.closed_at >= now - HISTORY_WINDOW),
                         or_(
                             Company.id == member.id,
@@ -117,7 +112,7 @@ class ConflictService:
                 )
                 for other_mandate_id, matched_id, other_role in (await db.execute(matches)).all():
                     key = (company_id, other_mandate_id)
-                    if key in hits or not is_conflict(role, other_role):
+                    if key in hits:
                         continue
                     hits[key] = ConflictHit(
                         review_id=0,
@@ -137,6 +132,12 @@ class ConflictService:
     async def _open_review(self, db: AsyncSession, mandate: Mandate, hits: list[ConflictHit], context: AuditContext) -> None:
         now = context.clock.now()
         review = ConflictReview(mandate_id=mandate.id, opened_at=now)
+        if mandate.closed_at is None and mandate.stage != DealStage.CONFLICT_REVIEW.value:
+            review.resume_stage = mandate.stage
+            mandate.stage = DealStage.CONFLICT_REVIEW.value
+            mandate.stage_changed_at = now
+            mandate.updated_at = now
+            mandate.version += 1
         db.add(review)
         await db.flush()
         for hit in hits:
@@ -277,10 +278,11 @@ class ConflictService:
             review.decided_by = context.user_id
             review.decided_at = now
         old = {"conflict_status": mandate.conflict_status, "stage": mandate.stage}
+        resume = next((review.resume_stage for review in reviews if review.resume_stage), None)
         if values.decision == ConflictDecisionKind.CLEAR:
             mandate.conflict_status = ConflictStatus.CLEARED.value
             if mandate.stage == DealStage.CONFLICT_REVIEW.value:
-                mandate.stage = DealStage.PREPARATION.value
+                mandate.stage = resume or DealStage.PREPARATION.value
                 mandate.stage_changed_at = now
         else:
             mandate.conflict_status = ConflictStatus.REJECTED.value
