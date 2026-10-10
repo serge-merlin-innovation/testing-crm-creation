@@ -7,7 +7,6 @@ class Permission(StrEnum):
     SETTINGS_MANAGE = "settings.manage"
     AUDIT_READ = "audit.read"
     MANDATES_CREATE = "mandates.create"
-    CONFLICTS_APPROVE = "conflicts.approve"
     CONFLICTS_REGISTER = "conflicts.register"
     DEALS_READ_STAFFED = "deals.read_staffed"
     DEALS_EDIT_STAFFED = "deals.edit_staffed"
@@ -50,7 +49,6 @@ DEFAULT_ROLES: dict[RoleName, tuple[str, frozenset[Permission]]] = {
         frozenset(
             {
                 Permission.MANDATES_CREATE,
-                Permission.CONFLICTS_APPROVE,
                 Permission.FEES_READ,
                 Permission.FEES_EDIT_OWN_DEALS,
                 Permission.DASHBOARD_FIRM,
