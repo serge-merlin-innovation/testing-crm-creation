@@ -294,7 +294,7 @@ class ReportingService:
     # REP-03: fee forecast
 
     def _fee_scope(self, user: dict[str, Any], now: datetime, query: Any) -> Any:
-        # Back-office reads every deal's fees (decision 31); everyone else only the deals they read.
+        # Back-office reads every deal's fees (ROLE-01 c4, REP-03); everyone else only the deals they read.
         if has_permission(user, Permission.DEALS_READ_SUMMARY):
             return query.where(~in_conflict_hiding())
         return DealPolicy(now).visible(user, query)
