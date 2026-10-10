@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fieldErrors, readDetail } from "@/lib/deals";
-import type { MessageKey } from "@/lib/i18n/messages";
+import type { Language, MessageKey } from "@/lib/i18n/messages";
 import { sendJson, useApiData } from "@/lib/use-api";
+import { WhoKnows } from "./who-knows";
 
 type Messages = Record<MessageKey, string>;
 type Role = { function: string | null; company_id: number };
@@ -27,7 +28,7 @@ type Company = { id: number; name: string };
 
 const NO_COMPANY = "none";
 
-export function ContactsView({ messages }: { messages: Messages }) {
+export function ContactsView({ messages, language }: { messages: Messages; language: Language }) {
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
   const contacts = useApiData<Contact[]>(`/api/v1/contacts/?q=${encodeURIComponent(search)}`);
@@ -36,6 +37,7 @@ export function ContactsView({ messages }: { messages: Messages }) {
   const [companyId, setCompanyId] = useState(NO_COMPANY);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
+  const [selected, setSelected] = useState<Contact | null>(null);
 
   const companyName = (id: number | undefined) => companies.data?.find((company) => company.id === id)?.name ?? "";
 
@@ -120,6 +122,7 @@ export function ContactsView({ messages }: { messages: Messages }) {
                   <TableHead>{messages["contacts.company"]}</TableHead>
                   <TableHead>{messages["contacts.function"]}</TableHead>
                   <TableHead>{messages["search.knownBy"]}</TableHead>
+                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -136,6 +139,11 @@ export function ContactsView({ messages }: { messages: Messages }) {
                         .map((holder) => `${holder.name} (${holder.strength}/3)`)
                         .join(", ")}
                     </TableCell>
+                    <TableCell>
+                      <Button size="sm" variant="outline" onClick={() => setSelected(contact)}>
+                        {messages["contacts.relationships"]}
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -144,6 +152,16 @@ export function ContactsView({ messages }: { messages: Messages }) {
           {contacts.data?.length === 0 ? <p>{messages["common.empty"]}</p> : null}
         </CardContent>
       </Card>
+
+      {selected ? (
+        <WhoKnows
+          key={selected.id}
+          contactId={selected.id}
+          contactName={`${selected.first_name} ${selected.last_name}`}
+          messages={messages}
+          language={language}
+        />
+      ) : null}
 
       <Card>
         <CardHeader>
