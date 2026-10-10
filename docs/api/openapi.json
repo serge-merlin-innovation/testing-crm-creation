@@ -1348,14 +1348,16 @@
       "BuyerStatus": {
         "enum": [
           "long_list",
+          "client_approved",
           "contacted",
           "teaser_sent",
           "nda_sent",
           "nda_signed",
           "im_sent",
           "indicative_offer",
-          "management_meeting",
+          "data_room_access",
           "binding_offer",
+          "preferred_bidder",
           "declined"
         ],
         "title": "BuyerStatus",
@@ -10284,6 +10286,14 @@
         "title": "SuccessFeeKind",
         "type": "string"
       },
+      "SuggestStake": {
+        "enum": [
+          "majority",
+          "minority"
+        ],
+        "title": "SuggestStake",
+        "type": "string"
+      },
       "Suggestion": {
         "properties": {
           "company_id": {
@@ -17342,7 +17352,7 @@
     },
     "/api/v1/mandates/{mandate_id}/buyers/suggestions": {
       "get": {
-        "description": "Investor profiles ranked by fit with the target's sector, geography and size (BUY-01).",
+        "description": "Investor profiles ranked by fit with the target's sector, geography and size (BUY-01), optionally filtered by EV/EBITDA multiple and majority/minority stake (CO-04 c1).",
         "operationId": "get_suggestions_api_v1_mandates__mandate_id__buyers_suggestions_get",
         "parameters": [
           {
@@ -17352,6 +17362,47 @@
             "schema": {
               "title": "Mandate Id",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Only profiles whose EV/EBITDA range includes this multiple",
+            "in": "query",
+            "name": "ev_ebitda",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0.0,
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only profiles whose EV/EBITDA range includes this multiple",
+              "title": "Ev Ebitda"
+            }
+          },
+          {
+            "description": "Only profiles that take this stake (or both)",
+            "in": "query",
+            "name": "stake",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SuggestStake"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only profiles that take this stake (or both)",
+              "title": "Stake"
             }
           }
         ],

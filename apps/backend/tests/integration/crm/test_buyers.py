@@ -627,3 +627,25 @@ async def test_buy03_c5_an_activity_logged_on_the_buyer_resets_the_idle_clock(wo
 
     assert quiet == []
     assert len([mail for mail in world.emails.sent if "no activity" in mail.subject]) == 1
+
+
+async def test_co04_c1_ev_ebitda_and_stake_filter_suggest_buyers(world):
+    majority = await company(world, "Majority Partners")
+    await profile(world, majority)
+    minority = await company(world, "Minority Partners")
+    await profile(world, minority, stake="minority", ev_ebitda_min="10", ev_ebitda_max="14")
+    either = await company(world, "Flexible Partners")
+    await profile(world, either, stake="both", ev_ebitda_min="4", ev_ebitda_max="12")
+    mandate_id = await deal(world)
+    path = f"/api/v1/mandates/{mandate_id}/buyers/suggestions"
+
+    def ids(response):
+        assert response.status_code == 200, response.text
+        return sorted(row["company_id"] for row in response.json())
+
+    assert ids(await get(world.analyst, path)) == sorted([majority, minority, either])
+    assert ids(await get(world.analyst, path, stake="majority")) == sorted([majority, either])
+    assert ids(await get(world.analyst, path, stake="minority")) == sorted([minority, either])
+    assert ids(await get(world.analyst, path, ev_ebitda="11")) == sorted([minority, either])
+    assert ids(await get(world.analyst, path, ev_ebitda="6", stake="majority")) == sorted([majority, either])
+    assert (await get(world.analyst, path, stake="both")).status_code == 422

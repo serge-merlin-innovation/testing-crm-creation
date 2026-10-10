@@ -26,6 +26,8 @@ import {
   type BuyerStatus,
   type DeclineReason,
   type Suggestion,
+  type SuggestStakeFilter,
+  suggestionsPath,
 } from "@/lib/buyers";
 import { fillTemplate } from "@/lib/compliance";
 import { documentLinkProps, fieldErrors, readDetail, type Mandate } from "@/lib/deals";
@@ -53,9 +55,12 @@ function SuggestPanel({
   const [rationale, setRationale] = useState("");
   const [result, setResult] = useState<AddResult | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [evEbitda, setEvEbitda] = useState("");
+  const [stake, setStake] = useState<SuggestStakeFilter>("any");
 
   async function suggest() {
-    const response = await apiFetch(`/api/v1/mandates/${mandate.id}/buyers/suggestions`).catch(() => null);
+    const path = suggestionsPath(mandate.id, { evEbitda, stake });
+    const response = await apiFetch(path).catch(() => null);
     const rows = response?.ok ? ((await response.json()) as Suggestion[]) : [];
     setSuggestions(rows);
     setSelected([]);
@@ -81,11 +86,35 @@ function SuggestPanel({
 
   return (
     <section className="flex flex-col gap-3" aria-label={messages["buyers.suggest"]}>
-      <div className="flex gap-2">
+      <FieldGroup className="sm:flex-row sm:items-end">
+        <Field>
+          <FieldLabel htmlFor="suggest-ev-ebitda">{messages["buyers.suggestEvEbitda"]}</FieldLabel>
+          <Input
+            id="suggest-ev-ebitda"
+            type="number"
+            min="0"
+            step="0.1"
+            value={evEbitda}
+            onChange={(event) => setEvEbitda(event.target.value)}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="suggest-stake">{messages["investor.stake"]}</FieldLabel>
+          <Select value={stake} onValueChange={(value) => setStake(value as SuggestStakeFilter)}>
+            <SelectTrigger id="suggest-stake">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="any">{messages["buyers.suggestAnyStake"]}</SelectItem>
+              <SelectItem value="majority">{messages["investor.stake.majority"]}</SelectItem>
+              <SelectItem value="minority">{messages["investor.stake.minority"]}</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
         <Button type="button" variant="outline" onClick={() => void suggest()}>
           {messages["buyers.suggest"]}
         </Button>
-      </div>
+      </FieldGroup>
       {suggestions?.length === 0 ? <p>{messages["buyers.noSuggestions"]}</p> : null}
       {suggestions && suggestions.length > 0 ? (
         <>

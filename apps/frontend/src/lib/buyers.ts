@@ -101,3 +101,14 @@ export function blockedReason(buyer: Pick<Buyer, "approval" | "nda">, status: Bu
 export function toggle(selected: number[], id: number): number[] {
   return selected.includes(id) ? selected.filter((value) => value !== id) : [...selected, id];
 }
+
+export type SuggestStakeFilter = "any" | "majority" | "minority";
+
+/** Suggest buyers, narrowed by EV/EBITDA multiple and stake (CO-04 c1). */
+export function suggestionsPath(mandateId: number, filter: { evEbitda: string; stake: SuggestStakeFilter }): string {
+  const params = new URLSearchParams();
+  if (filter.evEbitda.trim()) params.set("ev_ebitda", filter.evEbitda.trim());
+  if (filter.stake !== "any") params.set("stake", filter.stake);
+  const query = params.toString();
+  return `/api/v1/mandates/${mandateId}/buyers/suggestions${query ? `?${query}` : ""}`;
+}

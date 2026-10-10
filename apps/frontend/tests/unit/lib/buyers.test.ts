@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BUYER_STATUSES, blockedReason, SETTABLE_STATUSES, toggle } from "@/lib/buyers";
+import { BUYER_STATUSES, blockedReason, SETTABLE_STATUSES, suggestionsPath, toggle } from "@/lib/buyers";
 
 const signed = { sent_date: "2026-10-01", signed_date: "2026-10-05" } as never;
 
@@ -55,5 +55,14 @@ describe("toggle", () => {
   it("adds and removes ids", () => {
     expect(toggle([1, 2], 3)).toEqual([1, 2, 3]);
     expect(toggle([1, 2], 1)).toEqual([2]);
+  });
+});
+
+describe("suggestionsPath", () => {
+  it("adds the EV/EBITDA and stake filters only when set", () => {
+    expect(suggestionsPath(7, { evEbitda: "", stake: "any" })).toBe("/api/v1/mandates/7/buyers/suggestions");
+    expect(suggestionsPath(7, { evEbitda: " 8.5 ", stake: "minority" })).toBe(
+      "/api/v1/mandates/7/buyers/suggestions?ev_ebitda=8.5&stake=minority",
+    );
   });
 });

@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from openpyxl import Workbook  # type: ignore[import-untyped]
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -34,7 +34,9 @@ from .schemas import (
     BuyerStatus,
     BuyerUpdate,
     NdaUpdate,
+    Stake,
     StatusChange,
+    SuggestStake,
     WarningReason,
 )
 
@@ -90,6 +92,16 @@ async def _is_ancestor(db: AsyncSession, ancestor_id: int, company_id: int) -> b
 
 def _blank(text: str | None) -> bool:
     return text is None or not text.strip()
+
+
+def _profile_filters(ev_ebitda: Decimal | None, stake: SuggestStake | None) -> list[Any]:
+    filters: list[Any] = []
+    if ev_ebitda is not None:
+        filters.append(or_(InvestorProfile.ev_ebitda_min.is_(None), InvestorProfile.ev_ebitda_min <= ev_ebitda))
+        filters.append(or_(InvestorProfile.ev_ebitda_max.is_(None), InvestorProfile.ev_ebitda_max >= ev_ebitda))
+    if stake is not None:
+        filters.append(InvestorProfile.stake.in_([stake.value, Stake.BOTH.value]))
+    return filters
 
 
 class InvestorProfileService:
@@ -311,7 +323,13 @@ class BuyerService:
 
     # Suggest and add (BUY-01)
 
-    async def suggestions(self, db: AsyncSession, grant: DealGrant) -> list[dict[str, Any]]:
+    async def suggestions(
+        self,
+        db: AsyncSession,
+        grant: DealGrant,
+        ev_ebitda: Decimal | None = None,
+        stake: SuggestStake | None = None,
+    ) -> list[dict[str, Any]]:
         """Companies with an investor profile, ranked by how many criteria fit the target's sector, geography and size."""
         mandate = grant.mandate
         subject = await db.get(Company, mandate.target_id or mandate.client_id)
@@ -327,6 +345,7 @@ class BuyerService:
                     InvestorProfile.criteria_updated_at.is_not(None),
                     Company.id.not_in(listed),
                     Company.id.not_in([cid for cid in (mandate.client_id, mandate.target_id) if cid is not None]),
+                    *_profile_filters(ev_ebitda, stake),
                 )
             )
         ).all()

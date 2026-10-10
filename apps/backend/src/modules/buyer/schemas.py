@@ -27,6 +27,11 @@ class BuyerStatus(StrEnum):
     DECLINED = "declined"
 
 
+class SuggestStake(StrEnum):
+    MAJORITY = "majority"
+    MINORITY = "minority"
+
+
 class Approval(StrEnum):
     PENDING = "pending"
     APPROVED = "approved"
