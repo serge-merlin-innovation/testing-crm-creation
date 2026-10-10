@@ -37,6 +37,8 @@ from ....modules.offboarding.routes import router as offboarding_router
 from ....modules.origination.routes import router as origination_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.privacy.routes import router as privacy_router
+from ....modules.process.routes import router as process_router
+from ....modules.process.routes import templates_router
 from ....modules.reporting.routes import deal_router as deal_forecast_router
 from ....modules.reporting.routes import router as reports_router
 from ....modules.role.authorization import RequireRecordAccess
@@ -66,6 +68,8 @@ router.include_router(deal_forecast_router, prefix="/mandates", dependencies=REC
 router.include_router(reports_router, prefix="/reports")
 router.include_router(compliance_router, prefix="/mandates", dependencies=RECORDS)
 router.include_router(buyers_router, prefix="/mandates", dependencies=RECORDS)
+router.include_router(process_router, prefix="/mandates", dependencies=RECORDS)
+router.include_router(templates_router, prefix="/templates", dependencies=RECORDS)
 router.include_router(buyer_companies_router, prefix="/companies", dependencies=RECORDS)
 router.include_router(buyer_contacts_router, prefix="/contacts", dependencies=RECORDS)
 router.include_router(conflict_reviews_router, prefix="/conflict-reviews", dependencies=RECORDS)

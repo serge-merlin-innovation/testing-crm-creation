@@ -27,6 +27,8 @@ class Company(Base, TimestampMixin):
     nace_code: Mapped[str | None] = mapped_column(String(16), default=None)
     address: Mapped[str | None] = mapped_column(String(400), default=None)
     register_source: Mapped[str | None] = mapped_column(String(16), default=None)
+    # The client's language: status reports to the client use it (REP-05 c2).
+    language: Mapped[str] = mapped_column(String(2), nullable=False, default="en", server_default="en")
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("companies.id", ondelete="SET NULL"), index=True, default=None)
 
 

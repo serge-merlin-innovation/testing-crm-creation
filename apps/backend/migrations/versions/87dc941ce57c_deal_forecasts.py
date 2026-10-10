@@ -1,7 +1,7 @@
 """deal forecasts
 
 Revision ID: 87dc941ce57c
-Revises: b32b7af0bfc9
+Revises: 846f5d7b5c39
 Create Date: 2026-10-10 14:24:48.967144
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "87dc941ce57c"
-down_revision: str | Sequence[str] | None = "b32b7af0bfc9"
+down_revision: str | Sequence[str] | None = "846f5d7b5c39"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

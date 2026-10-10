@@ -43,6 +43,7 @@ class ContactCreate(BaseModel):
     language: ContactLanguage = ContactLanguage.EN
     salutation: Annotated[str | None, Field(max_length=32)] = None
     do_not_contact: bool = False
+    marketing_opt_out: bool = False
     legal_basis: LegalBasis = LegalBasis.LEGITIMATE_INTEREST
     source: Annotated[str, Field(min_length=1, max_length=200, examples=["Met at M&A forum 2026"])]
     company_id: int | None = None
@@ -61,6 +62,7 @@ class ContactUpdate(BaseModel):
     language: ContactLanguage | None = None
     salutation: Annotated[str | None, Field(max_length=32)] = None
     do_not_contact: bool | None = None
+    marketing_opt_out: bool | None = None
     legal_basis: LegalBasis | None = None
     source: Annotated[str | None, Field(min_length=1, max_length=200)] = None
     # Changing the company closes the current role (kept as history) and opens a new one.
@@ -86,6 +88,7 @@ class ContactRead(BaseModel):
     language: ContactLanguage
     salutation: str | None
     do_not_contact: bool
+    marketing_opt_out: bool
     legal_basis: LegalBasis
     source: str
     current_role: EmploymentRead | None

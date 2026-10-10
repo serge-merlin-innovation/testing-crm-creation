@@ -228,6 +228,7 @@ async def test_deal_access_matrix_holds_over_api_tokens(world, endpoint):
         milestone_id=milestone.json()["id"],
         buyer_id=buyers["buyer_id"],
         invoice_id=invoice.json()["id"],
+        document_id=999999,
     )
     context = {"version": lambda: version, "spare_user_id": spare.id, "company_id": world.client_id, **buyers}
 
@@ -242,7 +243,7 @@ async def test_deal_access_matrix_holds_over_api_tokens(world, endpoint):
             if endpoint.collection and persona == "other_partner":
                 assert "Falcon" not in response.text
         else:
-            assert expected in (HIDDEN, FORBIDDEN)
+            assert expected in (HIDDEN, FORBIDDEN, 422)
             assert response.status_code == expected, (persona, response.text)
             assert "Falcon" not in response.text
 

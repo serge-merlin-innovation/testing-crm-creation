@@ -20,6 +20,7 @@ const PRIMARY_NAVIGATION: NavigationItem[] = [
   { label: "nav.users", href: "/users" },
   { label: "nav.permissions", href: "/permissions" },
   { label: "nav.picklists", href: "/picklists" },
+  { label: "nav.templates", href: "/templates" },
   { label: "nav.merge", href: "/merge" },
   { label: "nav.imports", href: "/imports" },
   { label: "nav.privacy", href: "/privacy", requires: "privacy.manage" },

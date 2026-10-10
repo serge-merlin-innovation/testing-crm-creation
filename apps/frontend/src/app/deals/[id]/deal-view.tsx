@@ -30,6 +30,7 @@ import { BuyersTab } from "./buyers-tab";
 import { ComplianceTab } from "./compliance-tab";
 import { FeesTab } from "./fees-tab";
 import { ClosingTab, MilestonesTab } from "./pipeline-tabs";
+import { ActivitiesTasksTab, FunnelPanel, LettersTab, OffersTab } from "./process-tabs";
 
 type Messages = Record<MessageKey, string>;
 type Member = {
@@ -462,6 +463,10 @@ export function DealView({
                 <TabsTrigger value="milestones">{messages["milestones.title"]}</TabsTrigger>
                 <TabsTrigger value="closing">{messages["closing.title"]}</TabsTrigger>
                 <TabsTrigger value="buyers">{messages["buyers.title"]}</TabsTrigger>
+                <TabsTrigger value="offers">{messages["offers.title"]}</TabsTrigger>
+                <TabsTrigger value="funnel">{messages["funnel.title"]}</TabsTrigger>
+                <TabsTrigger value="letters">{messages["letters.tab"]}</TabsTrigger>
+                <TabsTrigger value="activities">{messages["deal.activitiesTasks"]}</TabsTrigger>
               </>
             )}
             <TabsTrigger value="compliance">{messages["compliance.title"]}</TabsTrigger>
@@ -487,6 +492,18 @@ export function DealView({
               </TabsContent>
               <TabsContent value="buyers">
                 <BuyersTab mandate={mandate} messages={messages} />
+              </TabsContent>
+              <TabsContent value="offers">
+                <OffersTab mandate={mandate} messages={messages} />
+              </TabsContent>
+              <TabsContent value="funnel">
+                <FunnelPanel mandate={mandate} messages={messages} />
+              </TabsContent>
+              <TabsContent value="letters">
+                <LettersTab mandate={mandate} messages={messages} />
+              </TabsContent>
+              <TabsContent value="activities">
+                <ActivitiesTasksTab mandate={mandate} messages={messages} />
               </TabsContent>
             </>
           )}

@@ -26,6 +26,7 @@ from ..mandate.models import Mandate
 from ..mandate.policy import DealPolicy
 from ..origination.models import Opportunity
 from ..privacy.models import LegalHold, RetentionReview
+from ..process.models import GeneratedDocument
 from ..role.authorization import has_permission
 from ..role.permissions import Permission
 from ..task.models import Task
@@ -47,6 +48,7 @@ COMPANY_FIELDS = (
     "legal_form",
     "nace_code",
     "address",
+    "language",
 )
 
 
@@ -83,6 +85,7 @@ REFERENCES: dict[MergeableType, list[Reference]] = {
         Reference("legal_holds", LegalHold.__table__, "contact_id"),  # type: ignore[arg-type]
         Reference("retention_reviews", RetentionReview.__table__, "contact_id"),  # type: ignore[arg-type]
         Reference("deal_buyers.contact", DealBuyer.__table__, "contact_id"),  # type: ignore[arg-type]
+        Reference("generated_documents.contact", GeneratedDocument.__table__, "contact_id"),  # type: ignore[arg-type]
         *_polymorphic("contact"),
     ],
     MergeableType.COMPANY: [
