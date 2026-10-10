@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -195,7 +196,7 @@ export function TemplatesView({ messages }: { messages: Messages }) {
               ) : null}
               {errors.body ? <FieldError>{errors.body}</FieldError> : null}
             </Field>
-            <div className="flex items-center gap-2">
+            <Field orientation="horizontal">
               <Checkbox
                 id="template-im"
                 checked={values.references_im}
@@ -203,10 +204,10 @@ export function TemplatesView({ messages }: { messages: Messages }) {
                   setValues({ ...values, references_im: checked === true })
                 }
               />
-              <label htmlFor="template-im">
+              <FieldLabel htmlFor="template-im">
                 {messages["templates.referencesIm"]}
-              </label>
-            </div>
+              </FieldLabel>
+            </Field>
             {errors.form ? <FieldError>{errors.form}</FieldError> : null}
             <div className="flex gap-2">
               <Button type="submit" disabled={unknown.length > 0}>
@@ -227,54 +228,56 @@ export function TemplatesView({ messages }: { messages: Messages }) {
             </div>
           </FieldGroup>
         </form>
-        <Table aria-label={messages["templates.title"]}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{messages["templates.name"]}</TableHead>
-              <TableHead>{messages["templates.kind"]}</TableHead>
-              <TableHead>{messages["templates.language"]}</TableHead>
-              <TableHead>{messages["templates.subject"]}</TableHead>
-              <TableHead>{messages["templates.updated"]}</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(templates.data ?? []).map((template) => (
-              <TableRow key={template.id}>
-                <TableCell>
-                  {template.name}{" "}
-                  {template.references_im ? (
-                    <Badge variant="secondary">IM</Badge>
-                  ) : null}
-                </TableCell>
-                <TableCell>
-                  {
-                    messages[
-                      template.kind === "letter"
-                        ? "templates.kind.letter"
-                        : "templates.kind.report"
-                    ]
-                  }
-                </TableCell>
-                <TableCell>{template.language.toUpperCase()}</TableCell>
-                <TableCell>{template.subject}</TableCell>
-                <TableCell>
-                  {template.updated_at.slice(0, 10)}{" "}
-                  {template.updated_by_name ?? ""}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => edit(template)}
-                  >
-                    {messages["templates.edit"]}
-                  </Button>
-                </TableCell>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
+          <Table aria-label={messages["templates.title"]}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{messages["templates.name"]}</TableHead>
+                <TableHead>{messages["templates.kind"]}</TableHead>
+                <TableHead>{messages["templates.language"]}</TableHead>
+                <TableHead>{messages["templates.subject"]}</TableHead>
+                <TableHead>{messages["templates.updated"]}</TableHead>
+                <TableHead />
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {(templates.data ?? []).map((template) => (
+                <TableRow key={template.id}>
+                  <TableCell>
+                    {template.name}{" "}
+                    {template.references_im ? (
+                      <Badge variant="secondary">IM</Badge>
+                    ) : null}
+                  </TableCell>
+                  <TableCell>
+                    {
+                      messages[
+                        template.kind === "letter"
+                          ? "templates.kind.letter"
+                          : "templates.kind.report"
+                      ]
+                    }
+                  </TableCell>
+                  <TableCell>{template.language.toUpperCase()}</TableCell>
+                  <TableCell>{template.subject}</TableCell>
+                  <TableCell>
+                    {template.updated_at.slice(0, 10)}{" "}
+                    {template.updated_by_name ?? ""}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => edit(template)}
+                    >
+                      {messages["templates.edit"]}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollRegion>
       </CardContent>
     </Card>
   );

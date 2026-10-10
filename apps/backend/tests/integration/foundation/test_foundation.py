@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.interfaces.main import app
 from src.modules.audit.models import AuditEntry
 from src.modules.role.models import Role
-from src.modules.role.permissions import DEFAULT_ROLES, Permission, RoleName
+from src.modules.role.permissions import Permission, RoleName
 from tests.integration.crm.deal_helpers import build_world, create_mandate
 from tests.integration.foundation import helpers as shared_helpers
 
@@ -28,11 +28,34 @@ async def test_startup_seeds_the_six_roles_with_default_access(fresh_db: AsyncSe
 
     roles = {role.name: set(role.permissions) for role in (await fresh_db.execute(select(Role))).scalars()}
 
-    assert set(roles) == {name.value for name in RoleName}
-    for name, (_, permissions) in DEFAULT_ROLES.items():
-        assert roles[name.value] == {permission.value for permission in permissions}
-    assert not {"deals.read_staffed", "deals.edit_staffed"} & roles[RoleName.ADMIN.value]
-    assert roles[RoleName.READ_ONLY.value] == {Permission.DASHBOARD_AGGREGATED.value}
+    # Written from the spec's role table, not from DEFAULT_ROLES, so a seeder change cannot prove itself.
+    # Partner's "approve conflicts" is no permission: compliance decides (AUTHZ-05 c3, decision 94).
+    assert roles == {
+        "Admin": {"users.manage", "roles.manage", "settings.manage", "audit.read"},
+        "Partner": {
+            "mandates.create",
+            "fees.read",
+            "fees.edit_own_deals",
+            "dashboard.firm",
+            "dashboard.aggregated",
+            "deals.read_staffed",
+            "deals.edit_staffed",
+            "exports.approve",
+        },
+        "Director / Manager": {"deals.read_staffed", "deals.edit_staffed", "deal_team.assign", "buyers.manage"},
+        "Analyst / Associate": {"deals.read_staffed", "deals.edit_staffed"},
+        "Compliance / Back-office": {
+            "conflicts.register",
+            "kyc.manage",
+            "fees.read",
+            "fees.edit",
+            "invoices.manage",
+            "deals.read_summary",
+            "audit.read",
+            "privacy.manage",
+        },
+        "Read-only": {"dashboard.aggregated"},
+    }
 
 
 async def test_seeding_twice_keeps_admin_edits(fresh_db: AsyncSession, startup_against_test_db):
@@ -319,7 +342,7 @@ async def test_audit_entry_records_the_forwarded_client_ip(client: AsyncClient, 
     assert entries[0]["ip_address"] == "127.0.0.1"
 
 
-# AUD-01 criterion 1 (review S6): viewing a deal is logged with user, IP and record, break-glass reads too.
+# AUD-01 criterion 1: viewing a deal is logged with user, IP and record, break-glass reads too.
 async def test_viewing_a_deal_is_audited(client: AsyncClient, seeded_db: AsyncSession):
     world = await build_world(seeded_db)
     partner = await world.actor("paula", RoleName.PARTNER)

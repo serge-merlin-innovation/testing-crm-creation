@@ -63,12 +63,19 @@ class ContactService:
             )
             for role in roles.scalars():
                 roles_by_contact[role.contact_id].append(role)
+        company_ids = {role.company_id for rows in roles_by_contact.values() for role in rows}
+        names: dict[int, str] = (
+            dict((await db.execute(select(Company.id, Company.name).where(Company.id.in_(company_ids)))).tuples().all())
+            if company_ids
+            else {}
+        )
         holders = await self.holders(db, ids)
         result = []
         for contact in contacts:
             current, history = None, []
             for role in roles_by_contact[contact.id]:
                 item = EmploymentRead.model_validate(role, from_attributes=True)
+                item.company_name = names.get(role.company_id, "")
                 if role.end_date is None and current is None:
                     current = item
                 else:

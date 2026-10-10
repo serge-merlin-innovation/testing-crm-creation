@@ -9,7 +9,7 @@ import io
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from typing import Any, TypeVar
 
 from openpyxl import Workbook  # type: ignore[import-untyped]
@@ -17,6 +17,7 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..audit.service import AuditContext, AuditService, audit_export
+from ..common.money import to_cents
 from ..common.spreadsheet import safe_row
 from ..fee.models import FeeTerms, Invoice
 from ..fee.schemas import FeeTermsValues, InvoiceType, LehmanTier, SuccessFeeKind
@@ -37,7 +38,6 @@ from .models import DealForecast
 from .schemas import ForecastValues
 
 _T = TypeVar("_T")
-CENT = Decimal("0.01")
 HIDDEN_CELL_MINIMUM = 3
 KEY_DATE_HORIZON = timedelta(days=30)
 FORECAST_MONTHS = 12
@@ -58,10 +58,6 @@ STAGE_PROBABILITY: dict[str, int] = {
     DealStage.CLOSED_WON: 100,
     DealStage.ABORTED: 0,
 }
-
-
-def _money(value: Decimal) -> Decimal:
-    return value.quantize(CENT, rounding=ROUND_HALF_UP)
 
 
 def quarter_of(day: date | None) -> str:
@@ -286,14 +282,16 @@ class ReportingService:
                         {
                             "quarter": quarter,
                             "deals": len(shown),
-                            "expected_fees": _money(sum((d.expected_fee for d in shown), Decimal("0"))),
-                            "weighted_fees": _money(sum((d.expected_fee * d.probability / 100 for d in shown), Decimal("0"))),
+                            "expected_fees": to_cents(sum((d.expected_fee for d in shown), Decimal("0"))),
+                            "weighted_fees": to_cents(sum((d.expected_fee * d.probability / 100 for d in shown), Decimal("0"))),
                         }
                     )
             result["weighted_fees_by_quarter"] = fees
             hidden_fees = _anonymous([deal for deal in hidden if deal.terms is not None])
             result["other_teams_weighted_fees"] = (
-                _money(sum((d.expected_fee * d.probability / 100 for d in hidden_fees), Decimal("0"))) if hidden_fees else None
+                to_cents(sum((d.expected_fee * d.probability / 100 for d in hidden_fees), Decimal("0")))
+                if hidden_fees
+                else None
             )
         return result
 
@@ -340,11 +338,11 @@ class ReportingService:
             rows.append(
                 {
                     "month": key,
-                    "retainers": _money(cell["retainers"]),
-                    "success_fees": _money(cell["success_fees"]),
-                    "forecast_total": _money(cell["retainers"] + cell["success_fees"]),
-                    "actual_invoiced": _money(cell["invoiced"]),
-                    "actual_paid": _money(cell["paid"]),
+                    "retainers": to_cents(cell["retainers"]),
+                    "success_fees": to_cents(cell["success_fees"]),
+                    "forecast_total": to_cents(cell["retainers"] + cell["success_fees"]),
+                    "actual_invoiced": to_cents(cell["invoiced"]),
+                    "actual_paid": to_cents(cell["paid"]),
                 }
             )
         return {"months": rows, "deals": len(set(mandate_ids) | {d.mandate.id for d in open_deals})}
@@ -422,16 +420,16 @@ class ReportingService:
             "pitches": len(decided),
             "won": won,
             "lost": len(lost),
-            "win_rate": _money(Decimal(won) * 100 / len(decided)) if decided else None,
+            "win_rate": to_cents(Decimal(won) * 100 / len(decided)) if decided else None,
             "top_lost_reasons": [{"reason": reason, "count": count} for reason, count in top],
             "closed_deals": len(closed),
-            "average_duration_days": _money(sum(durations, Decimal("0")) / len(durations)) if durations else None,
+            "average_duration_days": to_cents(sum(durations, Decimal("0")) / len(durations)) if durations else None,
             "ev_ebitda_by_sector": [
                 {
                     "sector_id": sector_id,
                     "sector": label,
                     "deals": len(values),
-                    "average_ev_ebitda": _money(sum(values, Decimal("0")) / len(values)),
+                    "average_ev_ebitda": to_cents(sum(values, Decimal("0")) / len(values)),
                 }
                 for sector_id, (label, values) in sorted(sectors.items(), key=lambda item: item[1][0])
             ],

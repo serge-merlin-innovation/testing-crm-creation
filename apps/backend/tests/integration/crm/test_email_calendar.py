@@ -1,4 +1,4 @@
-"""Ticket #15: ACT-04 email logging, ACT-05 calendar feed, CON-02 c2 interactions, AUTHZ-02 c3."""
+"""ACT-04 email logging, ACT-05 calendar feed, CON-02 c2 interactions, AUTHZ-02 c3."""
 
 import base64
 from datetime import UTC, datetime
@@ -123,7 +123,7 @@ async def test_email_from_an_address_not_linked_to_a_crm_user_is_rejected(world)
     assert (await world.db.execute(select(UnmatchedEmail))).first() is None
 
 
-# Security review S13: a forged From is refused unless the provider verified SPF and DKIM.
+# ACT-04: a forged From is refused unless the provider verified SPF and DKIM.
 @pytest.mark.parametrize(("spf", "dkim"), [("fail", "pass"), ("pass", "fail"), ("softfail", "none"), (None, None)])
 async def test_email_without_passing_spf_and_dkim_is_rejected(world, spf, dkim):
     address = await address_of(world.partner)
@@ -379,7 +379,7 @@ async def test_a_guessed_feed_token_is_not_found(world):
     assert (await world.anon.get("/api/v1/calendar-feed/ics/not-a-token.ics")).status_code == 404
 
 
-# Review S3 (ROLE-01 c3): Read-only gets no logging address or feed, and a stale address logs nothing.
+# ROLE-01 c3: Read-only gets no logging address or feed, and a stale address logs nothing.
 async def test_read_only_cannot_log_email_or_hold_a_feed(world):
     viewer = await world.actor("rita", RoleName.READ_ONLY)
     for method, path in (
@@ -401,7 +401,7 @@ async def test_read_only_cannot_log_email_or_hold_a_feed(world):
     assert await timeline(world.partner, "contact", world.contact_id) == []
 
 
-# Review S15 (DEAL-01 c4): a deal sent back to conflict review or rejected leaves the team's feed entirely.
+# DEAL-01 c4: a deal sent back to conflict review or rejected leaves the team's feed entirely.
 async def test_feed_drops_a_deal_hidden_by_conflict_review(world):
     await world.partner.client.post(
         f"/api/v1/mandates/{world.mandate['id']}/team",

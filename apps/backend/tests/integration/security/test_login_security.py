@@ -8,6 +8,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
+from src.infrastructure.config.settings import settings
 from src.infrastructure.email import InMemoryEmailSender, LoggingEmailSender, set_email_sender
 from src.infrastructure.geoip import StaticGeoIp, UnknownGeoIp, set_geoip
 from src.interfaces.main import app
@@ -142,6 +143,46 @@ async def test_login_is_rate_limited_per_ip_and_session_mutations_need_csrf(clie
     assert (await other.post("/api/v1/auth/logout")).status_code == 403
 
 
+# AUTH-01 c5: the login form refuses a cross-site POST (login CSRF), on both steps.
+@pytest.mark.parametrize(
+    "headers",
+    [{"Origin": "https://evil.example"}, {"Sec-Fetch-Site": "cross-site"}, {"Sec-Fetch-Site": "same-site"}],
+)
+async def test_login_refuses_a_cross_site_post(client, seeded_db, clock, headers):
+    await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
+    form = {"email": "ana@firm.be", "password": PASSWORD}
+
+    first = await client.post("/api/v1/auth/login", data=form, headers=headers)
+    second = await client.post("/api/v1/auth/login/second-factor", json={"challenge": "x", "code": "123456"}, headers=headers)
+
+    assert (first.status_code, second.status_code) == (403, 403)
+
+
+async def test_login_accepts_a_same_origin_post(client, seeded_db, clock):
+    await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
+    same = {"Origin": settings.APP_URL, "Sec-Fetch-Site": "same-origin"}
+    response = await client.post("/api/v1/auth/login", data={"email": "ana@firm.be", "password": PASSWORD}, headers=same)
+    assert response.status_code == 200, response.text
+
+
+# AUTH-01 c5: per-account limit: bad passwords from rotating IPs still lock the account.
+async def test_bad_passwords_from_rotating_ips_lock_the_account(client, seeded_db, clock):
+    await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
+    for index in range(4):
+        attempt = await second_client(client, ip=f"10.1.0.{index + 1}").post(
+            "/api/v1/auth/login", data={"email": "ana@firm.be", "password": "wrong-password"}
+        )
+        assert attempt.status_code == 401
+    fifth = await second_client(client, ip="10.1.0.5").post(
+        "/api/v1/auth/login", data={"email": "ana@firm.be", "password": "wrong-password"}
+    )
+    assert fifth.status_code == 423
+    locked = await second_client(client, ip="10.1.0.99").post(
+        "/api/v1/auth/login", data={"email": "ana@firm.be", "password": PASSWORD}
+    )
+    assert locked.status_code == 423
+
+
 # AUTH-01 c6: last login date, IP and device are stored and shown on the profile.
 async def test_last_login_date_ip_and_device_show_on_profile(client, seeded_db, clock):
     ana = await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
@@ -244,7 +285,7 @@ async def test_trusted_device_skips_code_for_thirty_days_unless_admin_disables(c
     assert (await start_login(client, "ana@firm.be"))["step"] == "code"
 
 
-# AUTH-02 c5: admin resets 2FA, the user re-enrols at next login, the reset is audited.
+# AUTH-02 c6: admin resets 2FA, the user re-enrols at next login, the reset is audited.
 async def test_admin_2fa_reset_forces_re_enrolment_and_is_audited(client, seeded_db, clock, mailbox):
     await make_user(seeded_db, "admin@firm.be", RoleName.ADMIN)
     ana = await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)

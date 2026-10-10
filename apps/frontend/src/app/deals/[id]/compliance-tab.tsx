@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -69,30 +70,32 @@ function ConflictSection({ mandate, onChanged, messages }: Props) {
       </div>
       {status === "review" && !hits.data ? <p>{messages["compliance.reviewHint"]}</p> : null}
       {hits.data && hits.data.length > 0 ? (
-        <Table aria-label={messages["compliance.conflicts"]}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{messages["compliance.ourCompany"]}</TableHead>
-              <TableHead>{messages["compliance.matched"]}</TableHead>
-              <TableHead>{messages["compliance.otherDeal"]}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {hits.data.map((hit) => (
-              <TableRow key={`${hit.company_name}-${hit.other_mandate_id}`}>
-                <TableCell>
-                  {hit.company_name} ({hit.role})
-                </TableCell>
-                <TableCell>
-                  {hit.matched_company_name} ({hit.other_role})
-                </TableCell>
-                <TableCell>
-                  {hit.other_code_name} · {stageLabel(hit.other_stage)}
-                </TableCell>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
+          <Table aria-label={messages["compliance.conflicts"]}>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{messages["compliance.ourCompany"]}</TableHead>
+                <TableHead>{messages["compliance.matched"]}</TableHead>
+                <TableHead>{messages["compliance.otherDeal"]}</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {hits.data.map((hit) => (
+                <TableRow key={`${hit.company_name}-${hit.other_mandate_id}`}>
+                  <TableCell>
+                    {hit.company_name} ({hit.role})
+                  </TableCell>
+                  <TableCell>
+                    {hit.matched_company_name} ({hit.other_role})
+                  </TableCell>
+                  <TableCell>
+                    {hit.other_code_name} · {stageLabel(hit.other_stage)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollRegion>
       ) : null}
       {hits.data && status === "review" ? (
         <FieldGroup>

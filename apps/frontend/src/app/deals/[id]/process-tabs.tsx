@@ -1,7 +1,9 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RecordTimeline } from "@/components/record-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -369,7 +371,7 @@ export function OffersTab({
         <p>{messages["offers.empty"]}</p>
       ) : null}
       {data && data.bids.length > 0 ? (
-        <div className="overflow-x-auto" tabIndex={0}>
+        <ScrollRegion label={messages["a11y.scrollRegion"]}>
           <Table aria-label={messages["offers.comparison"]}>
             <TableHeader>
               <TableRow>
@@ -429,7 +431,7 @@ export function OffersTab({
               ))}
             </TableBody>
           </Table>
-        </div>
+        </ScrollRegion>
       ) : null}
     </div>
   );
@@ -459,26 +461,28 @@ export function FunnelPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      <Table aria-label={messages["funnel.title"]}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{messages["funnel.step"]}</TableHead>
-            <TableHead>{messages["funnel.count"]}</TableHead>
-            <TableHead>{messages["funnel.conversion"]}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {(funnel.data?.steps ?? []).map((step) => (
-            <TableRow key={step.key} data-step={step.key}>
-              <TableCell>{messages[FUNNEL_LABEL[step.key]]}</TableCell>
-              <TableCell>{step.count}</TableCell>
-              <TableCell>
-                {step.conversion_pct === null ? "-" : `${step.conversion_pct}%`}
-              </TableCell>
+      <ScrollRegion label={messages["a11y.scrollRegion"]}>
+        <Table aria-label={messages["funnel.title"]}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{messages["funnel.step"]}</TableHead>
+              <TableHead>{messages["funnel.count"]}</TableHead>
+              <TableHead>{messages["funnel.conversion"]}</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {(funnel.data?.steps ?? []).map((step) => (
+              <TableRow key={step.key} data-step={step.key}>
+                <TableCell>{messages[FUNNEL_LABEL[step.key]]}</TableCell>
+                <TableCell>{step.count}</TableCell>
+                <TableCell>
+                  {step.conversion_pct === null ? "-" : `${step.conversion_pct}%`}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollRegion>
       <div className="flex gap-2">
         <Button variant="outline" onClick={() => void exportPdf()}>
           {messages["funnel.export"]}
@@ -577,17 +581,17 @@ export function LettersTab({
             </Select>
           </Field>
           {(grid.data?.buyers ?? []).map((buyer) => (
-            <div key={buyer.id} className="flex items-center gap-2">
+            <Field key={buyer.id} orientation="horizontal">
               <Checkbox
                 id={`letter-buyer-${buyer.id}`}
                 checked={selected.includes(buyer.id)}
                 onCheckedChange={() => setSelected(toggle(selected, buyer.id))}
               />
-              <label htmlFor={`letter-buyer-${buyer.id}`}>
+              <FieldLabel htmlFor={`letter-buyer-${buyer.id}`}>
                 {buyer.name}{" "}
                 {buyer.contact_name ? `(${buyer.contact_name})` : ""}
-              </label>
-            </div>
+              </FieldLabel>
+            </Field>
           ))}
           <Button
             onClick={() => void send()}
@@ -617,35 +621,30 @@ export function LettersTab({
           ))}
         </Alert>
       ) : null}
-      <Table aria-label={messages["documents.title"]}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{messages["documents.subject"]}</TableHead>
-            <TableHead>{messages["documents.language"]}</TableHead>
-            <TableHead>{messages["documents.date"]}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {(documents.data ?? []).map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>{item.subject}</TableCell>
-              <TableCell>{item.language}</TableCell>
-              <TableCell>{item.created_at.slice(0, 10)}</TableCell>
+      <ScrollRegion label={messages["a11y.scrollRegion"]}>
+        <Table aria-label={messages["documents.title"]}>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{messages["documents.subject"]}</TableHead>
+              <TableHead>{messages["documents.language"]}</TableHead>
+              <TableHead>{messages["documents.date"]}</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {(documents.data ?? []).map((item) => (
+              <TableRow key={item.id}>
+                <TableCell>{item.subject}</TableCell>
+                <TableCell>{item.language}</TableCell>
+                <TableCell>{item.created_at.slice(0, 10)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </ScrollRegion>
     </div>
   );
 }
 
-type Activity = {
-  id: number;
-  type: string;
-  occurred_at: string;
-  note: string;
-  author_name: string | null;
-};
 type DealTask = {
   id: number;
   title: string;
@@ -662,28 +661,11 @@ export function ActivitiesTasksTab({
   mandate: Mandate;
   messages: Messages;
 }) {
-  const timeline = useApiData<{ activities: Activity[] }>(
-    `/api/v1/timeline/mandate/${mandate.id}`,
-  );
   const tasks = useApiData<DealTask[]>(`/api/v1/mandates/${mandate.id}/tasks`);
 
   return (
     <div className="flex flex-col gap-4">
-      <section aria-label={messages["deal.activities"]}>
-        <h2>{messages["deal.activities"]}</h2>
-        {(timeline.data?.activities ?? []).length === 0 ? (
-          <p>{messages["deal.noActivities"]}</p>
-        ) : null}
-        <ul className="flex flex-col gap-2">
-          {(timeline.data?.activities ?? []).map((activity) => (
-            <li key={activity.id}>
-              <Badge variant="secondary">{activity.type}</Badge>{" "}
-              {activity.occurred_at.slice(0, 10)} {activity.author_name ?? ""}:{" "}
-              {activity.note.split("\n")[0]}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <RecordTimeline recordType="mandate" recordId={mandate.id} messages={messages} />
       <Separator />
       <section aria-label={messages["deal.tasks"]}>
         <h2>{messages["deal.tasks"]}</h2>

@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EditAction } from "@/components/session-provider";
@@ -100,36 +101,38 @@ export function PermissionMatrixEditor({ messages }: { messages: Record<MessageK
         ) : null}
 
         {matrix ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{messages["permissions.permission"]}</TableHead>
-                {matrix.columns.map((column) => (
-                  <TableHead key={column.id}>{column.name}</TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {matrix.rows.map((row) => (
-                <TableRow key={row.permission}>
-                  <TableCell>{row.permission}</TableCell>
-                  {row.granted.map((granted, columnIndex) => {
-                    const column = matrix.columns[columnIndex];
-                    return (
-                      <TableCell key={column.id}>
-                        <Checkbox
-                          checked={granted}
-                          disabled={pending !== null}
-                          aria-label={`${row.permission} / ${column.name}`}
-                          onCheckedChange={() => void toggle(row.permission, columnIndex)}
-                        />
-                      </TableCell>
-                    );
-                  })}
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{messages["permissions.permission"]}</TableHead>
+                  {matrix.columns.map((column) => (
+                    <TableHead key={column.id}>{column.name}</TableHead>
+                  ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {matrix.rows.map((row) => (
+                  <TableRow key={row.permission}>
+                    <TableCell>{row.permission}</TableCell>
+                    {row.granted.map((granted, columnIndex) => {
+                      const column = matrix.columns[columnIndex];
+                      return (
+                        <TableCell key={column.id}>
+                          <Checkbox
+                            checked={granted}
+                            disabled={pending !== null}
+                            aria-label={`${row.permission} / ${column.name}`}
+                            onCheckedChange={() => void toggle(row.permission, columnIndex)}
+                          />
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollRegion>
         ) : null}
       </CardContent>
     </Card>

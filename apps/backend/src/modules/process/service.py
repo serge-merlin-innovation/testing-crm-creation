@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...infrastructure.email import EmailMessage, EmailSender
 from ...infrastructure.i18n.formatters import format_date
 from ..activity.models import Activity, ActivityLink
 from ..activity.schemas import ActivityType, RecordType
@@ -20,7 +21,6 @@ from ..company.schemas import FigureSource, Metric
 from ..contact.models import Contact
 from ..mandate.models import Milestone
 from ..mandate.policy import DealGrant
-from ..notification.ports import EmailSender, SentEmail
 from ..task.models import Task
 from ..task.service import read as task_read
 from ..user.models import User
@@ -37,7 +37,7 @@ from .schemas import (
 )
 
 ORDER = list(BuyerStatus)
-# Statuses at or past each funnel step. Declined buyers count as approached only (decision 46).
+# Statuses at or past each funnel step. Declined buyers count as approached only (BUY-07).
 STEP_FLOOR = {
     "nda": BuyerStatus.NDA_SIGNED,
     "im": BuyerStatus.IM_SENT,
@@ -399,7 +399,7 @@ class ProcessService:
         counts = dict.fromkeys(FUNNEL_STEPS, 0)
         for buyer in buyers:
             status = BuyerStatus(buyer.status)
-            if status == BuyerStatus.LONG_LIST:
+            if status in (BuyerStatus.LONG_LIST, BuyerStatus.CLIENT_APPROVED):
                 continue
             counts["approached"] += 1
             position = ORDER.index(status) if status != BuyerStatus.DECLINED else -1
@@ -515,7 +515,7 @@ class ProcessService:
                 ],
             )
             buyer.last_activity_at = now
-            await self.sender.send(SentEmail(to=contact.email, subject=subject, body=body))
+            await self.sender.send(EmailMessage(to=contact.email, subject=subject, body=body))
             sent.append(
                 {
                     "buyer_id": buyer.id,

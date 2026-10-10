@@ -5,6 +5,8 @@ import { LanguageCard } from "./language-card";
 import { LastLoginCard } from "./last-login";
 import { LogoutEverywhereCard } from "./logout-everywhere";
 import { CalendarFeedCard, EmailLoggingCard } from "./mail-and-calendar";
+import { TravelCard } from "./travel-card";
+import { NotificationPreferencesCard } from "./notification-preferences";
 
 export default async function Profile() {
   const language = await getLanguage();
@@ -14,9 +16,11 @@ export default async function Profile() {
       <main className="flex flex-col gap-4 p-4 md:p-6">
         <LanguageCard messages={MESSAGES[language]} language={language} />
         <LastLoginCard messages={MESSAGES[language]} language={language} />
+        <TravelCard messages={MESSAGES[language]} />
         <LogoutEverywhereCard messages={MESSAGES[language]} />
         <EmailLoggingCard messages={MESSAGES[language]} />
         <CalendarFeedCard messages={MESSAGES[language]} />
+        <NotificationPreferencesCard messages={MESSAGES[language]} />
       </main>
     </SignedInShell>
   );

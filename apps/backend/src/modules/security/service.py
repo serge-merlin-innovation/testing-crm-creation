@@ -15,6 +15,7 @@ from ...infrastructure.email import EmailMessage, get_email_sender
 from ...infrastructure.geoip import EU_COUNTRIES, get_geoip
 from ...infrastructure.i18n.localize import localize
 from ..audit.service import AuditContext, AuditService
+from ..common.hashing import sha256_hex
 from ..role.models import Role
 from ..user.models import User
 from .models import KnownLoginMarker, LoginFailure, RecoveryCode, SecurityPolicy, TrustedDevice, UserSecurity
@@ -26,10 +27,6 @@ LOCK_DURATION = timedelta(minutes=15)
 TRUST_DURATION = timedelta(days=30)
 CHALLENGE_TTL = timedelta(minutes=5)
 RECOVERY_CODE_COUNT = 10
-
-
-def _digest(value: str) -> str:
-    return hashlib.sha256(value.encode()).hexdigest()
 
 
 RECOVERY_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
@@ -222,7 +219,7 @@ class SecurityService:
 
     async def trust_device(self, db: AsyncSession, user_id: int, now: datetime) -> str:
         token = secrets.token_urlsafe(32)
-        db.add(TrustedDevice(user_id=user_id, token_hash=_digest(token), expires_at=now + TRUST_DURATION))
+        db.add(TrustedDevice(user_id=user_id, token_hash=sha256_hex(token), expires_at=now + TRUST_DURATION))
         return token
 
     async def is_trusted_device(self, db: AsyncSession, user_id: int, token: str | None, now: datetime) -> bool:
@@ -231,7 +228,9 @@ class SecurityService:
         found = (
             await db.execute(
                 select(TrustedDevice.id).where(
-                    TrustedDevice.user_id == user_id, TrustedDevice.token_hash == _digest(token), TrustedDevice.expires_at > now
+                    TrustedDevice.user_id == user_id,
+                    TrustedDevice.token_hash == sha256_hex(token),
+                    TrustedDevice.expires_at > now,
                 )
             )
         ).scalar_one_or_none()

@@ -485,7 +485,7 @@ async def bulk_contacts(world, count: int) -> None:
 async def test_an_analyst_exporting_more_than_500_contacts_needs_partner_approval(world):
     await bulk_contacts(world, 501)
 
-    refused = await world.analyst.client.get("/api/v1/exports/contacts")
+    refused = await world.analyst.client.get("/api/v1/exports/contacts", headers=step_up(world.analyst.email))
     assert refused.status_code == 403
     assert "approval" in refused.json()["detail"]
 
@@ -504,17 +504,17 @@ async def test_an_analyst_exporting_more_than_500_contacts_needs_partner_approva
     )
     assert approved.json()["status"] == "approved"
 
-    allowed = await world.analyst.client.get("/api/v1/exports/contacts")
+    allowed = await world.analyst.client.get("/api/v1/exports/contacts", headers=step_up(world.analyst.email))
     assert allowed.status_code == 200
     assert len(allowed.text.strip().splitlines()) == 502
-    assert (await world.analyst.client.get("/api/v1/exports/contacts")).status_code == 403
+    assert (await world.analyst.client.get("/api/v1/exports/contacts", headers=step_up(world.analyst.email))).status_code == 403
 
 
 async def test_500_contacts_or_a_non_analyst_export_needs_no_approval(world):
     await bulk_contacts(world, 500)
-    assert (await world.analyst.client.get("/api/v1/exports/contacts")).status_code == 200
+    assert (await world.analyst.client.get("/api/v1/exports/contacts", headers=step_up(world.analyst.email))).status_code == 200
     await bulk_contacts(world, 1)
-    assert (await world.partner.client.get("/api/v1/exports/contacts")).status_code == 200
+    assert (await world.partner.client.get("/api/v1/exports/contacts", headers=step_up(world.partner.email))).status_code == 200
 
 
 # REP-06 c2: every export logs user, time, filter and row count.
@@ -522,7 +522,9 @@ async def test_every_export_logs_user_time_filter_and_row_count(world):
     await bulk_contacts(world, 3)
     await contact(world.partner, first="Zed", last="Unique")
 
-    response = await world.partner.client.get("/api/v1/exports/contacts", params={"q": "Bulk"})
+    response = await world.partner.client.get(
+        "/api/v1/exports/contacts", params={"q": "Bulk"}, headers=step_up(world.partner.email)
+    )
 
     assert response.status_code == 200
     entry = (
@@ -563,7 +565,7 @@ async def test_every_export_route_logs_user_time_kind_filter_and_rows(world, kin
         fee_terms = {"retainer_monthly": "1000", "success_fee_kind": "percent", "success_fee_percent": "2"}
         put = await actor.client.put(f"/api/v1/mandates/{mandate['id']}/fees", json=fee_terms, headers=actor.headers)
         assert put.status_code == 200, put.text
-    headers = step_up(actor.email, actor.headers) if kind == "users" else actor.headers
+    headers = step_up(actor.email, actor.headers)
 
     response = await actor.client.get(url, params=params, headers=headers)
 
@@ -585,8 +587,11 @@ async def test_mailing_export_excludes_opted_out_and_do_not_contact_and_shows_th
     await contact(world.partner, first="Mail", last="Optout", marketing_opt_out=True)
     await contact(world.partner, first="Mail", last="Blocked", do_not_contact=True)
 
-    full = await world.partner.client.get("/api/v1/exports/contacts", params={"q": "Mail"})
-    mailing = await world.partner.client.get("/api/v1/exports/contacts", params={"q": "Mail", "for_mailing": "true"})
+    exports = "/api/v1/exports/contacts"
+    full = await world.partner.client.get(exports, params={"q": "Mail"}, headers=step_up(world.partner.email))
+    mailing = await world.partner.client.get(
+        exports, params={"q": "Mail", "for_mailing": "true"}, headers=step_up(world.partner.email)
+    )
 
     assert full.status_code == mailing.status_code == 200, mailing.text
     header, *rows = full.text.strip().splitlines()
@@ -600,17 +605,17 @@ async def test_mailing_export_excludes_opted_out_and_do_not_contact_and_shows_th
     assert entry.new_values["filter"] == {"q": "Mail", "for_mailing": True}
 
 
-# Security review S12: a contact name that starts like a formula is quoted in the CSV.
+# A contact name that starts like a formula is quoted in the CSV.
 async def test_contact_export_quotes_formula_like_values(world):
     await contact(world.partner, first="=HYPERLINK(evil)", last="@Attack")
 
-    body = (await world.partner.client.get("/api/v1/exports/contacts")).text
+    body = (await world.partner.client.get("/api/v1/exports/contacts", headers=step_up(world.partner.email))).text
 
     assert "'=HYPERLINK(evil)" in body
     assert "'@Attack" in body
 
 
-# Review S2 (decision 70): the person file leaves out other users' private notes (ACT-02 c1) and names a
+# The person file leaves out other users' private notes (ACT-02 c1) and names a
 # deal by its code name only (AUTHZ-06 c2), so it carries no deal id, client or target.
 async def test_export_person_excludes_others_private_notes_and_names_deals_by_code_name(world):
     contact_id = await contact(world.partner, email="jan@acme.be")

@@ -775,6 +775,10 @@
   "fr": "Définissez votre mot de passe et l'authentification à deux facteurs dans les 72 heures :\n{0}/accept-invitation?token={1}\n\nLe lien ne fonctionne qu'une fois. S'il a expiré, demandez à votre administrateur de le renvoyer.",
   "nl": "Stel binnen 72 uur uw wachtwoord en tweestapsverificatie in:\n{0}/accept-invitation?token={1}\n\nDe link werkt één keer. Is hij verlopen, vraag dan uw beheerder hem opnieuw te sturen."
  },
+ "Sign in from the CRM's own login page.": {
+  "fr": "Connectez-vous depuis la page de connexion du CRM.",
+  "nl": "Meld u aan via de aanmeldpagina van het CRM."
+ },
  "Someone asked to join {0}. Open the request to review it.": {
   "fr": "Quelqu'un demande à rejoindre {0}. Ouvrez la demande pour l'examiner.",
   "nl": "Iemand vraagt toegang tot {0}. Open de aanvraag om ze te beoordelen."
@@ -1043,6 +1047,10 @@
   "fr": "Trop de demandes de réinitialisation. Réessayez dans une heure.",
   "nl": "Te veel aanvragen. Probeer het over een uur opnieuw."
  },
+ "Too many wall-crossing requests. Try again later.": {
+  "fr": "Trop de demandes de franchissement de muraille. Réessayez plus tard.",
+  "nl": "Te veel aanvragen om de muur over te steken. Probeer het later opnieuw."
+ },
  "Type at least {0} characters": {
   "fr": "Saisissez au moins {0} caractères",
   "nl": "Typ minstens {0} tekens"
@@ -1290,5 +1298,17 @@
  "{0}: invoice the success fee": {
   "fr": "{0} : facturer la commission de succès",
   "nl": "{0}: succesfee factureren"
+ },
+ "Client approved follows from the client's approval: record it in Approval": {
+  "fr": "Approuvé par le client découle de l'approbation du client : indiquez-la dans Approbation",
+  "nl": "Goedgekeurd door klant volgt uit de goedkeuring van de klant: noteer die bij Goedkeuring"
+ },
+ "{0} already belongs to the group of {1}: change its parent on the company first": {
+  "fr": "{0} fait déjà partie du groupe de {1} : modifiez d'abord sa société mère sur la fiche société",
+  "nl": "{0} behoort al tot de groep van {1}: wijzig eerst de moedermaatschappij op de bedrijfsfiche"
+ },
+ "No filed accounts for this number": {
+  "fr": "Aucun compte déposé pour ce numéro",
+  "nl": "Geen neergelegde rekeningen voor dit nummer"
  }
 }

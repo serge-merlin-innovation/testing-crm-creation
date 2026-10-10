@@ -1,4 +1,4 @@
-"""buyer process: investor profiles, client exclusions, deal buyers, NDAs (ticket #13)
+"""buyer process: investor profiles, client exclusions, deal buyers, NDAs
 
 Revision ID: 3fe8bfeb0d3d
 Revises: b3f5916e42d1

@@ -1,6 +1,7 @@
 import re
 
 from ..config.settings import EnvironmentOption, Settings
+from ..geoip import GeoIp, UnknownGeoIp
 from ..logging import get_logger
 
 logger = get_logger()
@@ -26,6 +27,11 @@ class ProductionSecurityValidator:
             raise ProductionSecurityError(
                 "BREACH_CHECK_ENABLED is false on a deployed environment. New passwords must be checked "
                 "against known breaches (AUTH-12); the switch is for offline e2e runs only."
+            )
+        if deployed and len(self.settings.TOTP_ENCRYPTION_KEY) < 32:
+            raise ProductionSecurityError(
+                "TOTP_ENCRYPTION_KEY is missing or shorter than 32 characters on a deployed environment. "
+                "Without it 2FA secrets are encrypted with a key derived from SECRET_KEY; set it from Key Vault."
             )
 
     def validate_production_security(self) -> None:
@@ -257,3 +263,20 @@ class ProductionSecurityValidator:
 def validate_production_security(settings: Settings) -> None:
     validator = ProductionSecurityValidator(settings)
     validator.validate_production_security()
+
+
+def validate_geoip(settings: Settings, geoip: GeoIp) -> None:
+    """New-country alerts (AUTH-06 c1) need a geo-IP adapter. A named provider that is not wired is
+    a broken deploy; no provider at all is the accepted decision 7, said loudly at every start."""
+    if settings.ENVIRONMENT != EnvironmentOption.PRODUCTION:
+        return
+    if settings.GEOIP_PROVIDER and isinstance(geoip, UnknownGeoIp):
+        raise ProductionSecurityError(
+            f"GEOIP_PROVIDER is '{settings.GEOIP_PROVIDER}' but no geo-IP adapter is wired: every country "
+            "would read as unknown and new-country login alerts would never fire."
+        )
+    if not settings.GEOIP_PROVIDER:
+        logger.warning(
+            "PRODUCTION SECURITY WARNING: no GEOIP_PROVIDER, so new-country login alerts are OFF (AUTH-06 c1, "
+            "decision 7). Only new-device alerts are sent."
+        )

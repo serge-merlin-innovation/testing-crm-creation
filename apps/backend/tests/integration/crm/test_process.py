@@ -1,4 +1,4 @@
-"""Ticket #14: offers and bid comparison (BUY-05), process letters (BUY-06), the funnel (BUY-07), templates (ADM-07),
+"""Offers and bid comparison (BUY-05), process letters (BUY-06), the funnel (BUY-07), templates (ADM-07),
 the client status report (REP-05), contact language/salutation in templates (CON-01 c3), opted-out contacts excluded
 from mailings (GDPR-01 c2) and the full deal page (DEAL-03 c1)."""
 
@@ -584,3 +584,30 @@ async def test_deal03_c1_the_deal_page_serves_every_section(world):
     assert [item["note"] for item in partner["activities"].json()["activities"]] == ["Kick-off"]
     assert [link["label"] for link in partner["documents"].json()] == ["VDR"]
     assert analyst_fees.status_code == 403
+
+
+async def test_con01_c5_do_not_contact_contact_is_excluded_from_process_letters(world):
+    mandate_id = await deal(world)
+    kept = await buyer(world, mandate_id, "Albion Capital")
+    blocked = await buyer(world, mandate_id, "Northstar Capital")
+    contact_id = next(
+        row["contact_id"]
+        for row in (await get(world.director, f"/api/v1/mandates/{mandate_id}/buyers")).json()["buyers"]
+        if row["id"] == blocked
+    )
+    flagged = await send(world.director, "PATCH", f"/api/v1/contacts/{contact_id}", {"do_not_contact": True})
+    assert flagged.status_code == 200, flagged.text
+    await letter_templates(world)
+
+    result = (
+        await send(
+            world.director,
+            "POST",
+            f"/api/v1/mandates/{mandate_id}/letters",
+            {"template_name": "Process letter", "buyer_ids": [kept, blocked]},
+        )
+    ).json()
+
+    assert [item["buyer_id"] for item in result["sent"]] == [kept]
+    assert [(item["buyer_id"], item["reason"]) for item in result["excluded"]] == [(blocked, "do_not_contact")]
+    assert not [email for email in world.emails.sent if email.to == "Northstar@buyer.eu"]

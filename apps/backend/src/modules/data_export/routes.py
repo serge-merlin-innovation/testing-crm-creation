@@ -6,6 +6,7 @@ from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
+from ..security.dependencies import StepUpUserDep
 from .dependencies import DataExportServiceDep
 from .schemas import ApprovalDecision, ApprovalRead, ApprovalRequest, ContactFilter, ExportPreview
 from .service import APPROVAL_LIMIT, ApprovalRequiredError
@@ -34,7 +35,7 @@ async def preview_contacts_export(
 async def export_contacts(
     db: AsyncSessionDep,
     service: DataExportServiceDep,
-    user: CurrentUserDep,
+    user: StepUpUserDep,
     context: AuditContextDep,
     q: Q = None,
     for_mailing: Annotated[bool, Query(description="GDPR-01 c2: drop opted-out and do-not-contact contacts")] = False,

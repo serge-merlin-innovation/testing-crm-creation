@@ -57,6 +57,25 @@ describe("browser authentication requests", () => {
     );
   });
 
+  it("marks a service error retryable, with no technical detail (AUTH-01 c8)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(jsonResponse({ detail: "asyncpg: connection to 10.1.2.3 refused" }, 500)),
+    );
+    const { login } = await import("@/services/auth");
+
+    const error = await login("serge@firm.be", "pw").catch((caught: unknown) => caught);
+    expect(error).toMatchObject({ retryable: true, message: "Something went wrong. Please try again." });
+  });
+
+  it("does not mark a wrong password retryable", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ detail: "Invalid email or password" }, 401)));
+    const { login } = await import("@/services/auth");
+
+    const error = await login("serge@firm.be", "pw").catch((caught: unknown) => caught);
+    expect(error).toMatchObject({ retryable: false });
+  });
+
   it("uses the shared CSRF client for logout", async () => {
     const fetcher = vi
       .fn()

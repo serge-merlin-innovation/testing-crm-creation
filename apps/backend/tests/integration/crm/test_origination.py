@@ -1,4 +1,4 @@
-"""Ticket #12: origination pipeline (ORI-01), pitches, credentials (ORI-02), outcomes (ORI-03), dormant prospects (ORI-04)."""
+"""Origination pipeline (ORI-01), pitches, credentials (ORI-02), outcomes (ORI-03), dormant prospects (ORI-04)."""
 
 from datetime import UTC, datetime, timedelta
 
@@ -338,3 +338,25 @@ async def test_dormant_prospect_tasks_the_relationship_holder(world):
     await move(world, created["id"], "lost", lost_reason="timing")
     await run_jobs(world, NOW + timedelta(days=400))
     assert len(await tasks_of(world, world.partner.id)) == 2
+
+
+async def test_dormant_prospect_tasks_the_strongest_relationship_holder_not_the_owner(world):
+    contact = await post(
+        world.colleague,
+        "/api/v1/contacts/",
+        {"first_name": "Hugo", "last_name": "Claes", "source": "Forum", "company_id": world.company_id},
+    )
+    assert contact.status_code == 201, contact.text
+    contact_id = contact.json()["id"]
+    for actor, strength in ((world.analyst, 1), (world.colleague, 3)):
+        held = await actor.client.put(
+            f"/api/v1/contacts/{contact_id}/relationship-holders/me", json={"strength": strength}, headers=actor.headers
+        )
+        assert held.status_code == 200, held.text
+    await opportunity(world)
+
+    await run_jobs(world, NOW + timedelta(days=90))
+
+    assert [task.title for task in await tasks_of(world, world.colleague.id)] == ["Reconnect with Acme Holding"]
+    assert await tasks_of(world, world.partner.id) == []
+    assert await tasks_of(world, world.analyst.id) == []

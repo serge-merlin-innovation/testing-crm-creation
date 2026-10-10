@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DECLINE_LABEL, type DeclineReason } from "@/lib/buyers";
 import { readDetail } from "@/lib/deals";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { sendJson, useApiData } from "@/lib/use-api";
+import { CompanyPicker } from "./company-picker";
 
 type Messages = Record<MessageKey, string>;
 type Option = { id: number; label: string };
@@ -49,23 +50,25 @@ function Choices({
   chosen: number[];
   onChange: (ids: number[]) => void;
 }) {
+  const prefix = useId();
   return (
-    <fieldset className="flex flex-col gap-1">
-      <legend>{label}</legend>
+    <FieldSet>
+      <FieldLegend variant="label">{label}</FieldLegend>
       <div className="flex flex-wrap gap-3">
         {options.map((option) => (
-          <label key={option.id} className="flex items-center gap-1">
+          <Field key={option.id} orientation="horizontal" className="w-auto">
             <Checkbox
+              id={`${prefix}-${option.id}`}
               checked={chosen.includes(option.id)}
               onCheckedChange={(checked) =>
                 onChange(checked ? [...chosen, option.id] : chosen.filter((id) => id !== option.id))
               }
             />
-            {option.label}
-          </label>
+            <FieldLabel htmlFor={`${prefix}-${option.id}`}>{option.label}</FieldLabel>
+          </Field>
         ))}
       </div>
-    </fieldset>
+    </FieldSet>
   );
 }
 
@@ -146,6 +149,40 @@ function ProfileForm({ companyId, profile, messages, onSaved }: { companyId: num
   );
 }
 
+function LinkPortfolio({ companyId, messages, onLinked }: { companyId: number; messages: Messages; onLinked: () => Promise<void> }) {
+  const [chosen, setChosen] = useState("");
+  const [error, setError] = useState("");
+
+  async function link() {
+    setError("");
+    const response = await sendJson(`/api/v1/companies/${companyId}/portfolio`, "POST", { company_id: Number(chosen) });
+    if (response.status !== 200) {
+      setError(readDetail(response.body, messages["common.saveFailed"]));
+      return;
+    }
+    setChosen("");
+    await onLinked();
+  }
+
+  return (
+    <FieldGroup className="sm:flex-row sm:items-end">
+      <CompanyPicker
+        id={`portfolio-${companyId}`}
+        label={messages["investor.linkPortfolio"]}
+        value={chosen}
+        onChange={setChosen}
+        messages={messages}
+        exclude={[companyId]}
+        allowNone={false}
+        error={error}
+      />
+      <Button type="button" variant="outline" disabled={!chosen} onClick={() => void link()}>
+        {messages["investor.link"]}
+      </Button>
+    </FieldGroup>
+  );
+}
+
 export function InvestorProfilePanel({ companyId, messages }: { companyId: number; messages: Messages }) {
   const profile = useApiData<Profile>(`/api/v1/companies/${companyId}/investor-profile`);
   const data = profile.data;
@@ -171,6 +208,7 @@ export function InvestorProfilePanel({ companyId, messages }: { companyId: numbe
           </div>
         </div>
       ) : null}
+      <LinkPortfolio companyId={companyId} messages={messages} onLinked={profile.reload} />
       {data.declines.length ? (
         <div>
           <h4>{messages["investor.declines"]}</h4>

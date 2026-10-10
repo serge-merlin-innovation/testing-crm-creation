@@ -112,8 +112,8 @@ type Auditor = "admin" | "partner" | "compliance";
 
 /** Which signed-in identity audits each listed page: a page reaches axe only through someone who may open it. */
 const AUDITED_BY: Record<Auditor, string[]> = {
-  admin: ["/users", "/permissions", "/settings", "/picklists", "/templates", "/imports", "/stage-criteria", "/profile", "/overview", "/merge", "/exports", "/privacy", "/access", "/search"],
-  partner: ["/profile", "/overview", "/search", "/access", "/exports", "/privacy", "/merge", "/analytics", "/deals", "/origination", "/companies", "/contacts", "/inbox", "/fees", "/fee-forecast", "/win-loss"],
+  admin: ["/users", "/permissions", "/settings", "/picklists", "/templates", "/imports", "/stage-criteria", "/profile", "/overview", "/merge", "/exports", "/privacy", "/access", "/search", "/audit"],
+  partner: ["/profile", "/overview", "/search", "/access", "/exports", "/privacy", "/merge", "/analytics", "/deals", "/origination", "/companies", "/contacts", "/inbox", "/fees", "/fee-forecast", "/win-loss", "/tasks"],
   compliance: ["/conflict-reviews", "/privacy", "/fees", "/overview", "/profile"],
 };
 

@@ -6,7 +6,7 @@ Amounts are in EUR; enterprise values are in EUR thousands, as everywhere in the
 import csv
 import io
 from datetime import date, datetime, timedelta
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import func, select
@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..audit.service import AuditContext, AuditService, audit_export
 from ..common.exceptions import DealForbiddenError, InvoiceNotFoundError, ValidationError
+from ..common.money import to_cents
 from ..common.spreadsheet import safe_dict
 from ..mandate.models import DealLink, Mandate
 from ..mandate.pipeline import ENGAGEMENT_LETTER_LABEL
@@ -28,7 +29,6 @@ from ..user.models import User
 from .models import FeeTerms, Invoice, InvoiceTask
 from .schemas import FeeTermsValues, InvoiceCreate, InvoiceType, InvoiceUpdate, LehmanTier, SuccessFeeKind
 
-CENT = Decimal("0.01")
 THOUSAND = Decimal("1000")
 AMENDED_LETTER_LABEL = "Amended engagement letter"
 INVOICE_TASK_DUE = timedelta(days=7)
@@ -56,10 +56,6 @@ EXPORT_COLUMNS = (
 )
 
 
-def _money(value: Decimal) -> Decimal:
-    return value.quantize(CENT, rounding=ROUND_HALF_UP)
-
-
 def expected_success_fee(terms: FeeTermsValues, ev_thousands: Decimal) -> Decimal:
     """The success fee on an EV, before crediting retainers: never below the minimum fee."""
     ev = ev_thousands * THOUSAND
@@ -75,14 +71,14 @@ def expected_success_fee(terms: FeeTermsValues, ev_thousands: Decimal) -> Decima
                 fee += (ceiling - floor) * tier.percent / 100
             if tier.up_to is not None:
                 floor = max(floor, tier.up_to * THOUSAND)
-    return _money(max(fee, terms.minimum_fee))
+    return to_cents(max(fee, terms.minimum_fee))
 
 
 def net_fee(terms: FeeTermsValues, ev_thousands: Decimal, retainers_paid: Decimal) -> Decimal:
     fee = expected_success_fee(terms, ev_thousands)
     if terms.retainers_creditable:
         fee = max(fee - retainers_paid, Decimal("0"))
-    return _money(fee)
+    return to_cents(fee)
 
 
 def _values_of(row: FeeTerms) -> FeeTermsValues:
@@ -100,7 +96,7 @@ def _values_of(row: FeeTerms) -> FeeTermsValues:
 def _snapshot(values: FeeTermsValues) -> dict[str, Any]:
     def text(value: Any) -> Any:
         if isinstance(value, Decimal):
-            return f"{_money(value):.2f}"
+            return f"{to_cents(value):.2f}"
         return value
 
     snapshot = {field: text(getattr(values, field)) for field in TERM_FIELDS if field != "lehman_tiers"}
@@ -143,7 +139,7 @@ class FeeService:
                 )
             )
         ).scalar_one()
-        return _money(Decimal(total))
+        return to_cents(Decimal(total))
 
     async def engaged(self, db: AsyncSession, mandate_id: int) -> bool:
         labels = (await db.execute(select(DealLink.label).where(DealLink.mandate_id == mandate_id))).scalars()

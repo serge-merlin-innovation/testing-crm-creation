@@ -39,6 +39,7 @@ from src.infrastructure.config.settings import get_settings  # noqa: E402
 from src.infrastructure.database import session as database_session  # noqa: E402
 from src.infrastructure.database.session import Base, async_session  # noqa: E402
 from src.interfaces.main import app  # noqa: E402
+from src.modules.access.routes import request_limiter as access_request_limiter  # noqa: E402
 from src.modules.role.service import seed_default_roles  # noqa: E402
 
 TEST_DATABASE_URL = get_settings().DATABASE_URL
@@ -111,6 +112,7 @@ async def db_session(test_db):
 @pytest_asyncio.fixture(scope="function")
 async def client(test_db):
     app.dependency_overrides = {}
+    access_request_limiter.reset()
 
     async def override_get_db():
         yield test_db

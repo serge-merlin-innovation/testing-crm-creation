@@ -1,4 +1,4 @@
-"""Ticket #8: the pipeline board, stage gates, milestones, closing and closed-deal access."""
+"""The pipeline board, stage gates, milestones, closing and closed-deal access."""
 
 from datetime import UTC, datetime, timedelta
 
@@ -193,9 +193,9 @@ async def test_stage_moves_cannot_close_and_stale_versions_conflict(world):
 async def test_filters_return_only_accessible_deals(world):
     await clear_builtin_gate(world)
     falcon = await create_mandate(world, world.partner, world.client_id)
-    heron = await create_mandate(world, world.partner, world.client_id, code_name="Heron", type="buy_side")
+    heron = await create_mandate(world, world.partner, await world.company("Qwerty Tools"), code_name="Heron", type="buy_side")
     await at_stage(world, heron["id"], DealStage.MARKETING)
-    await create_mandate(world, world.outsider, world.client_id, code_name="Hidden", type="buy_side")
+    await create_mandate(world, world.outsider, await world.company("Zyxwv Unrelated"), code_name="Hidden", type="buy_side")
 
     async def codes(**filters) -> list[str]:
         response = await world.partner.client.get("/api/v1/mandates/", params=filters, headers=world.partner.headers)

@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -90,32 +91,34 @@ function Summary({ mandate, onSaved, messages }: { mandate: Mandate; onSaved: (m
 
   return (
     <div className="flex flex-col gap-4">
-      <Table>
-        <TableBody>
-          <TableRow>
-            <TableHead>{messages["deals.client"]}</TableHead>
-            <TableCell>{mandate.client_name}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableHead>{messages["deals.target"]}</TableHead>
-            <TableCell>{mandate.target_name ?? messages["deals.none"]}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableHead>{messages["deals.type"]}</TableHead>
-            <TableCell>{mandate.type}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableHead>{messages["deals.stage"]}</TableHead>
-            <TableCell>
-              <Badge variant="secondary">{stageLabel(mandate.stage)}</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableHead>{messages["deals.leadPartner"]}</TableHead>
-            <TableCell>{mandate.lead_partner_name}</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+      <ScrollRegion label={messages["a11y.scrollRegion"]}>
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableHead>{messages["deals.client"]}</TableHead>
+              <TableCell>{mandate.client_name}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableHead>{messages["deals.target"]}</TableHead>
+              <TableCell>{mandate.target_name ?? messages["deals.none"]}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableHead>{messages["deals.type"]}</TableHead>
+              <TableCell>{mandate.type}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableHead>{messages["deals.stage"]}</TableHead>
+              <TableCell>
+                <Badge variant="secondary">{stageLabel(mandate.stage)}</Badge>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableHead>{messages["deals.leadPartner"]}</TableHead>
+              <TableCell>{mandate.lead_partner_name}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </ScrollRegion>
 
       {conflict ? (
         <Alert variant="destructive">
@@ -207,7 +210,7 @@ function TeamTab({ mandateId, messages }: { mandateId: number; messages: Message
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
-      <div className="overflow-x-auto" tabIndex={0}>
+      <ScrollRegion label={messages["a11y.scrollRegion"]}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -238,7 +241,7 @@ function TeamTab({ mandateId, messages }: { mandateId: number; messages: Message
             ))}
           </TableBody>
         </Table>
-      </div>
+      </ScrollRegion>
 
       {canManage ? (
         <form onSubmit={(event) => void add(event)}>
@@ -285,7 +288,7 @@ function TeamTab({ mandateId, messages }: { mandateId: number; messages: Message
       ) : null}
 
       <h3>{messages["deals.wallCrossings"]}</h3>
-      <div className="overflow-x-auto" tabIndex={0}>
+      <ScrollRegion label={messages["a11y.scrollRegion"]}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -306,7 +309,7 @@ function TeamTab({ mandateId, messages }: { mandateId: number; messages: Message
             ))}
           </TableBody>
         </Table>
-      </div>
+      </ScrollRegion>
     </div>
   );
 }
@@ -315,7 +318,7 @@ function HistoryTab({ mandateId, version, messages }: { mandateId: number; versi
   const history = useApiData<HistoryEntry[]>(`/api/v1/mandates/${mandateId}/history?v=${version}`);
 
   return (
-    <div className="overflow-x-auto" tabIndex={0}>
+    <ScrollRegion label={messages["a11y.scrollRegion"]}>
       <Table>
         <TableHeader>
           <TableRow>
@@ -338,7 +341,7 @@ function HistoryTab({ mandateId, version, messages }: { mandateId: number; versi
           ))}
         </TableBody>
       </Table>
-    </div>
+    </ScrollRegion>
   );
 }
 

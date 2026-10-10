@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..audit.service import AuditContext, AuditService, audit_export
 from ..common.exceptions import PermissionDeniedError, RoleNotFoundError
 from ..common.spreadsheet import safe_row
+from ..user.models import User
 from .models import Role
 from .permissions import DEFAULT_ROLES, Permission, RoleName
 from .schemas import MatrixColumn, MatrixRow, PermissionMatrix, RolePermissionsUpdate, RoleRead
@@ -16,6 +17,11 @@ from .schemas import MatrixColumn, MatrixRow, PermissionMatrix, RolePermissionsU
 ADMIN_LOCKED_PERMISSIONS = frozenset({Permission.ROLES_MANAGE.value, Permission.USERS_MANAGE.value})
 
 ROLE_ORDER = [name.value for name in RoleName]
+
+
+async def users_with_permission(db: AsyncSession, permission: Permission) -> list[User]:
+    users = (await db.execute(select(User).where(User.is_deleted.is_(False), User.role_id.is_not(None)))).scalars()
+    return [user for user in users if permission.value in (user.permissions or [])]
 
 
 def _ordered(roles: list[Role]) -> list[Role]:

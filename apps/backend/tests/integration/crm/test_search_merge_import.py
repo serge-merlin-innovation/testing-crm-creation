@@ -478,7 +478,7 @@ async def hidden_deal_with_parties(world):
     return {"buyer": buyer_id, "contact": buyer_contact, "counterparty": counterparty_id}
 
 
-# CON-04 c3 (review B2): a buyer or counterparty on a hidden deal blocks the merge, and nothing moves.
+# CON-04 c3: a buyer or counterparty on a hidden deal blocks the merge, and nothing moves.
 @pytest.mark.parametrize("party", ["buyer", "contact", "counterparty"])
 async def test_merge_blocked_for_a_party_on_a_hidden_deal(world, party):
     parties = await hidden_deal_with_parties(world)
@@ -491,3 +491,37 @@ async def test_merge_blocked_for_a_party_on_a_hidden_deal(world, party):
     blocked = await merge(world.outsider, record_type=record_type, survivor_id=other, duplicate_id=parties[party])
     assert blocked.status_code == 403, blocked.text
     assert "deal_buyers" not in blocked.text
+
+
+async def test_saved_filter_pe_benelux_ticket_10_50(world):
+    small_fund = await world.company("Benelux Growth Partners", "financial_investor")
+    big_fund = await world.company("Benelux Mega Buyout", "financial_investor")
+    no_profile = await world.company("Benelux Unprofiled Fund", "financial_investor")
+    for fund, low, high in ((small_fund, "10", "50"), (big_fund, "100", "500")):
+        saved = await world.partner.client.put(
+            f"/api/v1/companies/{fund}/investor-profile",
+            json={"sector_ids": [], "country_ids": [world.country_id], "ticket_min": low, "ticket_max": high},
+            headers=world.partner.headers,
+        )
+        assert saved.status_code == 200, saved.text
+    client_id = await world.company("Acme Holding")
+    await create_mandate(world, world.partner, client_id, code_name="Mid", estimated_ev="25000")
+    criteria = {
+        "company_types": ["financial_investor"],
+        "country_ids": [world.country_id],
+        "ev_min": "10000",
+        "ev_max": "50000",
+    }
+    created = await world.partner.client.post(
+        "/api/v1/saved-filters/",
+        json={"name": "PE funds, Benelux, ticket 10-50m", "criteria": criteria},
+        headers=world.partner.headers,
+    )
+    assert created.status_code == 201, created.text
+
+    found = await search(world.partner, filter_id=created.json()["id"])
+
+    ids = [c["id"] for c in found["companies"]]
+    assert small_fund in ids
+    assert big_fund not in ids
+    assert no_profile not in ids

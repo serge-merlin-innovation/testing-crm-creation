@@ -10,6 +10,7 @@ from ..common.exceptions import ValidationError
 from ..mandate.policy import EditGrant, ReadGrant
 from ..role.authorization import RequireRecordAccess, require_permission
 from ..role.permissions import Permission
+from ..security.dependencies import StepUpUserDep
 from .dependencies import ReportingServiceDep
 from .schemas import DashboardRead, FeeForecastRead, ForecastRead, ForecastValues, HomeRead, WinLossRead
 
@@ -67,7 +68,12 @@ async def fee_forecast(
     dependencies=[RequireRecordAccess],
 )
 async def fee_forecast_export(
-    db: AsyncSessionDep, service: ReportingServiceDep, user: FeeReaderDep, clock: ClockDep, context: AuditContextDep
+    db: AsyncSessionDep,
+    service: ReportingServiceDep,
+    user: FeeReaderDep,
+    clock: ClockDep,
+    context: AuditContextDep,
+    _: StepUpUserDep,
 ) -> Response:
     body = service.fee_forecast_xlsx(db, await service.fee_forecast(db, user, clock.now()), context)
     await db.commit()

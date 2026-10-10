@@ -85,7 +85,7 @@ class PrivacyService:
     async def export_person(self, db: AsyncSession, contact_id: int, context: AuditContext) -> tuple[str, str]:
         """Everything the CRM holds about one person, as a JSON file (GDPR access request).
 
-        Decision 70: other users' private notes stay out, and a deal appears by code name only."""
+        Other users' private notes stay out (ACT-02 c1), and a deal appears by code name only (AUTHZ-06 c2)."""
         contact = await self._contact(db, contact_id)
         employments = (
             (await db.execute(select(Employment).where(Employment.contact_id == contact_id).order_by(Employment.id)))

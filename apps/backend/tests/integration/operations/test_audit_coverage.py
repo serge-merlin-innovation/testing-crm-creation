@@ -34,6 +34,7 @@ NOT_RECORD_CHANGES = {
     ("PUT", "/api/v1/test-hooks/clock"),
     ("POST", "/api/v1/test-hooks/emails/capture"),
     ("POST", "/api/v1/test-hooks/jobs/run"),
+    ("PUT", "/api/v1/test-hooks/registers"),
 }
 
 NOW = datetime(2026, 10, 12, 9, 0, tzinfo=UTC)
@@ -73,6 +74,7 @@ async def world(client, seeded_db):
     built = await build_world(seeded_db)
     built.partner = await built.actor("paula", RoleName.PARTNER)
     built.analyst = await built.actor("anna", RoleName.ANALYST)
+    built.admin = await built.actor("adam", RoleName.ADMIN)
     yield built
     for session in built.clients:
         await session.aclose()
@@ -162,5 +164,57 @@ async def test_the_inbound_mail_webhook_needs_no_session_and_is_audited_as_the_s
         },
     )
     assert response.status_code == 202, response.text
-    rows = await world.db.execute(select(AuditEntry.user_id).where(AuditEntry.action == "email.unmatched"))
+    rows = await world.db.execute(select(AuditEntry.user_id).where(AuditEntry.action == "unmatched_email.created"))
     assert [user_id for (user_id,) in rows] == [world.partner.id]
+
+
+async def test_restore_feed_regeneration_and_unmatched_mail_are_audited(world, client, monkeypatch):
+    monkeypatch.setattr(settings, "INBOUND_EMAIL_SECRET", "hook-secret")
+    partner = world.partner
+    client_id = await world.company("Acme Holding")
+    company = {"record_type": "company", "record_id": client_id}
+    created = await partner.client.post(
+        "/api/v1/activities/",
+        json={"type": "call", "occurred_at": NOW.isoformat(), "note": "Intro", "links": [company]},
+        headers=partner.headers,
+    )
+    activity_id = created.json()["id"]
+    assert (await partner.client.delete(f"/api/v1/activities/{activity_id}", headers=partner.headers)).status_code < 300
+    restored = await world.admin.client.post(f"/api/v1/activities/{activity_id}/restore", headers=world.admin.headers)
+    assert restored.status_code < 300, restored.text
+    assert (await actions(world.db, "activity"))[-1] == "activity.restored"
+
+    regenerated = await partner.client.post("/api/v1/calendar-feed/regenerate", headers=partner.headers)
+    assert regenerated.status_code < 300, regenerated.text
+    assert await actions(world.db, "calendar_feed") == ["calendar_feed.regenerated"]
+
+    address = (await partner.client.get("/api/v1/email-logging/address")).json()["address"]
+    for subject in ("First", "Second"):
+        inbound = await client.post(
+            "/api/v1/email-logging/inbound",
+            headers={"X-Inbound-Secret": "hook-secret"},
+            json={
+                "sender": partner.email,
+                "to": ["nobody@example.org"],
+                "bcc": [address],
+                "subject": subject,
+                "text": "x",
+                "spf": "pass",
+                "dkim": "pass",
+                "message_id": f"<{subject}@x>",
+            },
+        )
+        assert inbound.status_code == 202, inbound.text
+    unmatched = (await partner.client.get("/api/v1/email-logging/unmatched", headers=partner.headers)).json()
+    linked = await partner.client.post(
+        f"/api/v1/email-logging/unmatched/{unmatched[0]['id']}/link", json={"links": [company]}, headers=partner.headers
+    )
+    assert linked.status_code < 300, linked.text
+    discarded = await partner.client.delete(f"/api/v1/email-logging/unmatched/{unmatched[1]['id']}", headers=partner.headers)
+    assert discarded.status_code < 300, discarded.text
+    assert await actions(world.db, "unmatched_email") == [
+        "unmatched_email.created",
+        "unmatched_email.created",
+        "unmatched_email.linked",
+        "unmatched_email.discarded",
+    ]

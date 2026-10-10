@@ -2,8 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from ..notification.dependencies import get_email_sender
-from ..notification.ports import EmailSender
+from ...infrastructure.email import EmailSender, get_email_sender
 from .service import OfferService, ProcessService, TemplateService
 
 

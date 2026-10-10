@@ -23,7 +23,7 @@ from ..company.models import Company
 from ..company.ports import UnconfiguredAnnualAccounts, UnconfiguredRegister
 from ..company.service import CompanyService
 from ..compliance.models import DealCounterparty
-from ..contact.models import Employment
+from ..contact.models import Employment, RelationshipHolder
 from ..fee.models import FeeTerms
 from ..fee.schemas import FeeTermsValues
 from ..mandate.models import DealTeamMember, Mandate
@@ -616,13 +616,22 @@ class OriginationService:
             )
             if now - last < threshold:
                 continue
-            await self._task(db, opportunity, f"Reconnect with {company_name}", now.date(), now)
+            holder = await relationship_holder(db, opportunity.company_id)
+            await self._task(db, opportunity, f"Reconnect with {company_name}", now.date(), now, holder)
             opportunity.dormant_tasked_at = now
         await db.commit()
         await self.notifications.flush_emails()
 
-    async def _task(self, db: AsyncSession, opportunity: Opportunity, title: str, due: date, now: datetime) -> None:
-        owner = await db.get(User, opportunity.owner_id)
+    async def _task(
+        self,
+        db: AsyncSession,
+        opportunity: Opportunity,
+        title: str,
+        due: date,
+        now: datetime,
+        assignee_id: int | None = None,
+    ) -> None:
+        owner = await db.get(User, assignee_id or opportunity.owner_id)
         if owner is None or owner.is_deleted:
             return
         db.add(
@@ -649,6 +658,20 @@ class OriginationService:
             ),
             now,
         )
+
+
+async def relationship_holder(db: AsyncSession, company_id: int) -> int | None:
+    """The colleague with the strongest CON-02 relationship to someone currently working at the company."""
+    contacts = select(Employment.contact_id).where(Employment.company_id == company_id, Employment.end_date.is_(None))
+    return (
+        await db.execute(
+            select(RelationshipHolder.user_id)
+            .join(User, User.id == RelationshipHolder.user_id)
+            .where(RelationshipHolder.contact_id.in_(contacts), User.is_deleted.is_(False))
+            .order_by(RelationshipHolder.strength.desc(), RelationshipHolder.user_id)
+            .limit(1)
+        )
+    ).scalar_one_or_none()
 
 
 async def last_activity(db: AsyncSession, company_id: int) -> datetime | None:

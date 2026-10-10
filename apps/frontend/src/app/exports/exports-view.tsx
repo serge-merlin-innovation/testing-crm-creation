@@ -1,7 +1,9 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState } from "react";
 import { EditAction } from "@/components/session-provider";
+import { StepUpExport } from "@/components/step-up-export";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +15,6 @@ import { readDetail } from "@/lib/deals";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { approvalNotice } from "@/lib/offboarding";
 import { sendJson, useApiData } from "@/lib/use-api";
-import { apiFetch } from "@/services/api";
 
 type Messages = Record<MessageKey, string>;
 type Preview = { row_count: number; needs_approval: boolean; limit: number };
@@ -35,21 +36,6 @@ export function ExportsView({ messages, canApprove }: { messages: Messages; canA
   const [reason, setReason] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-
-  async function download() {
-    setError("");
-    const response = await apiFetch(`/api/v1/exports/contacts${qs}`).catch(() => null);
-    if (!response?.ok) {
-      setError(response ? readDetail(await response.json().catch(() => null), messages["common.loadFailed"]) : messages["common.loadFailed"]);
-      return;
-    }
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(await response.blob());
-    link.download = "contacts.csv";
-    link.click();
-    URL.revokeObjectURL(link.href);
-    await approvals.reload();
-  }
 
   async function request() {
     setNotice("");
@@ -104,9 +90,15 @@ export function ExportsView({ messages, canApprove }: { messages: Messages; canA
               </Alert>
             ) : null}
             <EditAction>
-              <Button className="self-start" onClick={() => void download()}>
-                {messages["exports.download"]}
-              </Button>
+              <div className="self-start">
+                <StepUpExport
+                  path={`/api/v1/exports/contacts${qs}`}
+                  filename="contacts.csv"
+                  label={messages["exports.download"]}
+                  messages={messages}
+                  onDone={approvals.reload}
+                />
+              </div>
             </EditAction>
             {preview.data?.needs_approval ? (
               <div className="flex items-end gap-2">
@@ -139,43 +131,45 @@ export function ExportsView({ messages, canApprove }: { messages: Messages; canA
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{messages["common.name"]}</TableHead>
-                <TableHead>{messages["exports.filter"]}</TableHead>
-                <TableHead>{messages["exports.rows"]}</TableHead>
-                <TableHead>{messages["exports.reason"]}</TableHead>
-                <TableHead>{messages["users.status"]}</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(approvals.data ?? []).map((approval) => (
-                <TableRow key={approval.id}>
-                  <TableCell>{approval.requested_by_name}</TableCell>
-                  <TableCell>{approval.filter.q ?? ""}</TableCell>
-                  <TableCell>{approval.row_count}</TableCell>
-                  <TableCell>{approval.reason}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{approval.status}</Badge>
-                  </TableCell>
-                  <TableCell className="flex gap-2">
-                    {canApprove && approval.status === "pending" ? (
-                      <>
-                        <Button size="sm" onClick={() => void decide(approval.id, true)}>
-                          {messages["exports.approve"]}
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => void decide(approval.id, false)}>
-                          {messages["exports.reject"]}
-                        </Button>
-                      </>
-                    ) : null}
-                  </TableCell>
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{messages["common.name"]}</TableHead>
+                  <TableHead>{messages["exports.filter"]}</TableHead>
+                  <TableHead>{messages["exports.rows"]}</TableHead>
+                  <TableHead>{messages["exports.reason"]}</TableHead>
+                  <TableHead>{messages["users.status"]}</TableHead>
+                  <TableHead />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {(approvals.data ?? []).map((approval) => (
+                  <TableRow key={approval.id}>
+                    <TableCell>{approval.requested_by_name}</TableCell>
+                    <TableCell>{approval.filter.q ?? ""}</TableCell>
+                    <TableCell>{approval.row_count}</TableCell>
+                    <TableCell>{approval.reason}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{approval.status}</Badge>
+                    </TableCell>
+                    <TableCell className="flex gap-2">
+                      {canApprove && approval.status === "pending" ? (
+                        <>
+                          <Button size="sm" onClick={() => void decide(approval.id, true)}>
+                            {messages["exports.approve"]}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => void decide(approval.id, false)}>
+                            {messages["exports.reject"]}
+                          </Button>
+                        </>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollRegion>
           {approvals.data?.length === 0 ? <p>{messages["common.empty"]}</p> : null}
         </CardContent>
       </Card>

@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollRegion } from "@/components/scroll-region";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,7 @@ export function UsersView({ messages }: { messages: Messages }) {
               <AlertDescription>{messages["common.loadFailed"]}</AlertDescription>
             </Alert>
           ) : null}
-          <div className="overflow-x-auto">
+          <ScrollRegion label={messages["a11y.scrollRegion"]}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -94,7 +95,7 @@ export function UsersView({ messages }: { messages: Messages }) {
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </ScrollRegion>
           {users.data?.data.length === 0 ? <p>{messages["common.empty"]}</p> : null}
         </CardContent>
       </Card>

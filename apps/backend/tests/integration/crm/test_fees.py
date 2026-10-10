@@ -1,4 +1,4 @@
-"""Ticket #10: fees (DEAL-05), fee-field visibility (AUTHZ-06), invoices (REP-07), ROLE-01 c4 + c5."""
+"""Fees (DEAL-05), fee-field visibility (AUTHZ-06), invoices (REP-07), ROLE-01 c4 + c5."""
 
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -12,6 +12,7 @@ from src.modules.fee.schemas import FeeTermsValues
 from src.modules.fee.service import expected_success_fee
 from src.modules.role.permissions import RoleName
 from tests.integration.crm.deal_helpers import build_world, create_mandate
+from tests.integration.foundation.helpers import step_up
 
 pytestmark = pytest.mark.asyncio
 
@@ -249,7 +250,7 @@ async def test_analyst_gets_no_fee_fields_in_api_or_exports(world):
         body = (await analyst.client.get(path, headers=analyst.headers)).text
         assert not [key for key in FEE_KEYS if key in body], (path, body)
 
-    export = await world.partner.client.get("/api/v1/fees/export", headers=world.partner.headers)
+    export = await world.partner.client.get("/api/v1/fees/export", headers=step_up(world.partner.email, world.partner.headers))
     assert export.status_code == 200
     assert export.headers["content-type"].startswith("text/csv")
     assert "Falcon" in export.text

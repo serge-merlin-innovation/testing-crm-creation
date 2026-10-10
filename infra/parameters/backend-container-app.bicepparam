@@ -78,6 +78,11 @@ param environmentVariables = [
     // CD resolves Azure's public frontend origin after Infra creates the environment.
     value: readEnvironmentVariable('BACKEND_FRONTEND_BASE_URL', '')
   }
+  {
+    // Links in emails and the calendar feed, and the only Origin a login POST may come from (AUTH-01 c5).
+    name: 'APP_URL'
+    value: readEnvironmentVariable('BACKEND_FRONTEND_BASE_URL', '')
+  }
 ]
 param secretEnvironmentVariables = [
   {

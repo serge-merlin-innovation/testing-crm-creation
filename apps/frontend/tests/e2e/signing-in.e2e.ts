@@ -50,3 +50,26 @@ test("shows the last sign-in date, IP and device on the profile", async ({ page 
   await expect(card.getByRole("row", { name: /Device/ })).toContainText("Chrome");
   await expect(card.getByRole("row", { name: /Last sign-in/ })).toContainText(/\d{2}\/\d{2}\/\d{4}/);
 });
+
+// AUTH-01 c8: a service error shows a clear message and a Try again that resubmits the password step.
+test("offers a retry when the login service fails", async ({ page }) => {
+  let failures = 1;
+  await page.route("**/api/v1/auth/login", async (route) => {
+    if (failures > 0) {
+      failures -= 1;
+      await route.fulfill({ status: 500, contentType: "application/json", body: '{"detail":"db at 10.1.2.3 down"}' });
+      return;
+    }
+    await route.fallback();
+  });
+  await page.goto(LOGIN_PATH);
+  await page.getByLabel("Email").fill(MEMBER.email);
+  await page.getByLabel("Password").fill(MEMBER.password);
+  await page.getByRole("button", { name: "Sign in securely" }).click();
+
+  const alert = page.locator("form").getByRole("alert");
+  await expect(alert).toContainText("Something went wrong. Please try again.");
+  await expect(alert).not.toContainText("10.1.2.3");
+  await page.getByRole("button", { name: "Try again" }).click();
+  await expect(page.getByRole("heading", { name: /Authentication code|Set up two-factor sign-in/ })).toBeVisible();
+});

@@ -1,6 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import { LOGIN_PATH } from "@/lib/auth-routing";
 import { ADMIN, inviteUser, signIn, signInApi, runId } from "./identities";
+import { currentCode } from "./totp";
 
 const PARTNER = {
   firstName: "Pieter",
@@ -54,7 +55,9 @@ async function seed(browser: Browser) {
   const company = await request.post("/api/v1/companies/", {
     headers,
     data: {
-      name: `Brightwater Foods ${RUN.toUpperCase()}r`,
+      // Random tokens only: a client name shared with another run's deal is a potential conflict (AUTHZ-05 c1),
+      // which would hold this deal in Conflict review.
+      name: `Client ${runId()}`,
       type: "target",
       country_id: countries.find((country) => country.code === "NL")!.id,
       vat_or_registry_number: `NLR-${RUN}`,
@@ -162,8 +165,15 @@ test("back-office sees the 12-month fee forecast and exports it to Excel", async
   await expect(page.getByRole("heading", { name: "Fee forecast, next 12 months" })).toBeVisible();
   await expect(page.locator("tbody tr")).toHaveCount(12);
   await expect(page.getByRole("columnheader", { name: "Invoiced (EUR)" })).toBeVisible();
+  // AUTH-02 c5: a mass export asks the code again.
+  await page.getByRole("button", { name: "Export to Excel" }).click();
+  const dialog = page.getByRole("alertdialog");
+  await dialog.getByLabel("Authentication code").fill("000000");
+  await dialog.getByRole("button", { name: "Export" }).click();
+  await expect(dialog.getByText("That code is not valid.", { exact: false })).toBeVisible();
   const download = page.waitForEvent("download");
-  await page.getByRole("link", { name: "Export to Excel" }).click();
+  await dialog.getByLabel("Authentication code").fill(currentCode(BACK_OFFICE.email));
+  await dialog.getByRole("button", { name: "Export" }).click();
   expect((await download).suggestedFilename()).toBe("fee-forecast.xlsx");
 });
 
