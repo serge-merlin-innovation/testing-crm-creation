@@ -120,19 +120,10 @@ class AuthSettings(BaseSettings):
     # peer (no proxy). Set to 1 behind a single nginx/Caddy, 2 if Cloudflare is also in front.
     TRUSTED_PROXY_HOPS: int = config("TRUSTED_PROXY_HOPS", default=0, cast=int)
 
-    OAUTH_MICROSOFT_CLIENT_ID: str = config("OAUTH_MICROSOFT_CLIENT_ID", default="")
-    OAUTH_MICROSOFT_CLIENT_SECRET: str = config("OAUTH_MICROSOFT_CLIENT_SECRET", default="")
-    # Entra directory the Microsoft provider authenticates against. "common" is
-    # Microsoft's own default and admits ANY account, including personal Outlook
-    # ones - set the tenant GUID per deployment. The production validator warns
-    # when a configured Microsoft client is left on a multi-tenant authority.
-    OAUTH_MICROSOFT_TENANT: str = config("OAUTH_MICROSOFT_TENANT", default="common")
-    OAUTH_REDIRECT_BASE_URL: str = config("OAUTH_REDIRECT_BASE_URL", default="http://localhost:8000")
-
-    # Where an OAuth callback sends the browser once the session exists. The callback
-    # runs on the backend origin, so a relative redirect would land on FastAPI rather
-    # than the Next.js app.
-    FRONTEND_BASE_URL: str = config("FRONTEND_BASE_URL", default="http://localhost:3000")
+    # Scheduled-job runner (reminders, expiries, digests, retention). Off in tests, which use the
+    # test-only "run jobs now" hook instead.
+    SCHEDULED_JOBS_ENABLED: bool = config("SCHEDULED_JOBS_ENABLED", default=True, cast=bool)
+    SCHEDULED_JOBS_TICK_SECONDS: int = config("SCHEDULED_JOBS_TICK_SECONDS", default=60, cast=int)
 
 
 class APISettings(BaseSettings):
@@ -149,12 +140,10 @@ class AppSettings(BaseSettings):
     LICENSE_NAME: str = config("LICENSE_NAME", default="All rights reserved.")
 
 
-class FirstSuperuserSettings(BaseSettings):
-    FIRST_SUPERUSER_NAME: str = config("FIRST_SUPERUSER_NAME", default="")
-    FIRST_SUPERUSER_EMAIL: str = config("FIRST_SUPERUSER_EMAIL", default="")
-    FIRST_SUPERUSER_USERNAME: str = config("FIRST_SUPERUSER_USERNAME", default="")
-    FIRST_SUPERUSER_PASSWORD: str = config("FIRST_SUPERUSER_PASSWORD", default="")
-    DEFAULT_ROLE_NAME: str = config("DEFAULT_ROLE_NAME", default="user")
+class FirstAdminSettings(BaseSettings):
+    FIRST_ADMIN_NAME: str = config("FIRST_ADMIN_NAME", default="")
+    FIRST_ADMIN_EMAIL: str = config("FIRST_ADMIN_EMAIL", default="")
+    FIRST_ADMIN_PASSWORD: str = config("FIRST_ADMIN_PASSWORD", default="")
 
 
 class SecuritySettings(BaseSettings):
@@ -204,7 +193,7 @@ class Settings(
     AuthSettings,
     APISettings,
     AppSettings,
-    FirstSuperuserSettings,
+    FirstAdminSettings,
     SecuritySettings,
     LoggingSettings,
 ):

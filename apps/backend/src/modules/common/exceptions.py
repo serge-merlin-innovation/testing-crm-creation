@@ -32,3 +32,11 @@ class RoleNotFoundError(ResourceNotFoundError):
 
 class InsufficientCreditsError(DomainError):
     pass
+
+
+class LastAdminError(PermissionDeniedError):
+    pass
+
+
+class OneRolePerUserError(ResourceExistsError):
+    pass

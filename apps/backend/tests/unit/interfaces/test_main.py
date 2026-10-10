@@ -18,6 +18,7 @@ async def test_custom_lifespan_preserves_create_tables_setting(monkeypatch) -> N
     with (
         patch.object(main, "validate_production_security"),
         patch.object(main, "lifespan_factory", return_value=wrapped_lifespan) as factory,
+        patch.object(main, "seed_default_roles"),
     ):
         async with main.lifespan_with_security(app):
             pass

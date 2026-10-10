@@ -1,77 +1,42 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from ..common.schemas import TimestampSchema
-
-
-class RoleBase(BaseModel):
-    name: Annotated[
-        str,
-        Field(
-            description="Name of the role",
-            examples=["user", "moderator", "admin"],
-            min_length=1,
-            max_length=50,
-        ),
-    ]
+from .permissions import ALL_PERMISSIONS
 
 
-class Role(TimestampSchema, RoleBase):
-    pass
+class RoleRead(BaseModel):
+    id: int
+    name: str
+    description: str | None = None
+    permissions: list[str] = Field(default_factory=list)
+    created_at: datetime
+    is_deleted: bool = False
 
 
-class RoleSelect(BaseModel):
+class RolePermissionsUpdate(BaseModel):
+    permissions: Annotated[list[str], Field(examples=[["audit.read", "users.manage"]])]
+
+    @field_validator("permissions")
+    @classmethod
+    def known_permissions_only(cls, value: list[str]) -> list[str]:
+        unknown = sorted(set(value) - set(ALL_PERMISSIONS))
+        if unknown:
+            raise ValueError(f"Unknown permissions: {unknown}")
+        return sorted(set(value))
+
+
+class MatrixColumn(BaseModel):
     id: int
     name: str
 
 
-class RoleRead(RoleBase):
-    id: int
-    created_at: datetime
-    description: str | None = None
-    is_deleted: bool = False
+class MatrixRow(BaseModel):
+    permission: str
+    granted: list[bool]
 
 
-class RoleCreate(RoleBase):
-    description: Annotated[
-        str | None,
-        Field(
-            description="Description of the role",
-            max_length=500,
-            default=None,
-        ),
-    ]
-
-
-class RoleCreateInternal(RoleCreate):
-    pass
-
-
-class RoleUpdate(BaseModel):
-    name: Annotated[
-        str | None,
-        Field(
-            description="Name of the role",
-            min_length=1,
-            max_length=50,
-            default=None,
-        ),
-    ]
-    description: Annotated[
-        str | None,
-        Field(
-            description="Description of the role",
-            max_length=500,
-            default=None,
-        ),
-    ]
-
-
-class RoleUpdateInternal(RoleUpdate):
-    updated_at: datetime
-
-
-class RoleDelete(BaseModel):
-    pass
+class PermissionMatrix(BaseModel):
+    columns: list[MatrixColumn]
+    rows: list[MatrixRow]

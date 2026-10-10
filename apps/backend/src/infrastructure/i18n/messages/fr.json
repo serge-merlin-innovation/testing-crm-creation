@@ -1,0 +1,7 @@
+{
+  "auth.invalid_credentials": "Adresse e-mail ou mot de passe invalide",
+  "auth.no_role": "Votre compte n'a pas de rôle. Demandez l'accès à un administrateur.",
+  "errors.forbidden": "Vous n'avez pas l'autorisation d'effectuer cette action.",
+  "errors.last_admin": "Le dernier administrateur ne peut pas être retiré.",
+  "errors.one_role_per_user": "Un utilisateur ne peut avoir qu'un seul rôle."
+}

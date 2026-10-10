@@ -1,67 +1,63 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Query
-from fastcrud import PaginatedListResponse, compute_offset, paginated_response
+from fastapi import APIRouter, Response
 
-from ...infrastructure.auth.http_exceptions import NotFoundException
-from ...infrastructure.dependencies import AsyncSessionDep, CurrentSuperUserDep
-from ..common.exceptions import RoleNotFoundError
-from ..common.utils.error_handler import handle_exception
+from ...infrastructure.dependencies import AsyncSessionDep
+from ..audit.dependencies import AuditContextDep
+from .authorization import require_permission
 from .dependencies import RoleServiceDep
-from .schemas import RoleRead
+from .permissions import Permission
+from .schemas import PermissionMatrix, RolePermissionsUpdate, RoleRead
 
 router = APIRouter(tags=["Roles"])
 
+RoleManagerDep = Annotated[dict[str, Any], require_permission(Permission.ROLES_MANAGE)]
+
+
+@router.get("/", response_model=list[RoleRead], summary="List roles (Admin)")
+async def get_roles(db: AsyncSessionDep, role_service: RoleServiceDep, _: RoleManagerDep) -> list[dict[str, Any]]:
+    return await role_service.list_roles(db)
+
 
 @router.get(
-    "/",
-    response_model=PaginatedListResponse[RoleRead],
-    summary="List roles (Admin)",
-    responses={401: {"description": "Not authenticated"}, 403: {"description": "Not authorized - requires admin privileges"}},
+    "/matrix",
+    response_model=PermissionMatrix,
+    summary="Permission matrix (Admin)",
+    description="Roles are columns, permissions are rows; `granted[i]` belongs to `columns[i]`.",
 )
-async def get_roles(
-    db: AsyncSessionDep,
-    role_service: RoleServiceDep,
-    _: CurrentSuperUserDep,
-    page: Annotated[int, Query(ge=1)] = 1,
-    items_per_page: Annotated[int, Query(ge=1, le=100)] = 10,
-) -> dict:
-    try:
-        roles_data = await role_service.get_all(
-            db=db,
-            skip=compute_offset(page, items_per_page),
-            limit=items_per_page,
-        )
-        return paginated_response(crud_data=roles_data, page=page, items_per_page=items_per_page)
-    except Exception as e:
-        http_exception = handle_exception(e)
-        if http_exception:
-            raise http_exception
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+async def get_permission_matrix(db: AsyncSessionDep, role_service: RoleServiceDep, _: RoleManagerDep) -> PermissionMatrix:
+    return await role_service.matrix(db)
 
 
 @router.get(
-    "/{name}",
+    "/matrix/export",
+    summary="Export the permission matrix as CSV (Admin)",
+    response_class=Response,
+    responses={200: {"content": {"text/csv": {}}}},
+)
+async def export_permission_matrix(
+    db: AsyncSessionDep, role_service: RoleServiceDep, context: AuditContextDep, _: RoleManagerDep
+) -> Response:
+    body = await role_service.export_matrix_csv(db, context)
+    return Response(
+        content=body,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="permission-matrix.csv"'},
+    )
+
+
+@router.put(
+    "/{role_id}/permissions",
     response_model=RoleRead,
-    summary="Get a role by name (Admin)",
-    responses={
-        401: {"description": "Not authenticated"},
-        403: {"description": "Not authorized - requires admin privileges"},
-        404: {"description": "Role not found"},
-    },
+    summary="Replace a role's permissions (Admin)",
+    description="Applies at every holder's next request and is written to the audit log.",
 )
-async def get_role_by_name(
-    name: str,
+async def set_role_permissions(
+    role_id: int,
+    values: RolePermissionsUpdate,
     db: AsyncSessionDep,
     role_service: RoleServiceDep,
-    _: CurrentSuperUserDep,
+    context: AuditContextDep,
+    _: RoleManagerDep,
 ) -> dict[str, Any]:
-    try:
-        return await role_service.get_by_name(name, db)
-    except RoleNotFoundError:
-        raise NotFoundException("Role not found")
-    except Exception as e:
-        http_exception = handle_exception(e)
-        if http_exception:
-            raise http_exception
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+    return await role_service.set_permissions(role_id, values, db, context)

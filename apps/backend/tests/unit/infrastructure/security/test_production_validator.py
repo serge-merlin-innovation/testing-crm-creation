@@ -23,14 +23,10 @@ class TestProductionSecurityValidator:
             "SESSION_SECURE_COOKIES": True,
             "SESSION_TIMEOUT_MINUTES": 30,
             "CSRF_ENABLED": True,
-            "FIRST_SUPERUSER_USERNAME": "secure_admin_user",
-            "FIRST_SUPERUSER_PASSWORD": "very_secure_admin_password_123",
+            "FIRST_ADMIN_EMAIL": "admin@firm.be",
+            "FIRST_ADMIN_PASSWORD": "very_secure_admin_password_123",
             "PRODUCTION_SECURITY_VALIDATION_ENABLED": True,
             "PRODUCTION_SECURITY_STRICT_MODE": False,
-            # OAuth settings - no Microsoft client configured by default, so the
-            # tenant-scope check stays quiet unless a test opts in.
-            "OAUTH_MICROSOFT_CLIENT_ID": "",
-            "OAUTH_MICROSOFT_TENANT": "common",
         }
         defaults.update(overrides)
 
@@ -143,42 +139,6 @@ class TestProductionSecurityValidator:
         docs_warnings = [log for log in warning_logs if "API documentation" in log.message]
         assert len(docs_warnings) > 0
 
-    def test_multi_tenant_microsoft_oauth_logs_warning(self, caplog):
-        settings = self.create_mock_settings(
-            OAUTH_MICROSOFT_CLIENT_ID="a-client-id",
-            OAUTH_MICROSOFT_TENANT="common",
-        )
-        validator = ProductionSecurityValidator(settings)
-
-        validator.validate_production_security()
-
-        warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
-        tenant_warnings = [log for log in warning_logs if "OAUTH_MICROSOFT_TENANT" in log.message]
-        assert len(tenant_warnings) > 0
-
-    def test_single_tenant_microsoft_oauth_logs_no_warning(self, caplog):
-        settings = self.create_mock_settings(
-            OAUTH_MICROSOFT_CLIENT_ID="a-client-id",
-            OAUTH_MICROSOFT_TENANT="11111111-2222-3333-4444-555555555555",
-        )
-        validator = ProductionSecurityValidator(settings)
-
-        validator.validate_production_security()
-
-        warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
-        tenant_warnings = [log for log in warning_logs if "OAUTH_MICROSOFT_TENANT" in log.message]
-        assert len(tenant_warnings) == 0
-
-    def test_unconfigured_microsoft_oauth_logs_no_warning(self, caplog):
-        settings = self.create_mock_settings(OAUTH_MICROSOFT_CLIENT_ID="", OAUTH_MICROSOFT_TENANT="common")
-        validator = ProductionSecurityValidator(settings)
-
-        validator.validate_production_security()
-
-        warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
-        tenant_warnings = [log for log in warning_logs if "OAUTH_MICROSOFT_TENANT" in log.message]
-        assert len(tenant_warnings) == 0
-
     def test_insecure_session_config_logs_warning(self, caplog):
         settings = self.create_mock_settings(
             SESSION_SECURE_COOKIES=False,
@@ -199,20 +159,15 @@ class TestProductionSecurityValidator:
         assert len(timeout_warnings) > 0
         assert len(csrf_warnings) > 0
 
-    def test_weak_first_superuser_credentials_logs_warning(self, caplog):
-        settings = self.create_mock_settings(FIRST_SUPERUSER_USERNAME="admin", FIRST_SUPERUSER_PASSWORD="123456")
+    def test_weak_first_admin_password_logs_warning(self, caplog):
+        settings = self.create_mock_settings(FIRST_ADMIN_EMAIL="admin@firm.be", FIRST_ADMIN_PASSWORD="123456")
         validator = ProductionSecurityValidator(settings)
 
         validator.validate_production_security()
 
         warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
+        password_warnings = [log for log in warning_logs if "First admin password" in log.message]
 
-        username_warnings = [
-            log for log in warning_logs if "First superuser username" in log.message and "predictable" in log.message
-        ]
-        password_warnings = [log for log in warning_logs if "First superuser password" in log.message]
-
-        assert len(username_warnings) > 0
         assert len(password_warnings) > 0
 
     def test_convenience_function(self):
@@ -221,12 +176,12 @@ class TestProductionSecurityValidator:
         with pytest.raises(ProductionSecurityError):
             validate_production_security(settings)
 
-    def test_no_first_superuser_credentials_skips_credential_checks(self, caplog):
-        settings = self.create_mock_settings(FIRST_SUPERUSER_USERNAME="", FIRST_SUPERUSER_PASSWORD="")
+    def test_no_first_admin_credentials_skips_credential_checks(self, caplog):
+        settings = self.create_mock_settings(FIRST_ADMIN_EMAIL="", FIRST_ADMIN_PASSWORD="")
         validator = ProductionSecurityValidator(settings)
 
         validator.validate_production_security()
 
         warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
-        credential_warnings = [log for log in warning_logs if "First superuser" in log.message]
+        credential_warnings = [log for log in warning_logs if "First admin" in log.message]
         assert len(credential_warnings) == 0

@@ -13,7 +13,7 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 
 from ..modules.common.utils.error_handler import register_exception_handlers
-from .auth.dependencies import get_current_superuser
+from .auth.dependencies import get_current_user
 from .auth.setup import auth
 from .config.settings import (
     DatabaseSettings,
@@ -280,12 +280,10 @@ def create_application(
 
         if is_production and _enable_docs_in_production:
             apply_dependency = True
-            dependency_to_apply = (
-                docs_production_dependency if docs_production_dependency is not None else get_current_superuser
-            )
+            dependency_to_apply = docs_production_dependency if docs_production_dependency is not None else get_current_user
         elif not is_local and not is_production:
             apply_dependency = True
-            dependency_to_apply = get_current_superuser
+            dependency_to_apply = docs_production_dependency if docs_production_dependency is not None else get_current_user
 
         if apply_dependency and dependency_to_apply is not None:
             docs_router = APIRouter(dependencies=[Depends(dependency_to_apply)])

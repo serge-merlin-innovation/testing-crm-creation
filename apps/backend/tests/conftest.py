@@ -9,6 +9,8 @@ os.environ.setdefault("SECRET_KEY", "test_secret_key_for_tests")
 os.environ.setdefault("SQLITE_URI", ":memory:")
 os.environ.setdefault("SQLITE_ASYNC_PREFIX", "sqlite+aiosqlite:///")
 os.environ["CSRF_ENABLED"] = "true"
+os.environ["CREATE_TABLES_ON_STARTUP"] = "false"
+os.environ["SCHEDULED_JOBS_ENABLED"] = "false"
 
 # Disable the testcontainers Ryuk reaper. Under `pytest -n auto`, each xdist worker
 # is a separate process that spins up its own Ryuk container, and Docker Desktop
@@ -21,8 +23,7 @@ from pathlib import Path  # noqa: E402
 
 import pytest  # noqa: E402
 import pytest_asyncio  # noqa: E402
-from crudauth import get_password_hash  # noqa: E402
-from faker import Faker  # noqa: E402
+from crudauth.ratelimit import MemoryRateLimiterBackend  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
 from sqlalchemy.orm import sessionmaker  # noqa: E402
@@ -31,12 +32,12 @@ from testcontainers.core.docker_client import DockerClient  # noqa: E402
 # mypy: disable-error-code="import-untyped"
 from testcontainers.postgres import PostgresContainer  # noqa: E402
 
-from src.infrastructure.auth.dependencies import get_current_superuser, get_current_user  # noqa: E402
+from src.infrastructure.auth.setup import auth  # noqa: E402
 from src.infrastructure.config.settings import get_settings  # noqa: E402
+from src.infrastructure.database import session as database_session  # noqa: E402
 from src.infrastructure.database.session import Base, async_session  # noqa: E402
 from src.interfaces.main import app  # noqa: E402
-from src.modules.role.models import Role  # noqa: E402
-from src.modules.user.models import User  # noqa: E402
+from src.modules.role.service import seed_default_roles  # noqa: E402
 
 TEST_DATABASE_URL = get_settings().DATABASE_URL
 
@@ -122,137 +123,26 @@ async def client(test_db):
     app.dependency_overrides = {}
 
 
-@pytest_asyncio.fixture
-async def test_role(db_session: AsyncSession):
-    role = Role(name="user", description="Default user role")
-    db_session.add(role)
-    await db_session.commit()
-    return {"id": role.id, "name": role.name}
+@pytest_asyncio.fixture(scope="function")
+async def fresh_db(test_db):
+    yield test_db
 
 
-@pytest_asyncio.fixture
-async def second_test_role(db_session: AsyncSession):
-    role = Role(name="moderator", description="Moderator role")
-    db_session.add(role)
-    await db_session.commit()
-    return {"id": role.id, "name": role.name}
+@pytest_asyncio.fixture(scope="function")
+async def seeded_db(test_db):
+    await seed_default_roles(test_db)
+    yield test_db
 
 
-@pytest_asyncio.fixture
-async def test_user(db_session: AsyncSession, test_role: dict):
-    fake = Faker()
-    user = User(
-        name=fake.name(),
-        username=f"u{fake.random_int(10000, 99999)}",
-        email=fake.email(),
-        hashed_password=get_password_hash("Password123!"),
-        is_superuser=False,
-        role_id=test_role["id"],
-        profile_image_url="https://example.com/test.jpg",
+@pytest.fixture
+def startup_against_test_db(monkeypatch, test_db_engine):
+    monkeypatch.setattr(
+        database_session, "local_session", sessionmaker(test_db_engine, class_=AsyncSession, expire_on_commit=False)
     )
-    db_session.add(user)
-    await db_session.commit()
-    return {
-        "id": user.id,
-        "name": user.name,
-        "username": user.username,
-        "email": user.email,
-        "is_superuser": user.is_superuser,
-        "role_id": user.role_id,
-        "role_name": test_role["name"],
-        "password": "Password123!",
-        "profile_image_url": user.profile_image_url,
-    }
-
-
-@pytest_asyncio.fixture
-async def test_user_2(db_session: AsyncSession, test_role: dict):
-    fake = Faker()
-    user = User(
-        name=fake.name(),
-        username=f"u{fake.random_int(10000, 99999)}",
-        email=fake.email(),
-        hashed_password=get_password_hash("Password123!"),
-        is_superuser=False,
-        role_id=test_role["id"],
-        profile_image_url="https://example.com/test2.jpg",
-    )
-    db_session.add(user)
-    await db_session.commit()
-    return {
-        "id": user.id,
-        "name": user.name,
-        "username": user.username,
-        "email": user.email,
-        "is_superuser": user.is_superuser,
-        "role_id": user.role_id,
-        "role_name": test_role["name"],
-        "password": "Password123!",
-        "profile_image_url": user.profile_image_url,
-    }
-
-
-@pytest_asyncio.fixture
-async def test_superuser(db_session: AsyncSession, test_role: dict):
-    fake = Faker()
-    user = User(
-        name=fake.name(),
-        username=f"su{fake.random_int(10000, 99999)}",
-        email=fake.email(),
-        hashed_password=get_password_hash("SuperuserPass123!"),
-        is_superuser=True,
-        role_id=test_role["id"],
-        profile_image_url="https://example.com/superuser.jpg",
-    )
-    db_session.add(user)
-    await db_session.commit()
-    return {
-        "id": user.id,
-        "name": user.name,
-        "username": user.username,
-        "email": user.email,
-        "is_superuser": user.is_superuser,
-        "role_id": user.role_id,
-        "role_name": test_role["name"],
-        "password": "SuperuserPass123!",
-        "profile_image_url": user.profile_image_url,
-    }
-
-
-@pytest_asyncio.fixture
-async def auth_client(client: AsyncClient, test_user: dict):
-
-    async def override_get_current_user():
-        return test_user
-
-    app.dependency_overrides[get_current_user] = override_get_current_user
-    return client
-
-
-@pytest_asyncio.fixture
-async def auth_client_2(client: AsyncClient, test_user_2: dict):
-
-    async def override_get_current_user():
-        return test_user_2
-
-    app.dependency_overrides[get_current_user] = override_get_current_user
-    return client
-
-
-@pytest_asyncio.fixture
-async def superuser_auth_client(client: AsyncClient, test_superuser: dict):
-
-    async def override_get_current_user():
-        return test_superuser
-
-    async def override_get_current_superuser():
-        return test_superuser
-
-    app.dependency_overrides[get_current_user] = override_get_current_user
-    app.dependency_overrides[get_current_superuser] = override_get_current_superuser
-    return client
 
 
 @pytest.fixture(autouse=True)
-def mock_oauth_settings(monkeypatch):
-    monkeypatch.setenv("OAUTH_REDIRECT_BASE_URL", "http://localhost:8000")
+def isolated_login_limiter(monkeypatch: pytest.MonkeyPatch):
+    # Every test client shares one IP and the limiter lives in process memory, so a lockout
+    # left behind would throttle the other auth tests in this worker.
+    monkeypatch.setattr(auth.runtime.lockout, "backend", MemoryRateLimiterBackend())

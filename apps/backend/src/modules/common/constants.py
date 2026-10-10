@@ -10,6 +10,8 @@ from ...infrastructure.auth.http_exceptions import (
 from .exceptions import (
     DomainError,
     InsufficientCreditsError,
+    LastAdminError,
+    OneRolePerUserError,
     PermissionDeniedError,
     ResourceExistsError,
     ResourceNotFoundError,
@@ -27,15 +29,16 @@ SUPPORT_ID_LENGTH = 8
 MAX_ENTITLEMENTS_PER_USER = 100
 DEFAULT_BATCH_SIZE = 100
 
+# First isinstance match wins, so subclasses come before their bases.
 EXCEPTION_MAPPING: dict[type[DomainError], Callable[[str], HTTPException]] = {
+    UserExistsError: lambda message: HTTPException(status_code=409, detail="A user with this email already exists."),
+    LastAdminError: lambda message: ForbiddenException(detail="The last Admin cannot be removed."),
+    OneRolePerUserError: lambda message: HTTPException(status_code=409, detail="A user can hold only one role."),
     InsufficientCreditsError: lambda message: HTTPException(status_code=402, detail=message or "Insufficient credits."),
     ResourceNotFoundError: lambda message: NotFoundException(detail="The requested resource was not found."),
     ResourceExistsError: lambda message: DuplicateValueException(detail="This resource already exists."),
     ValidationError: lambda message: UnprocessableEntityException(detail=message),
     PermissionDeniedError: lambda message: ForbiddenException(detail="You don't have permission for this action."),
     UserNotFoundError: lambda message: NotFoundException(detail="User not found."),
-    UserExistsError: lambda message: DuplicateValueException(
-        detail=message or "A user with this email or username already exists."
-    ),
     RoleNotFoundError: lambda message: NotFoundException(detail="The requested role was not found."),
 }

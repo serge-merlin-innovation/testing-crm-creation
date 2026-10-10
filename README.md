@@ -56,7 +56,7 @@ Requires `node >=22`, `pnpm`, `uv`, and Postgres — natively, or in a container
 pnpm install
 ```
 
-Copy the env files, then review `POSTGRES_PASSWORD`, `SECRET_KEY` and `FIRST_SUPERUSER_PASSWORD`
+Copy the env files, then review `POSTGRES_PASSWORD`, `SECRET_KEY` and `FIRST_ADMIN_PASSWORD`
 in `apps/backend/.env`:
 
 ```bash

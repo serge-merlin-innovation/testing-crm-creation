@@ -1,0 +1,7 @@
+{
+  "auth.invalid_credentials": "Invalid email or password",
+  "auth.no_role": "Your account has no role. Ask an administrator for access.",
+  "errors.forbidden": "You don't have permission for this action.",
+  "errors.last_admin": "The last Admin cannot be removed.",
+  "errors.one_role_per_user": "A user can hold only one role."
+}

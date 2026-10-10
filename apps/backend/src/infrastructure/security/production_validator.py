@@ -85,10 +85,7 @@ class ProductionSecurityValidator:
         session_warnings = self._check_session_security()
         warnings.extend(session_warnings)
 
-        warnings.extend(self._check_first_superuser_credentials())
-
-        oauth_warnings = self._check_oauth_tenant_scope()
-        warnings.extend(oauth_warnings)
+        warnings.extend(self._check_first_admin_credentials())
 
         for warning in warnings:
             self.logger.warning(f"PRODUCTION SECURITY WARNING: {warning}")
@@ -148,20 +145,6 @@ class ProductionSecurityValidator:
     def _is_database_password_empty(self) -> bool:
         return not self.settings.POSTGRES_PASSWORD or self.settings.POSTGRES_PASSWORD.strip() == ""
 
-    def _check_oauth_tenant_scope(self) -> list[str]:
-        warnings = []
-
-        multi_tenant_authorities = {"", "common", "organizations", "consumers"}
-
-        if self.settings.OAUTH_MICROSOFT_CLIENT_ID and self.settings.OAUTH_MICROSOFT_TENANT in multi_tenant_authorities:
-            warnings.append(
-                f"OAUTH_MICROSOFT_TENANT is '{self.settings.OAUTH_MICROSOFT_TENANT or 'unset'}', a multi-tenant "
-                f"authority, while a Microsoft OAuth client is configured. Any Microsoft account can then reach "
-                f"the sign-in flow. Set it to your Entra directory (tenant) GUID for production."
-            )
-
-        return warnings
-
     def _is_cors_too_permissive(self) -> bool:
         return self.settings.CORS_ENABLED and "*" in self.settings.CORS_ORIGINS_LIST
 
@@ -202,24 +185,17 @@ class ProductionSecurityValidator:
 
         return warnings
 
-    def _check_first_superuser_credentials(self) -> list[str]:
+    def _check_first_admin_credentials(self) -> list[str]:
         warnings: list[str] = []
 
-        if not self.settings.FIRST_SUPERUSER_USERNAME or not self.settings.FIRST_SUPERUSER_PASSWORD:
+        if not self.settings.FIRST_ADMIN_EMAIL or not self.settings.FIRST_ADMIN_PASSWORD:
             return warnings
 
-        weak_usernames = ["admin", "administrator", "root", "user", "test", "demo"]
-        if self.settings.FIRST_SUPERUSER_USERNAME.lower() in weak_usernames:
-            warnings.append(
-                f"First superuser username '{self.settings.FIRST_SUPERUSER_USERNAME}' is predictable. "
-                f"Consider using a less obvious username for better security."
-            )
-
-        password = self.settings.FIRST_SUPERUSER_PASSWORD
+        password = self.settings.FIRST_ADMIN_PASSWORD
         if len(password) < 12:
             warnings.append(
-                "First superuser password is shorter than 12 characters. Use a longer, "
-                "stronger password for the first superuser in production."
+                "First admin password is shorter than 12 characters. Use a longer, "
+                "stronger password for the first admin in production."
             )
 
         weak_passwords = {
@@ -252,8 +228,7 @@ class ProductionSecurityValidator:
         }
         if password.lower() in weak_passwords:
             warnings.append(
-                "First superuser password appears to be a common weak password. "
-                "Use a strong, unique password for the first superuser."
+                "First admin password appears to be a common weak password. Use a strong, unique password for the first admin."
             )
 
         return warnings

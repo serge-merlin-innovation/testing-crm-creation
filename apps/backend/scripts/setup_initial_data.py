@@ -5,8 +5,7 @@ from pathlib import Path
 backend_dir = Path(__file__).parent.parent
 sys.path.append(str(backend_dir))
 
-from scripts.create_first_role import create_first_role  # noqa: E402
-from scripts.create_first_superuser import create_first_superuser  # noqa: E402
+from scripts.create_first_admin import create_first_admin  # noqa: E402
 from src.infrastructure.database.session import create_tables  # noqa: E402
 from src.infrastructure.logging import get_logger  # noqa: E402
 
@@ -24,11 +23,8 @@ async def setup_initial_data() -> None:
         logger.error(f"Error creating database tables: {str(e)}", exc_info=True)
         sys.exit(1)
 
-    logger.info("Creating first role...")
-    await create_first_role()
-
-    logger.info("Creating superuser...")
-    await create_first_superuser()
+    logger.info("Seeding roles and the first Admin...")
+    await create_first_admin()
 
     logger.info("Initial data setup complete")
 
