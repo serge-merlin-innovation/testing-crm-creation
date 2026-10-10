@@ -8,6 +8,9 @@ from ....modules.account.routes import policy_router as password_policy_router
 from ....modules.account.routes import users_router as account_users_router
 from ....modules.activity.routes import notes_router, timeline_router
 from ....modules.activity.routes import router as activities_router
+from ....modules.api_access.routes import clients_router as api_clients_router
+from ....modules.api_access.routes import oauth_router
+from ....modules.api_access.routes import tokens_router as api_tokens_router
 from ....modules.audit.routes import router as audit_router
 from ....modules.company.routes import router as companies_router
 from ....modules.contact.routes import router as contacts_router
@@ -39,6 +42,9 @@ router.include_router(account_auth_router, prefix="/auth")
 router.include_router(security_router)
 router.include_router(session_router)
 router.include_router(password_policy_router)
+router.include_router(api_tokens_router, prefix="/api-tokens")
+router.include_router(api_clients_router, prefix="/api-clients")
+router.include_router(oauth_router, prefix="/oauth")
 
 if settings.ENVIRONMENT not in (EnvironmentOption.PRODUCTION, EnvironmentOption.STAGING):
     router.include_router(testing_router, prefix="/test-hooks")

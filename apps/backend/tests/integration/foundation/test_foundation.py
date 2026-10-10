@@ -61,7 +61,8 @@ async def test_login_is_by_email(client: AsyncClient, seeded_db: AsyncSession):
 async def test_microsoft_sign_in_is_gone(client: AsyncClient):
     paths = app.openapi()["paths"]
 
-    assert not [path for path in paths if "oauth" in path or "microsoft" in path]
+    # The NFR-05 client-credentials token endpoint (/api/v1/oauth/token) is API access, not sign-in.
+    assert not [path for path in paths if path.startswith("/api/v1/auth/") and "oauth" in path or "microsoft" in path]
     assert (await client.get("/api/v1/auth/oauth/microsoft")).status_code == 404
 
 

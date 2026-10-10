@@ -1,8 +1,9 @@
+from collections.abc import Awaitable, Callable
 from typing import Annotated, Any
 
 from crudauth import Principal
 from crudauth.exceptions import UnauthorizedException
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...modules.user.crud import crud_users
@@ -17,10 +18,29 @@ async def get_current_principal(
     return principal
 
 
+BearerResolver = Callable[[Request, AsyncSession, str], Awaitable[Principal]]
+_bearer_resolver: BearerResolver | None = None
+
+
+def set_bearer_resolver(resolver: BearerResolver | None) -> None:
+    """Registered at startup by the API-access module, which owns API tokens (NFR-05)."""
+    global _bearer_resolver
+    _bearer_resolver = resolver
+
+
 async def get_optional_principal(
-    principal: Annotated[Principal | None, Depends(auth.current_user(optional=True))],
+    request: Request,
+    db: Annotated[AsyncSession, Depends(async_session)],
+    session_principal: Annotated[Principal | None, Depends(auth.current_user(optional=True))],
 ) -> Principal | None:
-    return principal
+    scheme, _, credential = (request.headers.get("authorization") or "").partition(" ")
+    if scheme.lower() == "basic":
+        raise UnauthorizedException("Basic authentication is not supported. Use an API token or OAuth 2.0 client credentials.")
+    if scheme.lower() == "bearer":
+        if _bearer_resolver is None or not credential.strip():
+            raise UnauthorizedException("Not authenticated")
+        return await _bearer_resolver(request, db, credential.strip())
+    return session_principal
 
 
 async def _load_user(db: AsyncSession, user_id: Any) -> dict[str, Any] | None:

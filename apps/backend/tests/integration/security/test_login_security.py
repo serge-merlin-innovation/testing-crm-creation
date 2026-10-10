@@ -325,6 +325,7 @@ async def test_step_up_requires_a_fresh_code(client, seeded_db, clock):
     async def probe(user: StepUpUserDep) -> dict:
         return {"id": user["id"]}
 
+    original_routes = list(app.router.routes)
     app.include_router(router)
     try:
         await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
@@ -335,4 +336,5 @@ async def test_step_up_requires_a_fresh_code(client, seeded_db, clock):
         ok = await client.post("/__step-up-probe", headers={**csrf, "X-Step-Up-Code": current_code("ana@firm.be")})
         assert ok.status_code == 200
     finally:
-        app.router.routes[:] = [r for r in app.router.routes if getattr(r, "path", "") != "/__step-up-probe"]
+        app.router.routes[:] = original_routes
+        app.openapi_schema = None
