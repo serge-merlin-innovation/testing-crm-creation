@@ -1298,5 +1298,9 @@
  "{0} already belongs to the group of {1}: change its parent on the company first": {
   "fr": "{0} fait déjà partie du groupe de {1} : modifiez d'abord sa société mère sur la fiche société",
   "nl": "{0} behoort al tot de groep van {1}: wijzig eerst de moedermaatschappij op de bedrijfsfiche"
+ },
+ "No filed accounts for this number": {
+  "fr": "Aucun compte déposé pour ce numéro",
+  "nl": "Geen neergelegde rekeningen voor dit nummer"
  }
 }
