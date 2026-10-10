@@ -3,17 +3,20 @@ import re
 from datetime import datetime, timedelta
 from typing import Any
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import String, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..activity.models import Activity, ActivityLink, Note
 from ..audit.models import AuditEntry
 from ..audit.service import AuditContext, AuditService, audit_export
+from ..buyer.models import DealBuyer
 from ..common.exceptions import ContactNotFoundError, PermissionDeniedError, ResourceNotFoundError
-from ..contact.models import Contact, Employment
+from ..contact.models import Contact, Employment, RelationshipHolder
+from ..email_logging.models import LoggedEmail, UnmatchedEmail
 from ..mandate.models import Mandate
 from ..notification.schemas import EventKind
 from ..notification.service import Message, NotificationService
+from ..process.models import GeneratedDocument
 from ..role.authorization import has_permission
 from ..role.permissions import Permission
 from ..user.models import User
@@ -100,8 +103,31 @@ class PrivacyService:
             for note in await self._notes(db, contact_id)
             if note.visibility != "private" or note.author_id == context.user_id
         ]
+        letters = (
+            (
+                await db.execute(
+                    select(GeneratedDocument).where(GeneratedDocument.contact_id == contact_id).order_by(GeneratedDocument.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        buyer_links = (
+            (await db.execute(select(DealBuyer).where(DealBuyer.contact_id == contact_id).order_by(DealBuyer.id)))
+            .scalars()
+            .all()
+        )
+        holders = (
+            await db.execute(
+                select(RelationshipHolder.strength, User.name, User.first_name, User.last_name)
+                .join(User, User.id == RelationshipHolder.user_id)
+                .where(RelationshipHolder.contact_id == contact_id)
+                .order_by(RelationshipHolder.id)
+            )
+        ).all()
         mandate_ids = {link.record_id for link in links if link.record_type == "mandate"}
         mandate_ids |= {note.mandate_id for note in notes if note.mandate_id is not None}
+        mandate_ids |= {letter.mandate_id for letter in letters} | {buyer.mandate_id for buyer in buyer_links}
         code_names: dict[int, str] = dict(
             (await db.execute(select(Mandate.id, Mandate.code_name).where(Mandate.id.in_(mandate_ids)))).tuples().all()
         )
@@ -126,6 +152,24 @@ class PrivacyService:
                 for a in activities
             ],
             "notes": [_note_row(n, code_names) for n in notes],
+            "generated_documents": [
+                {
+                    "mandate": code_names.get(letter.mandate_id),
+                    "kind": letter.kind,
+                    "language": letter.language,
+                    "subject": letter.subject,
+                    "body": letter.body,
+                    "created_at": _jsonable(letter.created_at),
+                }
+                for letter in letters
+            ],
+            "buyer_links": [
+                {"mandate": code_names.get(buyer.mandate_id), "added_at": _jsonable(buyer.added_at)} for buyer in buyer_links
+            ],
+            "relationship_holders": [
+                {"user": " ".join(p for p in (first, last) if p) or name, "strength": strength}
+                for strength, name, first, last in holders
+            ],
             "legal_holds": [_row(h) for h in holds],
             "history": [
                 {"action": e.action, "at": _jsonable(e.created_at), "old": e.old_values, "new": e.new_values} for e in changes
@@ -138,7 +182,7 @@ class PrivacyService:
             record_type="contact",
             record_id=contact_id,
             filters={"contact_id": contact_id},
-            rows=1 + len(activities) + len(notes),
+            rows=1 + len(activities) + len(notes) + len(letters) + len(buyer_links) + len(holders),
         )
         await db.commit()
         return json.dumps(document, indent=2, default=str), f"person-{contact_id}.json"
@@ -208,6 +252,20 @@ class PrivacyService:
         notes = await self._notes(db, contact_id)
         for note in notes:
             note.body = ERASED
+        for letter in (await db.execute(select(GeneratedDocument).where(GeneratedDocument.contact_id == contact_id))).scalars():
+            letter.subject = _redact(letter.subject, identifiers)
+            letter.body = _redact(letter.body, identifiers)
+        activity_ids = [activity.id for activity in activities]
+        for logged in (await db.execute(select(LoggedEmail).where(LoggedEmail.activity_id.in_(activity_ids)))).scalars():
+            logged.sender = _redact(logged.sender, identifiers)
+            logged.subject = _redact(logged.subject, identifiers)
+        if contact.email:
+            mentioned = func.lower(func.cast(UnmatchedEmail.correspondents, String)).contains(contact.email.lower())
+            for unmatched in (await db.execute(select(UnmatchedEmail).where(mentioned))).scalars():
+                unmatched.sender = _redact(unmatched.sender, identifiers)
+                unmatched.subject = _redact(unmatched.subject, identifiers)
+                unmatched.body = _redact(unmatched.body, identifiers)
+                unmatched.correspondents = [_redact(c, identifiers) for c in unmatched.correspondents]
 
         contact.first_name = "Erased"
         contact.last_name = f"contact {contact.id}"

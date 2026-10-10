@@ -16,6 +16,7 @@ from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import ValidationError
 from ..company.models import Company
 from ..company.service import normalize_name
+from ..contact.models import Employment
 from ..mandate import pipeline as mandate_pipeline
 from ..mandate import service as mandate_service
 from ..mandate.models import Mandate
@@ -25,6 +26,7 @@ from ..mandate.stages import DealStage
 from ..notification.ports import LoggingEmailSender
 from ..notification.schemas import EventKind
 from ..notification.service import Message, NotificationService
+from ..privacy.models import LegalHold
 from ..role.permissions import Permission
 from ..task.models import Task
 from ..user.models import User
@@ -37,6 +39,7 @@ HISTORY_WINDOW = timedelta(days=730)
 NAME_SIMILARITY = 0.6
 REVIEW_WORKING_DAYS = 5
 KYC_VALID_FOR = timedelta(days=365)
+AML_RETENTION_YEARS = 10
 
 
 def add_working_days(start: datetime, days: int) -> datetime:
@@ -379,6 +382,26 @@ class KycService:
             "can_review": Permission.KYC_MANAGE.value in (grant.user.get("permissions") or []),
         }
 
+    async def _hold_client_people(self, db: AsyncSession, mandate: Mandate, context: AuditContext) -> None:
+        """Decision 23 / GDPR-02 c2: a KYC'd client's current people fall under AML retention, so erasure is blocked."""
+        now = context.clock.now()
+        reason = f"AML {AML_RETENTION_YEARS}-year retention: KYC of {mandate.code_name}"
+        people = select(Employment.contact_id).where(Employment.company_id == mandate.client_id, Employment.end_date.is_(None))
+        held = select(LegalHold.contact_id).where(LegalHold.reason == reason, LegalHold.released_at.is_(None))
+        for contact_id in (await db.execute(people.where(Employment.contact_id.not_in(held)).distinct())).scalars():
+            db.add(
+                LegalHold(
+                    contact_id=contact_id,
+                    reason=reason,
+                    created_by=context.user_id,
+                    created_at=now,
+                    until=now.replace(year=now.year + AML_RETENTION_YEARS),
+                )
+            )
+            self.audit.record(
+                db, context, "legal_hold.added", record_type="contact", record_id=contact_id, new_values={"reason": reason}
+            )
+
     async def review(self, db: AsyncSession, grant: DealGrant, values: KycReview, context: AuditContext) -> dict[str, Any]:
         assert context.user_id is not None
         mandate = grant.mandate
@@ -409,6 +432,8 @@ class KycService:
             record.reviewer_id = context.user_id
             record.reviewed_at = now
         record.approved_at = now if status == KycStatus.APPROVED else None
+        if status == KycStatus.APPROVED:
+            await self._hold_client_people(db, mandate, context)
         self.audit.record(
             db,
             context,

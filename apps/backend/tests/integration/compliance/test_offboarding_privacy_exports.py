@@ -13,10 +13,12 @@ from src.infrastructure.jobs import job_runner
 from src.interfaces.main import app
 from src.modules.audit.models import AuditEntry
 from src.modules.contact.models import Contact
+from src.modules.email_logging.models import LoggedEmail, UnmatchedEmail
 from src.modules.notification.models import Notification
 from src.modules.notification.service import NotificationService
 from src.modules.privacy.jobs import MONTHLY, RETENTION_JOB
 from src.modules.privacy.service import PrivacyService
+from src.modules.process.models import GeneratedDocument
 from src.modules.role.permissions import RoleName
 from tests.integration.crm.deal_helpers import build_world, create_mandate, seed_buyers
 from tests.integration.foundation.helpers import step_up
@@ -248,6 +250,92 @@ async def test_export_person_produces_all_data_and_activities_as_a_file(world):
     assert (await world.analyst.client.get(f"/api/v1/contacts/{contact_id}/export")).status_code == 403
 
 
+async def seed_person_traces(world, contact_id: int) -> dict:
+    """A letter, a deal-buyer link, a relationship holder, a logged email and an unmatched email, all about Jan."""
+    mandate = await create_mandate(world, world.partner, world.client_id, code_name="Falcon")
+    buyer_company = await world.company("Northwind Capital", "financial_investor")
+    added = await world.partner.client.post(
+        f"/api/v1/mandates/{mandate['id']}/buyers",
+        json={
+            "items": [{"company_id": buyer_company, "owner_id": world.partner.id, "rationale": "Fit", "contact_id": contact_id}]
+        },
+        headers=world.partner.headers,
+    )
+    assert added.status_code == 200, added.text
+    holder = await world.partner.client.put(
+        f"/api/v1/contacts/{contact_id}/relationship-holders/me", json={"strength": 3}, headers=world.partner.headers
+    )
+    assert holder.status_code == 200, holder.text
+    activity = await world.partner.client.post(
+        "/api/v1/activities/",
+        json={
+            "type": "email",
+            "occurred_at": NOW.isoformat(),
+            "note": "Re: offer",
+            "links": [{"record_type": "contact", "record_id": contact_id}],
+        },
+        headers=world.partner.headers,
+    )
+    assert activity.status_code == 201, activity.text
+    world.db.add(
+        GeneratedDocument(
+            mandate_id=mandate["id"],
+            kind="letter",
+            language="en",
+            subject="Falcon: next phase for Jan Peeters",
+            body="Dear Mr Peeters,\nBest regards",
+            created_by=world.partner.id,
+            created_at=NOW,
+            contact_id=contact_id,
+        )
+    )
+    world.db.add(
+        LoggedEmail(
+            user_id=world.partner.id,
+            activity_id=activity.json()["id"],
+            message_id="<logged@acme.be>",
+            sender="jan@acme.be",
+            subject="Jan Peeters: offer",
+            attachment_names=[],
+            received_at=NOW,
+        )
+    )
+    world.db.add(
+        UnmatchedEmail(
+            user_id=world.partner.id,
+            message_id="<unmatched@acme.be>",
+            sender="paula@firm.be",
+            subject="Call with Jan Peeters",
+            body="Jan Peeters (jan@acme.be) called about timing",
+            correspondents=["jan@acme.be"],
+            attachment_names=[],
+            occurred_at=NOW,
+            received_at=NOW,
+        )
+    )
+    await world.db.commit()
+    return mandate
+
+
+# GDPR-02 c1: the person file also holds the letters to them, the deals they appear on as buyer contact
+# (by code name only) and the colleagues who hold the relationship.
+async def test_person_file_includes_letters_buyer_links_and_relationship_holders(world):
+    contact_id = await contact(world.partner, email="jan@acme.be")
+    mandate = await seed_person_traces(world, contact_id)
+
+    response = await world.compliance.client.get(f"/api/v1/contacts/{contact_id}/export")
+
+    assert response.status_code == 200, response.text
+    document = json.loads(response.text)
+    [letter] = document["generated_documents"]
+    assert (letter["mandate"], letter["subject"]) == ("Falcon", "Falcon: next phase for Jan Peeters")
+    [link] = document["buyer_links"]
+    assert link["mandate"] == "Falcon"
+    assert document["relationship_holders"] == [{"user": "paula", "strength": 3}]
+    assert f'"mandate_id": {mandate["id"]}' not in response.text
+    assert "Acme Holding" not in response.text
+
+
 # GDPR-02 c2: erasure anonymises; activities keep non-personal content.
 async def test_erasure_anonymises_personal_fields_and_keeps_non_personal_activity_content(world):
     contact_id = await contact(world.partner, email="jan@acme.be", phone="+32 2 555 12 34")
@@ -274,6 +362,34 @@ async def test_erasure_anonymises_personal_fields_and_keeps_non_personal_activit
     assert "Peeters" not in activity["note"]
     assert "discussed the sale timeline" in activity["note"]
     assert activity["participants"] == ["[erased]", "paula"]
+
+
+# GDPR-02 c2: erasure also redacts the letters, logged emails and unmatched emails about the person.
+async def test_erasure_redacts_letters_and_logged_and_unmatched_emails(world):
+    contact_id = await contact(world.partner, email="jan@acme.be")
+    await seed_person_traces(world, contact_id)
+
+    response = await world.compliance.client.post(f"/api/v1/contacts/{contact_id}/erase", headers=world.compliance.headers)
+
+    assert response.status_code == 200, response.text
+    world.db.expire_all()
+    letter = (await world.db.execute(select(GeneratedDocument))).scalar_one()
+    logged = (await world.db.execute(select(LoggedEmail))).scalar_one()
+    unmatched = (await world.db.execute(select(UnmatchedEmail))).scalar_one()
+    texts = [
+        letter.subject,
+        letter.body,
+        logged.sender,
+        logged.subject,
+        unmatched.subject,
+        unmatched.body,
+        *unmatched.correspondents,
+    ]
+    for text in texts:
+        assert "Peeters" not in text
+        assert "jan@acme.be" not in text
+    assert letter.subject == "Falcon: next phase for [erased]"
+    assert unmatched.body.endswith("called about timing")
 
 
 async def test_erasure_is_blocked_with_the_reason_when_a_legal_hold_applies(world):

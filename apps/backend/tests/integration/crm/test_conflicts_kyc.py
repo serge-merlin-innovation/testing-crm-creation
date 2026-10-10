@@ -340,6 +340,29 @@ async def test_recording_all_three_checks_approves_kyc_with_date_and_reviewer(wo
     assert (await get(world.partner, path)).json()["status"] == "approved"
 
 
+# GDPR-02 c2 / decision 23: approving KYC places an AML 10-year legal hold on the client's people, so they cannot be erased.
+async def test_approved_kyc_places_an_aml_hold_on_the_clients_contacts(world):
+    mandate = await create_mandate(world, world.partner, world.client_id, code_name="Falcon")
+    created = await post(
+        world.partner,
+        "/api/v1/contacts/",
+        {"first_name": "Jan", "last_name": "Client", "source": "Deal", "company_id": world.client_id},
+    )
+    assert created.status_code == 201, created.text
+    contact_id = created.json()["id"]
+
+    await post(world.compliance, f"/api/v1/mandates/{mandate['id']}/kyc", KYC_DONE)
+    await post(world.compliance, f"/api/v1/mandates/{mandate['id']}/kyc", KYC_DONE)
+
+    holds = (await get(world.compliance, f"/api/v1/contacts/{contact_id}/legal-holds")).json()
+    assert len(holds) == 1
+    assert "AML" in holds[0]["reason"]
+    assert "Falcon" in holds[0]["reason"]
+    assert holds[0]["until"].startswith("2036-")
+    erase = await post(world.compliance, f"/api/v1/contacts/{contact_id}/erase", {})
+    assert erase.status_code == 409
+
+
 # ORI-05 c3: KYC older than 12 months on a running deal gives compliance a refresh task, once.
 async def test_stale_kyc_on_a_running_deal_creates_a_refresh_task(world):
     running = await create_mandate(world, world.partner, world.client_id, code_name="Falcon")
