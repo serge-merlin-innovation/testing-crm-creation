@@ -12,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
+from ...infrastructure.email import get_email_sender
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import ValidationError
 from ..company.models import Company
@@ -22,7 +23,6 @@ from ..mandate.models import Mandate
 from ..mandate.policy import DealGrant
 from ..mandate.schemas import ConflictStatus
 from ..mandate.stages import DealStage
-from ..notification.ports import LoggingEmailSender
 from ..notification.schemas import EventKind
 from ..notification.service import Message, NotificationService
 from ..role.permissions import Permission
@@ -64,7 +64,7 @@ async def _users_with(db: AsyncSession, permission: Permission) -> list[User]:
 
 class ConflictService:
     def __init__(self, notifications: NotificationService | None = None, audit: AuditService | None = None) -> None:
-        self.notifications = notifications or NotificationService(LoggingEmailSender())
+        self.notifications = notifications or NotificationService(get_email_sender())
         self.audit = audit or AuditService()
 
     # The check

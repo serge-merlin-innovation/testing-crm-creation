@@ -10,6 +10,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
+from ...infrastructure.email import get_email_sender
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import CompanyNotFoundError, DealForbiddenError, ValidationError
 from ..common.spreadsheet import safe_row
@@ -19,7 +20,6 @@ from ..contact.models import Contact
 from ..mandate.models import DealTeamMember, Mandate
 from ..mandate.policy import DealAction, DealGrant, DealPolicy
 from ..mandate.stages import DealStage
-from ..notification.ports import LoggingEmailSender
 from ..notification.schemas import EventKind
 from ..notification.service import Message, NotificationService
 from ..picklist.models import PicklistValue
@@ -682,7 +682,7 @@ def _nda(nda: BuyerNda) -> dict[str, Any]:
 
 class BuyerReminders:
     def __init__(self, notifications: NotificationService | None = None) -> None:
-        self.notifications = notifications or NotificationService(LoggingEmailSender())
+        self.notifications = notifications or NotificationService(get_email_sender())
 
     async def run(self, db: AsyncSession, now: datetime) -> None:
         idle = (
