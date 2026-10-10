@@ -1,9 +1,11 @@
+from datetime import timedelta
 from typing import Any
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, HTTPException, Response
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
+from ..api_access.rate_limit import SlidingWindowLimiter
 from ..audit.dependencies import AuditContextDep
 from ..security.dependencies import StepUpUserDep
 from .dependencies import AccessServiceDep
@@ -27,6 +29,10 @@ delegations_router = APIRouter(tags=["Wall crossing"])
 break_glass_router = APIRouter(tags=["Wall crossing"])
 reviews_router = APIRouter(tags=["Wall crossing"])
 
+# A 404 tells a guessed code name from a real one, so guessing is throttled per user.
+REQUESTS_PER_HOUR = 10
+request_limiter = SlidingWindowLimiter(limit=REQUESTS_PER_HOUR, window=timedelta(hours=1))
+
 NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"description": "Not found, or not yours to see"}}
 
 
@@ -36,11 +42,27 @@ NOT_FOUND: dict[int | str, dict[str, Any]] = {404: {"description": "Not found, o
     response_model=MyAccessRequest,
     summary="Ask to join a deal by its code name",
     description="The deal partner (and their delegate) can comment; compliance decides. 404 for an unknown code name.",
-    responses={404: {"description": "No open deal has this code name"}, 409: {"description": "Already staffed or asked"}},
+    responses={
+        404: {"description": "No open deal has this code name"},
+        409: {"description": "Already staffed or asked"},
+        429: {"description": f"More than {REQUESTS_PER_HOUR} requests in an hour"},
+    },
 )
 async def create_request(
-    values: AccessRequestCreate, db: AsyncSessionDep, service: AccessServiceDep, context: AuditContextDep, _: CurrentUserDep
+    values: AccessRequestCreate,
+    db: AsyncSessionDep,
+    service: AccessServiceDep,
+    context: AuditContextDep,
+    user: CurrentUserDep,
+    clock: ClockDep,
 ) -> dict[str, Any]:
+    retry_after = request_limiter.hit(f"user:{user['id']}", clock.now())
+    if retry_after is not None:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many wall-crossing requests. Try again later.",
+            headers={"Retry-After": str(retry_after)},
+        )
     return await service.request(db, values, context)
 
 

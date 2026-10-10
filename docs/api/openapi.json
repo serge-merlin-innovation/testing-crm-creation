@@ -11770,6 +11770,9 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "description": "More than 10 requests in an hour"
           }
         },
         "summary": "Ask to join a deal by its code name",

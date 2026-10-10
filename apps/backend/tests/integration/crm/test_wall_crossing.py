@@ -9,6 +9,7 @@ from sqlalchemy import select
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
 from src.infrastructure.jobs import job_runner
 from src.modules.access.jobs import ACCESS_JOB, run_access_jobs
+from src.modules.access.routes import REQUESTS_PER_HOUR
 from src.modules.mandate.models import WallCrossing
 from src.modules.notification.service import NotificationService
 from src.modules.role.permissions import RoleName
@@ -358,3 +359,14 @@ async def test_role_change_and_mass_export_need_a_fresh_code(world):
     assert (no_code.status_code, wrong.status_code, ok.status_code) == (401, 401, 200)
     assert no_code.headers["X-Step-Up"] == "required"
     assert (export_without.status_code, export_with.status_code) == (401, 200)
+
+
+async def test_guessing_code_names_is_throttled_per_user(world):
+    for attempt in range(REQUESTS_PER_HOUR):
+        guess = await post(world.analyst, "/api/v1/access-requests/", {"code_name": f"Guess{attempt}", "reason": "x"})
+        assert guess.status_code == 404, guess.text
+
+    throttled = await post(world.analyst, "/api/v1/access-requests/", {"code_name": "Falcon", "reason": "x"})
+    assert throttled.status_code == 429
+    assert int(throttled.headers["Retry-After"]) > 0
+    await request_access(world, actor=world.delegate)
