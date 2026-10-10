@@ -36,6 +36,7 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/picklists": { kind: "permission", permission: "settings.manage" },
   "/stage-criteria": { kind: "permission", permission: "settings.manage" },
   "/conflict-reviews": { kind: "permission", permission: "conflicts.register" },
+  "/access": { kind: "authenticated" },
 };
 
 const GATED_BY_DEFAULT: PageAudience = { kind: "authenticated" };
