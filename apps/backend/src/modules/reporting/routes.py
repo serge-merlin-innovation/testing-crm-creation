@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Query, Response
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
@@ -10,18 +10,13 @@ from ..common.exceptions import ValidationError
 from ..mandate.policy import EditGrant, ReadGrant
 from ..role.authorization import RequireRecordAccess, require_permission
 from ..role.permissions import Permission
+from .dependencies import ReportingServiceDep
 from .schemas import DashboardRead, FeeForecastRead, ForecastRead, ForecastValues, HomeRead, WinLossRead
-from .service import ReportingService
 
 router = APIRouter(tags=["Reports"])
 deal_router = APIRouter(tags=["Reports"])
 
 
-def get_reporting_service() -> ReportingService:
-    return ReportingService()
-
-
-ReportingServiceDep = Annotated[ReportingService, Depends(get_reporting_service)]
 DashboardDep = Annotated[dict[str, Any], require_permission(Permission.DASHBOARD_AGGREGATED)]
 FirmDep = Annotated[dict[str, Any], require_permission(Permission.DASHBOARD_FIRM)]
 FeeReaderDep = Annotated[dict[str, Any], require_permission(Permission.FEES_READ)]
