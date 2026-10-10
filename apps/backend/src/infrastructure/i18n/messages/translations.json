@@ -1043,6 +1043,10 @@
   "fr": "Trop de demandes de réinitialisation. Réessayez dans une heure.",
   "nl": "Te veel aanvragen. Probeer het over een uur opnieuw."
  },
+ "Too many wall-crossing requests. Try again later.": {
+  "fr": "Trop de demandes de franchissement de muraille. Réessayez plus tard.",
+  "nl": "Te veel aanvragen om de muur over te steken. Probeer het later opnieuw."
+ },
  "Type at least {0} characters": {
   "fr": "Saisissez au moins {0} caractères",
   "nl": "Typ minstens {0} tekens"
