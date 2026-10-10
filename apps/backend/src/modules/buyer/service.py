@@ -6,10 +6,11 @@ from decimal import Decimal
 from typing import Any
 
 from openpyxl import Workbook  # type: ignore[import-untyped]
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
+from ..activity.models import Activity, ActivityLink
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import CompanyNotFoundError, DealForbiddenError, ValidationError
 from ..common.spreadsheet import safe_row
@@ -698,6 +699,20 @@ def _nda(nda: BuyerNda) -> dict[str, Any]:
     }
 
 
+async def _last_logged_activity(db: AsyncSession, buyer: DealBuyer, now: datetime) -> datetime | None:
+    """The latest call, meeting or email logged on the buyer company or its contact (BUY-03 c5)."""
+    linked = (ActivityLink.record_type == "company") & (ActivityLink.record_id == buyer.company_id)
+    if buyer.contact_id is not None:
+        linked = linked | ((ActivityLink.record_type == "contact") & (ActivityLink.record_id == buyer.contact_id))
+    return (
+        await db.execute(
+            select(func.max(Activity.occurred_at))
+            .join(ActivityLink, ActivityLink.activity_id == Activity.id)
+            .where(linked, Activity.deleted_at.is_(None), Activity.occurred_at <= now)
+        )
+    ).scalar_one_or_none()
+
+
 class BuyerReminders:
     def __init__(self, notifications: NotificationService | None = None) -> None:
         self.notifications = notifications or NotificationService(LoggingEmailSender())
@@ -714,11 +729,13 @@ class BuyerReminders:
                     DealBuyer.status != BuyerStatus.DECLINED.value,
                     DealBuyer.approval != Approval.EXCLUDED.value,
                     DealBuyer.last_activity_at <= now - BUYER_IDLE_AFTER,
-                    (DealBuyer.idle_reminded_at.is_(None)) | (DealBuyer.idle_reminded_at < DealBuyer.last_activity_at),
                 )
             )
         ).all()
         for buyer, mandate, owner in idle:
+            last = max(buyer.last_activity_at, await _last_logged_activity(db, buyer, now) or buyer.last_activity_at)
+            if last > now - BUYER_IDLE_AFTER or (buyer.idle_reminded_at is not None and buyer.idle_reminded_at >= last):
+                continue
             await self._remind(
                 db,
                 owner,

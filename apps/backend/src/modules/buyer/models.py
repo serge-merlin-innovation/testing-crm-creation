@@ -70,7 +70,7 @@ class DealBuyer(Base):
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     status_changed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status_changed_by: Mapped[int] = mapped_column(Integer, ForeignKey("user.id", ondelete="RESTRICT"), index=True)
-    # Any change to the buyer: the 14-day idle reminder counts from here.
+    # Any change to the buyer. The idle reminder counts from this or the last logged activity, whichever is later.
     last_activity_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     contact_id: Mapped[int | None] = mapped_column(ForeignKey("contacts.id", ondelete="SET NULL"), index=True, default=None)
     approval: Mapped[str] = mapped_column(String(16), nullable=False, default="pending")

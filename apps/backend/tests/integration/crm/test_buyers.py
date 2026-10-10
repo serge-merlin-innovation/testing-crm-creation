@@ -599,3 +599,31 @@ async def test_epic7_data_room_access_and_preferred_bidder_need_a_signed_nda(wor
     assert room.status_code == 200, room.text
     assert preferred.status_code == 200, preferred.text
     assert (await buyers(world, mandate_id))["funnel"]["preferred_bidder"] == 1
+
+
+async def test_buy03_c5_an_activity_logged_on_the_buyer_resets_the_idle_clock(world):
+    mandate_id = await deal(world)
+    [buyer_id] = await listed(world, mandate_id)
+    buyer = (await buyers(world, mandate_id))["buyers"][0]
+    await _to_marketing(world, mandate_id)
+    notifications = NotificationService(world.emails)
+
+    set_clock(FrozenClock(NOW + timedelta(days=10)))
+    logged = await send(
+        world.analyst,
+        "POST",
+        "/api/v1/activities/",
+        {
+            "type": "call",
+            "occurred_at": (NOW + timedelta(days=10)).isoformat(),
+            "note": "Buyer call",
+            "links": [{"record_type": "company", "record_id": buyer["company_id"]}],
+        },
+    )
+    assert logged.status_code == 201, logged.text
+    await run_buyer_jobs(world.db, NOW + timedelta(days=15), notifications)
+    quiet = [mail for mail in world.emails.sent if "no activity" in mail.subject]
+    await run_buyer_jobs(world.db, NOW + timedelta(days=25), notifications)
+
+    assert quiet == []
+    assert len([mail for mail in world.emails.sent if "no activity" in mail.subject]) == 1
