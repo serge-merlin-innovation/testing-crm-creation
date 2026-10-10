@@ -85,6 +85,38 @@ ENDPOINTS: list[Endpoint] = [
         body=lambda ctx: {"label": "IM", "url": "https://files.example.com/im.pdf"},
     ),
     Endpoint("DELETE", "/api/v1/mandates/{mandate_id}/links/{link_id}", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/stage",
+        hidden_from_unstaffed(member=OK, lead=OK),
+        body=lambda ctx: {"version": ctx["version"](), "stage": "conflict_review"},
+    ),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/close",
+        hidden_from_unstaffed(member=FORBIDDEN, lead=OK),
+        body=lambda ctx: {"version": ctx["version"](), "outcome": "aborted", "abort_reason": "Seller withdrew"},
+    ),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/reopen",
+        hidden_from_unstaffed(member=FORBIDDEN, lead=422),
+        body=lambda ctx: {"version": ctx["version"](), "reason": "Back on"},
+    ),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/milestones", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/milestones",
+        hidden_from_unstaffed(member=OK, lead=OK),
+        body=lambda ctx: {"name": "IM sent", "planned_date": "2026-11-01"},
+    ),
+    Endpoint(
+        "PATCH",
+        "/api/v1/mandates/{mandate_id}/milestones/{milestone_id}",
+        hidden_from_unstaffed(member=OK, lead=OK),
+        body=lambda ctx: {"actual_date": "2026-11-02"},
+    ),
+    Endpoint("DELETE", "/api/v1/mandates/{mandate_id}/milestones/{milestone_id}", hidden_from_unstaffed(member=OK, lead=OK)),
 ]
 
 # Under /mandates but about no existing deal: creating one, and picking its lead partner.
@@ -162,12 +194,18 @@ async def test_deal_access_matrix(world, endpoint: Endpoint, persona: str):
         headers=lead.headers,
     )
 
+    milestone = await lead.client.post(
+        f"/api/v1/mandates/{mandate_id}/milestones", json={"name": "Teaser", "planned_date": "2026-11-01"}, headers=lead.headers
+    )
+
     async def current_version() -> int:
         return (await lead.client.get(f"/api/v1/mandates/{mandate_id}", headers=lead.headers)).json()["version"]
 
     version = await current_version()
     context = {"version": lambda: version, "spare_user_id": spare.id}
-    path = endpoint.path.format(mandate_id=mandate_id, user_id=victim.id, link_id=link.json()["id"])
+    path = endpoint.path.format(
+        mandate_id=mandate_id, user_id=victim.id, link_id=link.json()["id"], milestone_id=milestone.json()["id"]
+    )
     caller = world.people[persona]
     response = await caller.client.request(
         endpoint.method,

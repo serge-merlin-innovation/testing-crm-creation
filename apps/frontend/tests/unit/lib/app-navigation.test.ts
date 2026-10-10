@@ -35,6 +35,7 @@ describe("getPrimaryNavigation", () => {
       "/picklists",
       "/merge",
       "/imports",
+      "/stage-criteria",
     ]);
   });
 

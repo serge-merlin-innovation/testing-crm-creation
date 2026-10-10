@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, Numeric, String
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ...infrastructure.database.session import Base
@@ -25,6 +25,16 @@ class Mandate(Base):
     target_id: Mapped[int | None] = mapped_column(ForeignKey("companies.id", ondelete="RESTRICT"), index=True, default=None)
     # Optimistic concurrency (DEAL-03): every write must name the version it read.
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    stage_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    # Closing (DEAL-06). `closed_at` set means the deal is read-only until a partner reopens it.
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True, default=None)
+    stage_before_close: Mapped[str | None] = mapped_column(String(32), default=None)
+    final_ev: Mapped[Decimal | None] = mapped_column(Numeric(18, 2), default=None)
+    buyer: Mapped[str | None] = mapped_column(String(200), default=None)
+    ev_ebitda: Mapped[Decimal | None] = mapped_column(Numeric(8, 2), default=None)
+    closing_date: Mapped[date | None] = mapped_column(Date, default=None)
+    tombstone_allowed: Mapped[bool | None] = mapped_column(Boolean, default=None)
+    abort_reason: Mapped[str | None] = mapped_column(String(1000), default=None)
 
 
 class DealTeamMember(Base):
@@ -66,3 +76,33 @@ class DealLink(Base):
     url: Mapped[str] = mapped_column(String(2000), nullable=False)
     added_by: Mapped[int] = mapped_column(Integer, ForeignKey("user.id", ondelete="RESTRICT"), index=True)
     added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class StageCriterion(Base):
+    """An exit criterion of a stage (DEAL-08): every forward move out of `stage` must satisfy it."""
+
+    __tablename__ = "stage_criteria"
+    __table_args__ = (Index("ix_stage_criteria_unique", "stage", "kind", "value_key", unique=True),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    stage: Mapped[str] = mapped_column(String(32), nullable=False)
+    kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    # Lowercased value, so "VDR" and "vdr" are one criterion; empty for the KYC gate.
+    value_key: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    value: Mapped[str | None] = mapped_column(String(100), default=None)
+    # The built-in engagement letter / KYC gate is disabled rather than deleted, so it is never re-seeded.
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
+class Milestone(Base):
+    __tablename__ = "deal_milestones"
+
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    mandate_id: Mapped[int] = mapped_column(ForeignKey("mandates.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    planned_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    actual_date: Mapped[date | None] = mapped_column(Date, default=None)
+    # Set when the 3-day reminder went out; cleared when the planned date moves.
+    reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)

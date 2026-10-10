@@ -20,6 +20,7 @@ const PRIMARY_NAVIGATION: NavigationItem[] = [
   { label: "nav.picklists", href: "/picklists" },
   { label: "nav.merge", href: "/merge" },
   { label: "nav.imports", href: "/imports" },
+  { label: "nav.stageCriteria", href: "/stage-criteria" },
 ];
 
 const ACCOUNT_NAVIGATION: NavigationItem[] = [

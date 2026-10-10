@@ -37,6 +37,7 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/search": { kind: "authenticated" },
   "/merge": { kind: "authenticated" },
   "/imports": { kind: "permission", permission: "settings.manage" },
+  "/stage-criteria": { kind: "permission", permission: "settings.manage" },
 };
 
 const GATED_BY_DEFAULT: PageAudience = { kind: "authenticated" };

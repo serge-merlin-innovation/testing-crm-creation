@@ -1,7 +1,7 @@
 """search, relationship holders, merges and imports
 
 Revision ID: 983e07bb68be
-Revises: 9b7a7a2263d1
+Revises: 8e8925d25945
 Create Date: 2026-10-10 09:00:33.336503
 
 """
@@ -15,7 +15,7 @@ from src.modules.search.models import SEARCH_FUNCTIONS, SEARCH_INDEXES, index_st
 
 # revision identifiers, used by Alembic.
 revision: str = "983e07bb68be"
-down_revision: str | Sequence[str] | None = "9b7a7a2263d1"
+down_revision: str | Sequence[str] | None = "8e8925d25945"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
