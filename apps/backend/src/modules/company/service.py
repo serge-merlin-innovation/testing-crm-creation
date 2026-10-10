@@ -79,6 +79,12 @@ class CompanyService:
             raise CompanyNotFoundError(f"Company {company_id} not found")
         return company
 
+    async def search(self, db: AsyncSession, q: str | None, limit: int) -> list[dict[str, Any]]:
+        query = select(Company).order_by(Company.name, Company.id).limit(limit)
+        if q and q.strip():
+            query = query.where(Company.name.icontains(q.strip(), autoescape=True))
+        return [to_read(company) for company in (await db.execute(query)).scalars()]
+
     async def prefill(self, enterprise_number: str) -> dict[str, Any]:
         formatted = format_enterprise_number(enterprise_number)
         try:

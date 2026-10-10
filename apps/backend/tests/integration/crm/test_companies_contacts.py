@@ -437,3 +437,26 @@ async def test_only_admins_manage_picklists(client, seeded_db, analyst):
     response = await client.post("/api/v1/picklists/", json={"kind": "sector", "code": "x", "label_en": "X"}, headers=analyst)
     assert response.status_code == 403
     assert (await client.get("/api/v1/picklists/?kind=country", headers=analyst)).status_code == 200
+
+
+# Lists behind the companies and contacts pages: name search, newest-first is not needed, alphabetical is.
+async def test_companies_and_contacts_can_be_listed_and_searched(client, seeded_db, analyst):
+    nl = await country(seeded_db, "NL")
+    await create_company(client, analyst, name="Zeta Logistics", type="target", country_id=nl, vat_or_registry_number="Z1")
+    await create_company(client, analyst, name="Alpha Foods", type="lender", country_id=nl, vat_or_registry_number="A1")
+
+    companies = (await client.get("/api/v1/companies/", headers=analyst)).json()
+    assert [company["name"] for company in companies] == ["Alpha Foods", "Zeta Logistics"]
+    found = (await client.get("/api/v1/companies/?q=zeta", headers=analyst)).json()
+    assert [company["name"] for company in found] == ["Zeta Logistics"]
+
+    await client.post(
+        "/api/v1/contacts/", json={"first_name": "Bea", "last_name": "Peeters", "source": "Forum"}, headers=analyst
+    )
+    await client.post(
+        "/api/v1/contacts/", json={"first_name": "Ann", "last_name": "Janssens", "source": "Forum"}, headers=analyst
+    )
+    contacts = (await client.get("/api/v1/contacts/", headers=analyst)).json()
+    assert [(c["first_name"], c["last_name"]) for c in contacts] == [("Ann", "Janssens"), ("Bea", "Peeters")]
+    found = (await client.get("/api/v1/contacts/?q=peet", headers=analyst)).json()
+    assert [c["last_name"] for c in found] == ["Peeters"]

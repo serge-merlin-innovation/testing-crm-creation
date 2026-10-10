@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..audit.service import AuditContext, AuditService
@@ -134,6 +134,19 @@ class ContactService:
         )
         await db.commit()
         return await self.read(db, contact, duplicates)
+
+    async def search(self, db: AsyncSession, q: str | None, limit: int) -> list[dict[str, Any]]:
+        query = select(Contact).order_by(Contact.last_name, Contact.first_name, Contact.id).limit(limit)
+        if q and q.strip():
+            term = q.strip()
+            query = query.where(
+                or_(
+                    Contact.first_name.icontains(term, autoescape=True),
+                    Contact.last_name.icontains(term, autoescape=True),
+                    Contact.email.icontains(term, autoescape=True),
+                )
+            )
+        return [await self.read(db, contact) for contact in (await db.execute(query)).scalars()]
 
     async def detail(self, db: AsyncSession, contact_id: int) -> dict[str, Any]:
         contact = await self.get(db, contact_id)
