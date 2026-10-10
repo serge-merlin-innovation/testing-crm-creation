@@ -1,16 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fieldErrors, readDetail } from "@/lib/deals";
 import type { Language, MessageKey } from "@/lib/i18n/messages";
-import { companyPayload, RECORD_LANGUAGES } from "@/lib/records";
+import { companyHref, companyPayload, RECORD_LANGUAGES, type RegisterPrefill } from "@/lib/records";
 import { sendJson, useApiData } from "@/lib/use-api";
 import { InvestorProfilePanel } from "./investor-profile";
 
@@ -31,6 +32,12 @@ export function CompaniesView({ messages }: { messages: Messages }) {
   const [type, setType] = useState("target");
   const [countryId, setCountryId] = useState("");
   const [number, setNumber] = useState("");
+  const [address, setAddress] = useState("");
+  const [register, setRegister] = useState<{ legalForm: string | null; naceCode: string | null }>({
+    legalForm: null,
+    naceCode: null,
+  });
+  const [lookupMissed, setLookupMissed] = useState(false);
   const [recordLanguage, setRecordLanguage] = useState<Language>("en");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState("");
@@ -39,16 +46,40 @@ export function CompaniesView({ messages }: { messages: Messages }) {
 
   const belgian = countries.data?.find((country) => String(country.id) === countryId)?.code === "BE";
 
+  async function lookup() {
+    setErrors({});
+    setLookupMissed(false);
+    const result = await sendJson("/api/v1/companies/lookup", "POST", { enterprise_number: number });
+    if (result.status !== 200) {
+      const inline = fieldErrors(result.body);
+      setErrors({ enterprise_number: inline.enterprise_number ?? readDetail(result.body, messages["common.saveFailed"]) });
+      return;
+    }
+    const prefill = result.body as RegisterPrefill;
+    if (!prefill.available) {
+      setLookupMissed(true);
+      return;
+    }
+    setName(prefill.name ?? name);
+    setAddress(prefill.address ?? "");
+    setRegister({ legalForm: prefill.legal_form, naceCode: prefill.nace_code });
+  }
+
   async function create(event: FormEvent<HTMLFormElement> | null, ignoreSimilar = false) {
     event?.preventDefault();
     setErrors({});
     setNotice("");
-    const payload = companyPayload({ name, type, countryId, number, belgian, language: recordLanguage }, ignoreSimilar);
+    const payload = companyPayload(
+      { name, type, countryId, number, belgian, language: recordLanguage, address, ...register },
+      ignoreSimilar,
+    );
     const result = await sendJson("/api/v1/companies/", "POST", payload);
     if (result.status === 201) {
       setDuplicates(null);
       setName("");
       setNumber("");
+      setAddress("");
+      setRegister({ legalForm: null, naceCode: null });
       setNotice(messages["companies.created"]);
       await companies.reload();
       return;
@@ -105,7 +136,11 @@ export function CompaniesView({ messages }: { messages: Messages }) {
               <TableBody>
                 {(companies.data ?? []).map((company) => (
                   <TableRow key={company.id}>
-                    <TableCell>{company.name}</TableCell>
+                    <TableCell>
+                      <Button asChild variant="link">
+                        <Link href={companyHref(company.id)}>{company.name}</Link>
+                      </Button>
+                    </TableCell>
                     <TableCell>{company.type}</TableCell>
                     <TableCell>{company.enterprise_number ?? ""}</TableCell>
                     <TableCell>
@@ -179,8 +214,21 @@ export function CompaniesView({ messages }: { messages: Messages }) {
                 <FieldLabel htmlFor="company-number">
                   {belgian ? messages["companies.enterpriseNumber"] : messages["companies.registryNumber"]}
                 </FieldLabel>
-                <Input id="company-number" value={number} onChange={(event) => setNumber(event.target.value)} />
+                <div className="flex gap-2">
+                  <Input id="company-number" value={number} onChange={(event) => setNumber(event.target.value)} />
+                  {belgian ? (
+                    <Button type="button" variant="outline" disabled={!number.trim()} onClick={() => void lookup()}>
+                      {messages["companies.lookup"]}
+                    </Button>
+                  ) : null}
+                </div>
+                {lookupMissed ? <FieldDescription>{messages["companies.lookupUnavailable"]}</FieldDescription> : null}
                 <FieldError>{errors.enterprise_number ?? errors.vat_or_registry_number}</FieldError>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="company-address">{messages["companies.address"]}</FieldLabel>
+                <Input id="company-address" value={address} onChange={(event) => setAddress(event.target.value)} />
+                <FieldError>{errors.address}</FieldError>
               </Field>
               <Field>
                 <FieldLabel htmlFor="company-language">{messages["records.language"]}</FieldLabel>
@@ -205,7 +253,16 @@ export function CompaniesView({ messages }: { messages: Messages }) {
               {duplicates ? (
                 <Alert>
                   <AlertDescription>
-                    {messages["companies.duplicates"]} {duplicates.list.map((item) => item.name).join(", ")}
+                    {messages["companies.duplicates"]}
+                    <ul className="flex flex-wrap gap-2">
+                      {duplicates.list.map((item) => (
+                        <li key={item.id}>
+                          <Button asChild variant="link" size="sm">
+                            <Link href={companyHref(item.id)}>{item.name}</Link>
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
                   </AlertDescription>
                 </Alert>
               ) : null}

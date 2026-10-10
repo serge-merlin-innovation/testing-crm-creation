@@ -12,6 +12,7 @@ import { DECLINE_LABEL, type DeclineReason } from "@/lib/buyers";
 import { readDetail } from "@/lib/deals";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { sendJson, useApiData } from "@/lib/use-api";
+import { CompanyPicker } from "./company-picker";
 
 type Messages = Record<MessageKey, string>;
 type Option = { id: number; label: string };
@@ -146,6 +147,40 @@ function ProfileForm({ companyId, profile, messages, onSaved }: { companyId: num
   );
 }
 
+function LinkPortfolio({ companyId, messages, onLinked }: { companyId: number; messages: Messages; onLinked: () => Promise<void> }) {
+  const [chosen, setChosen] = useState("");
+  const [error, setError] = useState("");
+
+  async function link() {
+    setError("");
+    const response = await sendJson(`/api/v1/companies/${companyId}/portfolio`, "POST", { company_id: Number(chosen) });
+    if (response.status !== 200) {
+      setError(readDetail(response.body, messages["common.saveFailed"]));
+      return;
+    }
+    setChosen("");
+    await onLinked();
+  }
+
+  return (
+    <FieldGroup className="sm:flex-row sm:items-end">
+      <CompanyPicker
+        id={`portfolio-${companyId}`}
+        label={messages["investor.linkPortfolio"]}
+        value={chosen}
+        onChange={setChosen}
+        messages={messages}
+        exclude={[companyId]}
+        allowNone={false}
+        error={error}
+      />
+      <Button type="button" variant="outline" disabled={!chosen} onClick={() => void link()}>
+        {messages["investor.link"]}
+      </Button>
+    </FieldGroup>
+  );
+}
+
 export function InvestorProfilePanel({ companyId, messages }: { companyId: number; messages: Messages }) {
   const profile = useApiData<Profile>(`/api/v1/companies/${companyId}/investor-profile`);
   const data = profile.data;
@@ -171,6 +206,7 @@ export function InvestorProfilePanel({ companyId, messages }: { companyId: numbe
           </div>
         </div>
       ) : null}
+      <LinkPortfolio companyId={companyId} messages={messages} onLinked={profile.reload} />
       {data.declines.length ? (
         <div>
           <h4>{messages["investor.declines"]}</h4>

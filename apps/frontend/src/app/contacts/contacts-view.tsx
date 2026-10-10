@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -11,12 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fieldErrors, readDetail } from "@/lib/deals";
 import type { Language, MessageKey } from "@/lib/i18n/messages";
-import { contactPayload, RECORD_LANGUAGES, type ContactForm } from "@/lib/records";
+import { contactHref, contactPayload, RECORD_LANGUAGES, type ContactForm } from "@/lib/records";
 import { sendJson, useApiData } from "@/lib/use-api";
+import { CompanyPicker, NO_COMPANY } from "../companies/company-picker";
 import { WhoKnows } from "./who-knows";
 
 type Messages = Record<MessageKey, string>;
-type Role = { function: string | null; company_id: number };
+type Role = { function: string | null; company_id: number; company_name: string };
 type Contact = {
   id: number;
   first_name: string;
@@ -26,15 +28,12 @@ type Contact = {
   current_role: Role | null;
   relationship_holders: { user_id: number; name: string; strength: number }[];
 };
-type Company = { id: number; name: string };
 
-const NO_COMPANY = "none";
 
 export function ContactsView({ messages, language }: { messages: Messages; language: Language }) {
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
   const contacts = useApiData<Contact[]>(`/api/v1/contacts/?q=${encodeURIComponent(search)}`);
-  const companies = useApiData<Company[]>("/api/v1/companies/?limit=200");
   const [form, setForm] = useState<ContactForm>({ first_name: "", last_name: "", email: "", phone: "", source: "", function: "", salutation: "" });
   const [companyId, setCompanyId] = useState(NO_COMPANY);
   const [recordLanguage, setRecordLanguage] = useState<Language>("en");
@@ -44,7 +43,6 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
   const [notice, setNotice] = useState("");
   const [selected, setSelected] = useState<Contact | null>(null);
 
-  const companyName = (id: number | undefined) => companies.data?.find((company) => company.id === id)?.name ?? "";
 
   function update(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -137,10 +135,14 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
                 {(contacts.data ?? []).map((contact) => (
                   <TableRow key={contact.id}>
                     <TableCell>
-                      {contact.first_name} {contact.last_name}
+                      <Button asChild variant="link">
+                        <Link href={contactHref(contact.id)}>
+                          {contact.first_name} {contact.last_name}
+                        </Link>
+                      </Button>
                     </TableCell>
                     <TableCell>{contact.email ?? ""}</TableCell>
-                    <TableCell>{companyName(contact.current_role?.company_id)}</TableCell>
+                    <TableCell>{contact.current_role?.company_name ?? ""}</TableCell>
                     <TableCell>{contact.current_role?.function ?? ""}</TableCell>
                     <TableCell>
                       {contact.relationship_holders
@@ -185,22 +187,13 @@ export function ContactsView({ messages, language }: { messages: Messages; langu
               {textField("email", "contacts.email", "email")}
               {textField("phone", "contacts.phone", "tel")}
               {textField("source", "contacts.source")}
-              <Field>
-                <FieldLabel htmlFor="contact-company">{messages["contacts.company"]}</FieldLabel>
-                <Select value={companyId} onValueChange={setCompanyId}>
-                  <SelectTrigger id="contact-company">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NO_COMPANY}>{messages["deals.none"]}</SelectItem>
-                    {(companies.data ?? []).map((company) => (
-                      <SelectItem key={company.id} value={String(company.id)}>
-                        {company.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
+              <CompanyPicker
+                id="contact-company"
+                label={messages["contacts.company"]}
+                value={companyId}
+                onChange={setCompanyId}
+                messages={messages}
+              />
               {textField("function", "contacts.function")}
               {textField("salutation", "contacts.salutation")}
               <Field>
