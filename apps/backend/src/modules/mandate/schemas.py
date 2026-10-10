@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
@@ -70,8 +70,13 @@ class MandateRead(MandateSummary):
     version: int
     created_at: datetime
     updated_at: datetime
+    stage_changed_at: datetime | None
+    closed_at: datetime | None
+    outcome: "OutcomeRead"
     can_edit: bool
     can_manage_team: bool
+    can_close: bool
+    can_reopen: bool
 
 
 class TeamMemberCreate(BaseModel):
@@ -144,3 +149,102 @@ class DealLinkRead(BaseModel):
     url: str
     added_by: int
     added_at: datetime
+
+
+class MandateListItem(MandateSummary):
+    sector_id: int
+    estimated_ev: Decimal
+    lead_partner_name: str
+    stage_changed_at: datetime | None
+    closed_at: datetime | None
+
+
+class DealFilters(BaseModel):
+    partner_id: int | None = None
+    type: MandateType | None = None
+    sector_id: int | None = None
+    stage: DealStage | None = None
+
+
+class StageMove(BaseModel):
+    version: int
+    stage: DealStage
+    reason: Annotated[str | None, Field(max_length=1000, description="Required when moving backwards")] = None
+
+
+class Outcome(StrEnum):
+    CLOSED_WON = "closed_won"
+    ABORTED = "aborted"
+
+
+class MandateClose(BaseModel):
+    version: int
+    outcome: Outcome
+    final_ev: EnterpriseValue | None = None
+    buyer: Annotated[str | None, Field(max_length=200)] = None
+    ev_ebitda: Annotated[Decimal | None, Field(ge=0, max_digits=8, decimal_places=2, description="EV / EBITDA")] = None
+    closing_date: date | None = None
+    tombstone_allowed: bool | None = None
+    abort_reason: Annotated[str | None, Field(max_length=1000)] = None
+
+
+class MandateReopen(BaseModel):
+    version: int
+    reason: Annotated[str | None, Field(max_length=1000)] = None
+
+
+class OutcomeRead(BaseModel):
+    final_ev: Decimal | None
+    buyer: str | None
+    ev_ebitda: Decimal | None
+    closing_date: date | None
+    tombstone_allowed: bool | None
+    abort_reason: str | None
+
+
+class CriterionKind(StrEnum):
+    FIELD = "field"
+    LINK_LABEL = "link_label"
+    KYC_ENGAGEMENT = "kyc_engagement"
+
+
+class StageCriterionCreate(BaseModel):
+    stage: DealStage
+    kind: CriterionKind
+    value: Annotated[str | None, Field(max_length=100, description="Field name or link label")] = None
+
+
+class StageCriterionRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    stage: DealStage
+    kind: CriterionKind
+    value: str | None
+    description: str
+
+
+class MilestoneCreate(BaseModel):
+    name: Annotated[str, Field(min_length=1, max_length=100, examples=["IM sent"])]
+    planned_date: date
+    actual_date: date | None = None
+
+
+class MilestoneUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: Annotated[str | None, Field(min_length=1, max_length=100)] = None
+    planned_date: date | None = None
+    actual_date: date | None = None
+
+
+class MilestoneRead(BaseModel):
+    id: int
+    name: str
+    planned_date: date
+    actual_date: date | None
+    late: bool
+    days_late: int
+
+
+MandateRead.model_rebuild()

@@ -8,16 +8,27 @@ from ..audit.dependencies import AuditContextDep
 from ..common.exceptions import LastLeadPartnerError, MandateExistsError, TeamMemberExistsError
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
-from .dependencies import MandateServiceDep
-from .policy import EditGrant, ReadGrant, TeamGrant
+from .dependencies import MandateServiceDep, PipelineServiceDep
+from .pipeline import StageBlockedError, StaleVersion
+from .policy import EditGrant, ReadGrant, ReopenGrant, TeamGrant
 from .schemas import (
+    DealFilters,
     DealLinkCreate,
     DealLinkRead,
     HistoryEntry,
+    MandateClose,
     MandateCreate,
+    MandateListItem,
     MandateRead,
-    MandateSummary,
+    MandateReopen,
+    MandateType,
     MandateUpdate,
+    MilestoneCreate,
+    MilestoneRead,
+    MilestoneUpdate,
+    StageCriterionCreate,
+    StageCriterionRead,
+    StageMove,
     TeamMemberCreate,
     TeamMemberRead,
     TeamRead,
@@ -25,6 +36,7 @@ from .schemas import (
     WallCrossingRead,
 )
 from .service import StaleVersionError
+from .stages import DealStage
 
 router = APIRouter(tags=["Mandates"])
 
@@ -36,14 +48,23 @@ HIDDEN: dict[int | str, dict[str, Any]] = {
 
 @router.get(
     "/",
-    response_model=list[MandateSummary],
+    response_model=list[MandateListItem],
     summary="Deals I am staffed on",
-    description="Only deals on whose team you are; `q` searches code names.",
+    description="Only deals you may read; `q` searches code names; partner, type, sector and stage filter.",
 )
 async def list_mandates(
-    db: AsyncSessionDep, service: MandateServiceDep, user: CurrentUserDep, clock: ClockDep, q: str | None = None
+    db: AsyncSessionDep,
+    service: MandateServiceDep,
+    user: CurrentUserDep,
+    clock: ClockDep,
+    q: str | None = None,
+    partner_id: int | None = None,
+    type: MandateType | None = None,
+    sector_id: int | None = None,
+    stage: DealStage | None = None,
 ) -> list[dict[str, Any]]:
-    return await service.list_visible(db, user, clock.now(), q)
+    filters = DealFilters(partner_id=partner_id, type=type, sector_id=sector_id, stage=stage)
+    return await service.list_visible(db, user, clock.now(), q, filters)
 
 
 @router.get("/lead-partners", response_model=list[UserOption], summary="Users who can lead a mandate")
@@ -185,4 +206,160 @@ async def remove_link(
     link_id: int, grant: EditGrant, db: AsyncSessionDep, service: MandateServiceDep, context: AuditContextDep
 ) -> Response:
     await service.remove_link(db, grant, link_id, context)
+    return Response(status_code=204)
+
+
+STALE = "Someone changed this deal since you opened it. Reload it and try again."
+
+
+async def _stale(db: AsyncSessionDep, service: MandateServiceDep, grant: Any) -> HTTPException:
+    current = await service.read(db, grant.mandate, grant)
+    await db.rollback()
+    return HTTPException(status_code=409, detail={"message": STALE, "current": current})
+
+
+@router.post(
+    "/{mandate_id}/stage",
+    response_model=MandateRead,
+    summary="Move a deal to another stage",
+    description="Forward moves must meet every exit criterion of the stages left; backward moves need a reason.",
+    responses={
+        **HIDDEN,
+        409: {"description": "Stale version"},
+        422: {"description": "Exit criteria missing (`detail.reasons`) or reason missing"},
+    },
+)
+async def move_stage(
+    values: StageMove,
+    grant: EditGrant,
+    db: AsyncSessionDep,
+    service: MandateServiceDep,
+    pipeline: PipelineServiceDep,
+    context: AuditContextDep,
+) -> dict[str, Any]:
+    try:
+        await pipeline.move(db, grant, values, context)
+    except StaleVersion as error:
+        raise await _stale(db, service, grant) from error
+    except StageBlockedError as error:
+        raise HTTPException(
+            status_code=422, detail={"message": "This deal cannot leave its stage yet.", "reasons": error.reasons}
+        ) from error
+    return await service.read(db, grant.mandate, grant)
+
+
+@router.post(
+    "/{mandate_id}/close",
+    response_model=MandateRead,
+    summary="Close a deal as Closed won or Aborted (partner on the deal)",
+    responses={**HIDDEN, 409: {"description": "Stale version"}, 422: {"description": "Outcome data missing"}},
+)
+async def close_mandate(
+    values: MandateClose,
+    grant: EditGrant,
+    db: AsyncSessionDep,
+    service: MandateServiceDep,
+    pipeline: PipelineServiceDep,
+    context: AuditContextDep,
+) -> dict[str, Any]:
+    try:
+        await pipeline.close(db, grant, values, context)
+    except StaleVersion as error:
+        raise await _stale(db, service, grant) from error
+    return await service.read(db, grant.mandate, grant)
+
+
+@router.post(
+    "/{mandate_id}/reopen",
+    response_model=MandateRead,
+    summary="Reopen a closed deal, with a reason (partner on the deal)",
+    responses={**HIDDEN, 409: {"description": "Stale version"}, 422: {"description": "Reason missing or deal not closed"}},
+)
+async def reopen_mandate(
+    values: MandateReopen,
+    grant: ReopenGrant,
+    db: AsyncSessionDep,
+    service: MandateServiceDep,
+    pipeline: PipelineServiceDep,
+    context: AuditContextDep,
+) -> dict[str, Any]:
+    try:
+        await pipeline.reopen(db, grant, values, context)
+    except StaleVersion as error:
+        raise await _stale(db, service, grant) from error
+    return await service.read(db, grant.mandate, grant)
+
+
+@router.get("/{mandate_id}/milestones", response_model=list[MilestoneRead], summary="Planned vs actual", responses=HIDDEN)
+async def get_milestones(
+    grant: ReadGrant, db: AsyncSessionDep, pipeline: PipelineServiceDep, clock: ClockDep
+) -> list[dict[str, Any]]:
+    return await pipeline.milestones(db, grant.mandate.id, clock.now().date())
+
+
+@router.post(
+    "/{mandate_id}/milestones", status_code=201, response_model=MilestoneRead, summary="Add a milestone", responses=HIDDEN
+)
+async def add_milestone(
+    values: MilestoneCreate, grant: EditGrant, db: AsyncSessionDep, pipeline: PipelineServiceDep, context: AuditContextDep
+) -> dict[str, Any]:
+    return await pipeline.add_milestone(db, grant, values, context)
+
+
+@router.patch(
+    "/{mandate_id}/milestones/{milestone_id}", response_model=MilestoneRead, summary="Edit a milestone", responses=HIDDEN
+)
+async def update_milestone(
+    milestone_id: int,
+    values: MilestoneUpdate,
+    grant: EditGrant,
+    db: AsyncSessionDep,
+    pipeline: PipelineServiceDep,
+    context: AuditContextDep,
+) -> dict[str, Any]:
+    return await pipeline.update_milestone(db, grant, milestone_id, values, context)
+
+
+@router.delete("/{mandate_id}/milestones/{milestone_id}", status_code=204, summary="Remove a milestone", responses=HIDDEN)
+async def remove_milestone(
+    milestone_id: int, grant: EditGrant, db: AsyncSessionDep, pipeline: PipelineServiceDep, context: AuditContextDep
+) -> Response:
+    await pipeline.remove_milestone(db, grant, milestone_id, context)
+    return Response(status_code=204)
+
+
+criteria_router = APIRouter(tags=["Mandates"])
+SettingsManagerDep = Annotated[dict[str, Any], require_permission(Permission.SETTINGS_MANAGE)]
+
+
+@criteria_router.get("/", response_model=list[StageCriterionRead], summary="Stage exit criteria")
+async def list_criteria(
+    db: AsyncSessionDep, pipeline: PipelineServiceDep, clock: ClockDep, _: CurrentUserDep
+) -> list[dict[str, Any]]:
+    return await pipeline.criteria(db, clock.now())
+
+
+@criteria_router.post(
+    "/",
+    status_code=201,
+    response_model=StageCriterionRead,
+    summary="Add an exit criterion to a stage (admin)",
+    responses={409: {"description": "Already set"}, 422: {"description": "Unknown field, empty label or closed stage"}},
+)
+async def add_criterion(
+    values: StageCriterionCreate,
+    db: AsyncSessionDep,
+    pipeline: PipelineServiceDep,
+    context: AuditContextDep,
+    _: SettingsManagerDep,
+) -> dict[str, Any]:
+    await pipeline.seed_builtin_gate(db, context.clock.now())
+    return await pipeline.add_criterion(db, values, context)
+
+
+@criteria_router.delete("/{criterion_id}", status_code=204, summary="Remove an exit criterion (admin)")
+async def remove_criterion(
+    criterion_id: int, db: AsyncSessionDep, pipeline: PipelineServiceDep, context: AuditContextDep, _: SettingsManagerDep
+) -> Response:
+    await pipeline.remove_criterion(db, criterion_id, context)
     return Response(status_code=204)

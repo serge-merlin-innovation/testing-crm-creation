@@ -1477,6 +1477,15 @@
         "title": "ContactUpdate",
         "type": "object"
       },
+      "CriterionKind": {
+        "enum": [
+          "field",
+          "link_label",
+          "kyc_engagement"
+        ],
+        "title": "CriterionKind",
+        "type": "string"
+      },
       "DealLinkCreate": {
         "properties": {
           "label": {
@@ -1643,7 +1652,8 @@
         "enum": [
           "deal_team.added",
           "task.assigned",
-          "task.overdue_digest"
+          "task.overdue_digest",
+          "milestone.due"
         ],
         "title": "EventKind",
         "type": "string"
@@ -2144,6 +2154,108 @@
         "title": "LoginCompleted",
         "type": "object"
       },
+      "MandateClose": {
+        "properties": {
+          "abort_reason": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abort Reason"
+          },
+          "buyer": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer"
+          },
+          "closing_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Date"
+          },
+          "ev_ebitda": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,6}|(?=[\\d.]{1,9}0*$)\\d{0,6}\\.\\d{0,2}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "EV / EBITDA",
+            "title": "Ev Ebitda"
+          },
+          "final_ev": {
+            "anyOf": [
+              {
+                "anyOf": [
+                  {
+                    "minimum": 0.0,
+                    "type": "number"
+                  },
+                  {
+                    "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,16}|(?=[\\d.]{1,19}0*$)\\d{0,16}\\.\\d{0,2}0*$)",
+                    "type": "string"
+                  }
+                ],
+                "description": "EUR thousands"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Ev"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/Outcome"
+          },
+          "tombstone_allowed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tombstone Allowed"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "outcome"
+        ],
+        "title": "MandateClose",
+        "type": "object"
+      },
       "MandateCreate": {
         "properties": {
           "client_id": {
@@ -2207,14 +2319,95 @@
         "title": "MandateCreate",
         "type": "object"
       },
+      "MandateListItem": {
+        "properties": {
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "estimated_ev": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Estimated Ev",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "lead_partner_id": {
+            "title": "Lead Partner Id",
+            "type": "integer"
+          },
+          "lead_partner_name": {
+            "title": "Lead Partner Name",
+            "type": "string"
+          },
+          "sector_id": {
+            "title": "Sector Id",
+            "type": "integer"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/DealStage"
+          },
+          "stage_changed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Changed At"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MandateType"
+          }
+        },
+        "required": [
+          "id",
+          "code_name",
+          "type",
+          "stage",
+          "lead_partner_id",
+          "sector_id",
+          "estimated_ev",
+          "lead_partner_name",
+          "stage_changed_at",
+          "closed_at"
+        ],
+        "title": "MandateListItem",
+        "type": "object"
+      },
       "MandateRead": {
         "properties": {
+          "can_close": {
+            "title": "Can Close",
+            "type": "boolean"
+          },
           "can_edit": {
             "title": "Can Edit",
             "type": "boolean"
           },
           "can_manage_team": {
             "title": "Can Manage Team",
+            "type": "boolean"
+          },
+          "can_reopen": {
+            "title": "Can Reopen",
             "type": "boolean"
           },
           "client_id": {
@@ -2224,6 +2417,18 @@
           "client_name": {
             "title": "Client Name",
             "type": "string"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
           },
           "code_name": {
             "title": "Code Name",
@@ -2251,12 +2456,27 @@
             "title": "Lead Partner Name",
             "type": "string"
           },
+          "outcome": {
+            "$ref": "#/components/schemas/OutcomeRead"
+          },
           "sector_id": {
             "title": "Sector Id",
             "type": "integer"
           },
           "stage": {
             "$ref": "#/components/schemas/DealStage"
+          },
+          "stage_changed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Changed At"
           },
           "stages": {
             "items": {
@@ -2317,41 +2537,40 @@
           "version",
           "created_at",
           "updated_at",
+          "stage_changed_at",
+          "closed_at",
+          "outcome",
           "can_edit",
-          "can_manage_team"
+          "can_manage_team",
+          "can_close",
+          "can_reopen"
         ],
         "title": "MandateRead",
         "type": "object"
       },
-      "MandateSummary": {
+      "MandateReopen": {
         "properties": {
-          "code_name": {
-            "title": "Code Name",
-            "type": "string"
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
           },
-          "id": {
-            "title": "Id",
+          "version": {
+            "title": "Version",
             "type": "integer"
-          },
-          "lead_partner_id": {
-            "title": "Lead Partner Id",
-            "type": "integer"
-          },
-          "stage": {
-            "$ref": "#/components/schemas/DealStage"
-          },
-          "type": {
-            "$ref": "#/components/schemas/MandateType"
           }
         },
         "required": [
-          "id",
-          "code_name",
-          "type",
-          "stage",
-          "lead_partner_id"
+          "version"
         ],
-        "title": "MandateSummary",
+        "title": "MandateReopen",
         "type": "object"
       },
       "MandateType": {
@@ -2542,6 +2761,133 @@
           "override"
         ],
         "title": "MetricRead",
+        "type": "object"
+      },
+      "MilestoneCreate": {
+        "properties": {
+          "actual_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Date"
+          },
+          "name": {
+            "examples": [
+              "IM sent"
+            ],
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "planned_date": {
+            "format": "date",
+            "title": "Planned Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "planned_date"
+        ],
+        "title": "MilestoneCreate",
+        "type": "object"
+      },
+      "MilestoneRead": {
+        "properties": {
+          "actual_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Date"
+          },
+          "days_late": {
+            "title": "Days Late",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "late": {
+            "title": "Late",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "planned_date": {
+            "format": "date",
+            "title": "Planned Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "planned_date",
+          "actual_date",
+          "late",
+          "days_late"
+        ],
+        "title": "MilestoneRead",
+        "type": "object"
+      },
+      "MilestoneUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "actual_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actual Date"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "planned_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Date"
+          }
+        },
+        "title": "MilestoneUpdate",
         "type": "object"
       },
       "NoteCreate": {
@@ -2750,6 +3096,97 @@
           "expires_in"
         ],
         "title": "OAuthToken",
+        "type": "object"
+      },
+      "Outcome": {
+        "enum": [
+          "closed_won",
+          "aborted"
+        ],
+        "title": "Outcome",
+        "type": "string"
+      },
+      "OutcomeRead": {
+        "properties": {
+          "abort_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Abort Reason"
+          },
+          "buyer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Buyer"
+          },
+          "closing_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closing Date"
+          },
+          "ev_ebitda": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Ebitda"
+          },
+          "final_ev": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Ev"
+          },
+          "tombstone_allowed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tombstone Allowed"
+          }
+        },
+        "required": [
+          "final_ev",
+          "buyer",
+          "ev_ebitda",
+          "closing_date",
+          "tombstone_allowed",
+          "abort_reason"
+        ],
+        "title": "OutcomeRead",
         "type": "object"
       },
       "PaginatedListResponse_AuditEntryRead_": {
@@ -3592,6 +4029,103 @@
           "password"
         ],
         "title": "SetPassword",
+        "type": "object"
+      },
+      "StageCriterionCreate": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/CriterionKind"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/DealStage"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Field name or link label",
+            "title": "Value"
+          }
+        },
+        "required": [
+          "stage",
+          "kind"
+        ],
+        "title": "StageCriterionCreate",
+        "type": "object"
+      },
+      "StageCriterionRead": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CriterionKind"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/DealStage"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "id",
+          "stage",
+          "kind",
+          "value",
+          "description"
+        ],
+        "title": "StageCriterionRead",
+        "type": "object"
+      },
+      "StageMove": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required when moving backwards",
+            "title": "Reason"
+          },
+          "stage": {
+            "$ref": "#/components/schemas/DealStage"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "stage"
+        ],
+        "title": "StageMove",
         "type": "object"
       },
       "TaskCreate": {
@@ -6557,7 +7091,7 @@
     },
     "/api/v1/mandates/": {
       "get": {
-        "description": "Only deals on whose team you are; `q` searches code names.",
+        "description": "Only deals you may read; `q` searches code names; partner, type, sector and stage filter.",
         "operationId": "list_mandates_api_v1_mandates__get",
         "parameters": [
           {
@@ -6575,6 +7109,70 @@
               ],
               "title": "Q"
             }
+          },
+          {
+            "in": "query",
+            "name": "partner_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Partner Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/MandateType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sector_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sector Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "stage",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DealStage"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stage"
+            }
           }
         ],
         "responses": {
@@ -6583,16 +7181,21 @@
               "application/json": {
                 "example": [
                   {
+                    "closed_at": "2026-10-10T09:00:00Z",
                     "code_name": "code_name",
+                    "estimated_ev": "estimated_ev",
                     "id": 1,
                     "lead_partner_id": 1,
+                    "lead_partner_name": "lead_partner_name",
+                    "sector_id": 1,
                     "stage": "conflict_review",
+                    "stage_changed_at": "2026-10-10T09:00:00Z",
                     "type": "sell_side"
                   }
                 ],
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/MandateSummary"
+                    "$ref": "#/components/schemas/MandateListItem"
                   },
                   "title": "Response List Mandates Api V1 Mandates  Get",
                   "type": "array"
@@ -6643,18 +7246,30 @@
             "content": {
               "application/json": {
                 "example": {
+                  "can_close": true,
                   "can_edit": true,
                   "can_manage_team": true,
+                  "can_reopen": true,
                   "client_id": 1,
                   "client_name": "client_name",
+                  "closed_at": "2026-10-10T09:00:00Z",
                   "code_name": "code_name",
                   "created_at": "2026-10-10T09:00:00Z",
                   "estimated_ev": "estimated_ev",
                   "id": 1,
                   "lead_partner_id": 1,
                   "lead_partner_name": "lead_partner_name",
+                  "outcome": {
+                    "abort_reason": "text",
+                    "buyer": "text",
+                    "closing_date": "2026-10-10",
+                    "ev_ebitda": "text",
+                    "final_ev": "text",
+                    "tombstone_allowed": true
+                  },
                   "sector_id": 1,
                   "stage": "conflict_review",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
                   "stages": [
                     "conflict_review"
                   ],
@@ -6736,18 +7351,30 @@
             "content": {
               "application/json": {
                 "example": {
+                  "can_close": true,
                   "can_edit": true,
                   "can_manage_team": true,
+                  "can_reopen": true,
                   "client_id": 1,
                   "client_name": "client_name",
+                  "closed_at": "2026-10-10T09:00:00Z",
                   "code_name": "code_name",
                   "created_at": "2026-10-10T09:00:00Z",
                   "estimated_ev": "estimated_ev",
                   "id": 1,
                   "lead_partner_id": 1,
                   "lead_partner_name": "lead_partner_name",
+                  "outcome": {
+                    "abort_reason": "text",
+                    "buyer": "text",
+                    "closing_date": "2026-10-10",
+                    "ev_ebitda": "text",
+                    "final_ev": "text",
+                    "tombstone_allowed": true
+                  },
                   "sector_id": 1,
                   "stage": "conflict_review",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
                   "stages": [
                     "conflict_review"
                   ],
@@ -6820,18 +7447,30 @@
             "content": {
               "application/json": {
                 "example": {
+                  "can_close": true,
                   "can_edit": true,
                   "can_manage_team": true,
+                  "can_reopen": true,
                   "client_id": 1,
                   "client_name": "client_name",
+                  "closed_at": "2026-10-10T09:00:00Z",
                   "code_name": "code_name",
                   "created_at": "2026-10-10T09:00:00Z",
                   "estimated_ev": "estimated_ev",
                   "id": 1,
                   "lead_partner_id": 1,
                   "lead_partner_name": "lead_partner_name",
+                  "outcome": {
+                    "abort_reason": "text",
+                    "buyer": "text",
+                    "closing_date": "2026-10-10",
+                    "ev_ebitda": "text",
+                    "final_ev": "text",
+                    "tombstone_allowed": true
+                  },
                   "sector_id": 1,
                   "stage": "conflict_review",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
                   "stages": [
                     "conflict_review"
                   ],
@@ -6866,6 +7505,101 @@
           }
         },
         "summary": "Edit a deal",
+        "tags": [
+          "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/close": {
+      "post": {
+        "operationId": "close_mandate_api_v1_mandates__mandate_id__close_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "abort_reason": "text",
+                "buyer": "text",
+                "closing_date": "2026-10-10",
+                "ev_ebitda": 25000.0,
+                "final_ev": 25000.0,
+                "outcome": "closed_won",
+                "tombstone_allowed": true,
+                "version": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MandateClose"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "can_close": true,
+                  "can_edit": true,
+                  "can_manage_team": true,
+                  "can_reopen": true,
+                  "client_id": 1,
+                  "client_name": "client_name",
+                  "closed_at": "2026-10-10T09:00:00Z",
+                  "code_name": "code_name",
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "estimated_ev": "estimated_ev",
+                  "id": 1,
+                  "lead_partner_id": 1,
+                  "lead_partner_name": "lead_partner_name",
+                  "outcome": {
+                    "abort_reason": "text",
+                    "buyer": "text",
+                    "closing_date": "2026-10-10",
+                    "ev_ebitda": "text",
+                    "final_ev": "text",
+                    "tombstone_allowed": true
+                  },
+                  "sector_id": 1,
+                  "stage": "conflict_review",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
+                  "stages": [
+                    "conflict_review"
+                  ],
+                  "target_id": 1,
+                  "target_name": "text",
+                  "type": "sell_side",
+                  "updated_at": "2026-10-10T09:00:00Z",
+                  "version": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MandateRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not on the deal team (the two are indistinguishable)"
+          },
+          "409": {
+            "description": "Stale version"
+          },
+          "422": {
+            "description": "Outcome data missing"
+          }
+        },
+        "summary": "Close a deal as Closed won or Aborted (partner on the deal)",
         "tags": [
           "Mandates"
         ]
@@ -7095,6 +7829,433 @@
           }
         },
         "summary": "Remove a link",
+        "tags": [
+          "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/milestones": {
+      "get": {
+        "operationId": "get_milestones_api_v1_mandates__mandate_id__milestones_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "actual_date": "2026-10-10",
+                    "days_late": 1,
+                    "id": 1,
+                    "late": true,
+                    "name": "name",
+                    "planned_date": "2026-10-10"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MilestoneRead"
+                  },
+                  "title": "Response Get Milestones Api V1 Mandates  Mandate Id  Milestones Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not on the deal team (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Planned vs actual",
+        "tags": [
+          "Mandates"
+        ]
+      },
+      "post": {
+        "operationId": "add_milestone_api_v1_mandates__mandate_id__milestones_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "actual_date": "2026-10-10",
+                "name": "IM sent",
+                "planned_date": "2026-10-10"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MilestoneCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "actual_date": "2026-10-10",
+                  "days_late": 1,
+                  "id": 1,
+                  "late": true,
+                  "name": "name",
+                  "planned_date": "2026-10-10"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MilestoneRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not on the deal team (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add a milestone",
+        "tags": [
+          "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/milestones/{milestone_id}": {
+      "delete": {
+        "operationId": "remove_milestone_api_v1_mandates__mandate_id__milestones__milestone_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "milestone_id",
+            "required": true,
+            "schema": {
+              "title": "Milestone Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not on the deal team (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove a milestone",
+        "tags": [
+          "Mandates"
+        ]
+      },
+      "patch": {
+        "operationId": "update_milestone_api_v1_mandates__mandate_id__milestones__milestone_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "milestone_id",
+            "required": true,
+            "schema": {
+              "title": "Milestone Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "actual_date": "2026-10-10",
+                "name": "text",
+                "planned_date": "2026-10-10"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MilestoneUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "actual_date": "2026-10-10",
+                  "days_late": 1,
+                  "id": 1,
+                  "late": true,
+                  "name": "name",
+                  "planned_date": "2026-10-10"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MilestoneRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not on the deal team (the two are indistinguishable)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit a milestone",
+        "tags": [
+          "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/reopen": {
+      "post": {
+        "operationId": "reopen_mandate_api_v1_mandates__mandate_id__reopen_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "reason": "text",
+                "version": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MandateReopen"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "can_close": true,
+                  "can_edit": true,
+                  "can_manage_team": true,
+                  "can_reopen": true,
+                  "client_id": 1,
+                  "client_name": "client_name",
+                  "closed_at": "2026-10-10T09:00:00Z",
+                  "code_name": "code_name",
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "estimated_ev": "estimated_ev",
+                  "id": 1,
+                  "lead_partner_id": 1,
+                  "lead_partner_name": "lead_partner_name",
+                  "outcome": {
+                    "abort_reason": "text",
+                    "buyer": "text",
+                    "closing_date": "2026-10-10",
+                    "ev_ebitda": "text",
+                    "final_ev": "text",
+                    "tombstone_allowed": true
+                  },
+                  "sector_id": 1,
+                  "stage": "conflict_review",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
+                  "stages": [
+                    "conflict_review"
+                  ],
+                  "target_id": 1,
+                  "target_name": "text",
+                  "type": "sell_side",
+                  "updated_at": "2026-10-10T09:00:00Z",
+                  "version": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MandateRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not on the deal team (the two are indistinguishable)"
+          },
+          "409": {
+            "description": "Stale version"
+          },
+          "422": {
+            "description": "Reason missing or deal not closed"
+          }
+        },
+        "summary": "Reopen a closed deal, with a reason (partner on the deal)",
+        "tags": [
+          "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/stage": {
+      "post": {
+        "description": "Forward moves must meet every exit criterion of the stages left; backward moves need a reason.",
+        "operationId": "move_stage_api_v1_mandates__mandate_id__stage_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "reason": "text",
+                "stage": "conflict_review",
+                "version": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/StageMove"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "can_close": true,
+                  "can_edit": true,
+                  "can_manage_team": true,
+                  "can_reopen": true,
+                  "client_id": 1,
+                  "client_name": "client_name",
+                  "closed_at": "2026-10-10T09:00:00Z",
+                  "code_name": "code_name",
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "estimated_ev": "estimated_ev",
+                  "id": 1,
+                  "lead_partner_id": 1,
+                  "lead_partner_name": "lead_partner_name",
+                  "outcome": {
+                    "abort_reason": "text",
+                    "buyer": "text",
+                    "closing_date": "2026-10-10",
+                    "ev_ebitda": "text",
+                    "final_ev": "text",
+                    "tombstone_allowed": true
+                  },
+                  "sector_id": 1,
+                  "stage": "conflict_review",
+                  "stage_changed_at": "2026-10-10T09:00:00Z",
+                  "stages": [
+                    "conflict_review"
+                  ],
+                  "target_id": 1,
+                  "target_name": "text",
+                  "type": "sell_side",
+                  "updated_at": "2026-10-10T09:00:00Z",
+                  "version": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MandateRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not on the deal team (the two are indistinguishable)"
+          },
+          "409": {
+            "description": "Stale version"
+          },
+          "422": {
+            "description": "Exit criteria missing (`detail.reasons`) or reason missing"
+          }
+        },
+        "summary": "Move a deal to another stage",
         "tags": [
           "Mandates"
         ]
@@ -8275,6 +9436,122 @@
         "summary": "Change session timeouts (new sessions only) and mobile read-only (Admin)",
         "tags": [
           "Sessions"
+        ]
+      }
+    },
+    "/api/v1/stage-criteria/": {
+      "get": {
+        "operationId": "list_criteria_api_v1_stage_criteria__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "description": "description",
+                    "id": 1,
+                    "kind": "field",
+                    "stage": "conflict_review",
+                    "value": "text"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StageCriterionRead"
+                  },
+                  "title": "Response List Criteria Api V1 Stage Criteria  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Stage exit criteria",
+        "tags": [
+          "Mandates"
+        ]
+      },
+      "post": {
+        "operationId": "add_criterion_api_v1_stage_criteria__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "kind": "field",
+                "stage": "conflict_review",
+                "value": "text"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/StageCriterionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "description": "description",
+                  "id": 1,
+                  "kind": "field",
+                  "stage": "conflict_review",
+                  "value": "text"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/StageCriterionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Already set"
+          },
+          "422": {
+            "description": "Unknown field, empty label or closed stage"
+          }
+        },
+        "summary": "Add an exit criterion to a stage (admin)",
+        "tags": [
+          "Mandates"
+        ]
+      }
+    },
+    "/api/v1/stage-criteria/{criterion_id}": {
+      "delete": {
+        "operationId": "remove_criterion_api_v1_stage_criteria__criterion_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "criterion_id",
+            "required": true,
+            "schema": {
+              "title": "Criterion Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove an exit criterion (admin)",
+        "tags": [
+          "Mandates"
         ]
       }
     },

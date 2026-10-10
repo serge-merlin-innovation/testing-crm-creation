@@ -78,6 +78,22 @@ class DealForbiddenError(PermissionDeniedError):
     pass
 
 
+class DealClosedError(DealForbiddenError):
+    pass
+
+
+class StageCriterionExistsError(ResourceExistsError):
+    pass
+
+
+class StageCriterionNotFoundError(ResourceNotFoundError):
+    pass
+
+
+class MilestoneNotFoundError(ResourceNotFoundError):
+    pass
+
+
 class MandateExistsError(ResourceExistsError):
     pass
 
