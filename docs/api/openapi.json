@@ -1117,6 +1117,169 @@
         "title": "CompanyUpdate",
         "type": "object"
       },
+      "ConflictDecision": {
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/ConflictDecisionKind"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "examples": [
+              "Different teams, no overlap"
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "ConflictDecision",
+        "type": "object"
+      },
+      "ConflictDecisionKind": {
+        "enum": [
+          "clear",
+          "reject"
+        ],
+        "title": "ConflictDecisionKind",
+        "type": "string"
+      },
+      "ConflictDecisionRead": {
+        "properties": {
+          "conflict_status": {
+            "$ref": "#/components/schemas/ConflictStatus"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          },
+          "decided_by": {
+            "title": "Decided By",
+            "type": "integer"
+          },
+          "decided_by_name": {
+            "title": "Decided By Name",
+            "type": "string"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/ConflictDecisionKind"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conflict_status",
+          "decision",
+          "reason",
+          "decided_by",
+          "decided_by_name",
+          "decided_at"
+        ],
+        "title": "ConflictDecisionRead",
+        "type": "object"
+      },
+      "ConflictHitRead": {
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "company_name": {
+            "title": "Company Name",
+            "type": "string"
+          },
+          "matched_company_id": {
+            "title": "Matched Company Id",
+            "type": "integer"
+          },
+          "matched_company_name": {
+            "title": "Matched Company Name",
+            "type": "string"
+          },
+          "other_code_name": {
+            "title": "Other Code Name",
+            "type": "string"
+          },
+          "other_mandate_id": {
+            "title": "Other Mandate Id",
+            "type": "integer"
+          },
+          "other_role": {
+            "title": "Other Role",
+            "type": "string"
+          },
+          "other_stage": {
+            "$ref": "#/components/schemas/DealStage"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company_id",
+          "company_name",
+          "role",
+          "matched_company_id",
+          "matched_company_name",
+          "other_mandate_id",
+          "other_code_name",
+          "other_role",
+          "other_stage"
+        ],
+        "title": "ConflictHitRead",
+        "type": "object"
+      },
+      "ConflictReviewItem": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "hits": {
+            "title": "Hits",
+            "type": "integer"
+          },
+          "mandate_id": {
+            "title": "Mandate Id",
+            "type": "integer"
+          },
+          "opened_at": {
+            "format": "date-time",
+            "title": "Opened At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mandate_id",
+          "code_name",
+          "opened_at",
+          "hits"
+        ],
+        "title": "ConflictReviewItem",
+        "type": "object"
+      },
+      "ConflictStatus": {
+        "enum": [
+          "clear",
+          "review",
+          "cleared",
+          "rejected"
+        ],
+        "title": "ConflictStatus",
+        "type": "string"
+      },
       "ContactCreate": {
         "properties": {
           "company_id": {
@@ -1477,6 +1640,47 @@
         "title": "ContactUpdate",
         "type": "object"
       },
+      "CounterpartyCreate": {
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "company_id"
+        ],
+        "title": "CounterpartyCreate",
+        "type": "object"
+      },
+      "CounterpartyRead": {
+        "properties": {
+          "added_at": {
+            "format": "date-time",
+            "title": "Added At",
+            "type": "string"
+          },
+          "company_id": {
+            "title": "Company Id",
+            "type": "integer"
+          },
+          "conflict_status": {
+            "$ref": "#/components/schemas/ConflictStatus"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company_id",
+          "name",
+          "added_at",
+          "conflict_status"
+        ],
+        "title": "CounterpartyRead",
+        "type": "object"
+      },
       "CriterionKind": {
         "enum": [
           "field",
@@ -1653,7 +1857,8 @@
           "deal_team.added",
           "task.assigned",
           "task.overdue_digest",
-          "milestone.due"
+          "milestone.due",
+          "conflict.review_overdue"
         ],
         "title": "EventKind",
         "type": "string"
@@ -2446,6 +2651,134 @@
         "title": "InvoiceUpdate",
         "type": "object"
       },
+      "KycRead": {
+        "properties": {
+          "approved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "can_review": {
+            "title": "Can Review",
+            "type": "boolean"
+          },
+          "frozen": {
+            "title": "Frozen",
+            "type": "boolean"
+          },
+          "id_check": {
+            "title": "Id Check",
+            "type": "boolean"
+          },
+          "pep_sanctions_screening": {
+            "title": "Pep Sanctions Screening",
+            "type": "boolean"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "reviewer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Id"
+          },
+          "reviewer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Name"
+          },
+          "sanctions_hit": {
+            "title": "Sanctions Hit",
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/KycStatus"
+          },
+          "ubo_check": {
+            "title": "Ubo Check",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "status",
+          "ubo_check",
+          "id_check",
+          "pep_sanctions_screening",
+          "sanctions_hit",
+          "reviewed_at",
+          "approved_at",
+          "reviewer_id",
+          "reviewer_name",
+          "frozen",
+          "can_review"
+        ],
+        "title": "KycRead",
+        "type": "object"
+      },
+      "KycReview": {
+        "properties": {
+          "id_check": {
+            "default": false,
+            "title": "Id Check",
+            "type": "boolean"
+          },
+          "pep_sanctions_screening": {
+            "default": false,
+            "title": "Pep Sanctions Screening",
+            "type": "boolean"
+          },
+          "sanctions_hit": {
+            "default": false,
+            "title": "Sanctions Hit",
+            "type": "boolean"
+          },
+          "ubo_check": {
+            "default": false,
+            "title": "Ubo Check",
+            "type": "boolean"
+          }
+        },
+        "title": "KycReview",
+        "type": "object"
+      },
+      "KycStatus": {
+        "enum": [
+          "none",
+          "pending",
+          "approved",
+          "frozen"
+        ],
+        "title": "KycStatus",
+        "type": "string"
+      },
       "Language": {
         "enum": [
           "en",
@@ -2680,6 +3013,16 @@
             "title": "Code Name",
             "type": "string"
           },
+          "counterparty_ids": {
+            "default": [],
+            "description": "Known counterparties, checked for conflicts with the client and target",
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 50,
+            "title": "Counterparty Ids",
+            "type": "array"
+          },
           "estimated_ev": {
             "anyOf": [
               {
@@ -2843,6 +3186,9 @@
             "title": "Code Name",
             "type": "string"
           },
+          "conflict_status": {
+            "$ref": "#/components/schemas/ConflictStatus"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -2852,6 +3198,10 @@
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Estimated Ev",
             "type": "string"
+          },
+          "frozen": {
+            "title": "Frozen",
+            "type": "boolean"
           },
           "id": {
             "title": "Id",
@@ -2952,7 +3302,9 @@
           "can_edit",
           "can_manage_team",
           "can_close",
-          "can_reopen"
+          "can_reopen",
+          "conflict_status",
+          "frozen"
         ],
         "title": "MandateRead",
         "type": "object"
@@ -4869,6 +5221,27 @@
           }
         },
         "title": "TravelUpdate",
+        "type": "object"
+      },
+      "Unfreeze": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "examples": [
+              "Different teams, no overlap"
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "Unfreeze",
         "type": "object"
       },
       "UserCreate": {
@@ -7154,6 +7527,40 @@
         ]
       }
     },
+    "/api/v1/conflict-reviews/": {
+      "get": {
+        "description": "Compliance only. Oldest first.",
+        "operationId": "open_reviews_api_v1_conflict_reviews__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "code_name": "code_name",
+                    "hits": 1,
+                    "mandate_id": 1,
+                    "opened_at": "2026-10-10T09:00:00Z"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConflictReviewItem"
+                  },
+                  "title": "Response Open Reviews Api V1 Conflict Reviews  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Conflict reviews waiting for a decision",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
     "/api/v1/contacts/": {
       "get": {
         "operationId": "list_contacts_api_v1_contacts__get",
@@ -7773,6 +8180,7 @@
               "example": {
                 "client_id": 1,
                 "code_name": "Falcon",
+                "counterparty_ids": [],
                 "estimated_ev": 25000.0,
                 "lead_partner_id": 1,
                 "sector_id": 1,
@@ -7799,8 +8207,10 @@
                   "client_name": "client_name",
                   "closed_at": "2026-10-10T09:00:00Z",
                   "code_name": "code_name",
+                  "conflict_status": "clear",
                   "created_at": "2026-10-10T09:00:00Z",
                   "estimated_ev": "estimated_ev",
+                  "frozen": true,
                   "id": 1,
                   "lead_partner_id": 1,
                   "lead_partner_name": "lead_partner_name",
@@ -7938,8 +8348,10 @@
                   "client_name": "client_name",
                   "closed_at": "2026-10-10T09:00:00Z",
                   "code_name": "code_name",
+                  "conflict_status": "clear",
                   "created_at": "2026-10-10T09:00:00Z",
                   "estimated_ev": "estimated_ev",
+                  "frozen": true,
                   "id": 1,
                   "lead_partner_id": 1,
                   "lead_partner_name": "lead_partner_name",
@@ -8034,8 +8446,10 @@
                   "client_name": "client_name",
                   "closed_at": "2026-10-10T09:00:00Z",
                   "code_name": "code_name",
+                  "conflict_status": "clear",
                   "created_at": "2026-10-10T09:00:00Z",
                   "estimated_ev": "estimated_ev",
+                  "frozen": true,
                   "id": 1,
                   "lead_partner_id": 1,
                   "lead_partner_name": "lead_partner_name",
@@ -8136,8 +8550,10 @@
                   "client_name": "client_name",
                   "closed_at": "2026-10-10T09:00:00Z",
                   "code_name": "code_name",
+                  "conflict_status": "clear",
                   "created_at": "2026-10-10T09:00:00Z",
                   "estimated_ev": "estimated_ev",
+                  "frozen": true,
                   "id": 1,
                   "lead_partner_id": 1,
                   "lead_partner_name": "lead_partner_name",
@@ -8181,6 +8597,263 @@
         "summary": "Close a deal as Closed won or Aborted (partner on the deal)",
         "tags": [
           "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/conflicts": {
+      "get": {
+        "description": "Compliance only (AUTHZ-05 c2): the deal team never sees the other deals.",
+        "operationId": "get_conflicts_api_v1_mandates__mandate_id__conflicts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "company_id": 1,
+                    "company_name": "company_name",
+                    "matched_company_id": 1,
+                    "matched_company_name": "matched_company_name",
+                    "other_code_name": "other_code_name",
+                    "other_mandate_id": 1,
+                    "other_role": "other_role",
+                    "other_stage": "conflict_review",
+                    "role": "role"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConflictHitRead"
+                  },
+                  "title": "Response Get Conflicts Api V1 Mandates  Mandate Id  Conflicts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Compliance only"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "What the deal conflicts with",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/conflicts/decision": {
+      "post": {
+        "description": "Compliance only. A reason is required; clearing activates the deal, rejecting aborts it.",
+        "operationId": "decide_conflict_api_v1_mandates__mandate_id__conflicts_decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "decision": "clear",
+                "reason": "Different teams, no overlap"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ConflictDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "conflict_status": "clear",
+                  "decided_at": "2026-10-10T09:00:00Z",
+                  "decided_by": 1,
+                  "decided_by_name": "decided_by_name",
+                  "decision": "clear",
+                  "reason": "reason"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictDecisionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Compliance only"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clear or reject the conflict review",
+        "tags": [
+          "Compliance"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/counterparties": {
+      "get": {
+        "operationId": "get_counterparties_api_v1_mandates__mandate_id__counterparties_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "added_at": "2026-10-10T09:00:00Z",
+                    "company_id": 1,
+                    "conflict_status": "clear",
+                    "name": "name"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CounterpartyRead"
+                  },
+                  "title": "Response Get Counterparties Api V1 Mandates  Mandate Id  Counterparties Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Known counterparties",
+        "tags": [
+          "Compliance"
+        ]
+      },
+      "post": {
+        "description": "Re-runs the conflict check for that party (AUTHZ-05 c6).",
+        "operationId": "add_counterparty_api_v1_mandates__mandate_id__counterparties_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "company_id": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/CounterpartyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "added_at": "2026-10-10T09:00:00Z",
+                  "company_id": 1,
+                  "conflict_status": "clear",
+                  "name": "name"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/CounterpartyRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add a counterparty",
+        "tags": [
+          "Compliance"
         ]
       }
     },
@@ -8608,6 +9281,140 @@
         "summary": "Mark an invoice paid (back-office)",
         "tags": [
           "Fees"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/kyc": {
+      "get": {
+        "operationId": "get_kyc_api_v1_mandates__mandate_id__kyc_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "approved_at": "2026-10-10T09:00:00Z",
+                  "can_review": true,
+                  "frozen": true,
+                  "id_check": true,
+                  "pep_sanctions_screening": true,
+                  "reviewed_at": "2026-10-10T09:00:00Z",
+                  "reviewer_id": 1,
+                  "reviewer_name": "text",
+                  "sanctions_hit": true,
+                  "status": "none",
+                  "ubo_check": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/KycRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The deal's KYC status",
+        "tags": [
+          "Compliance"
+        ]
+      },
+      "post": {
+        "description": "Compliance only. UBO, ID and PEP/sanctions checks approve it; a sanctions hit freezes the deal.",
+        "operationId": "review_kyc_api_v1_mandates__mandate_id__kyc_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "id_check": false,
+                "pep_sanctions_screening": false,
+                "sanctions_hit": false,
+                "ubo_check": false
+              },
+              "schema": {
+                "$ref": "#/components/schemas/KycReview"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "approved_at": "2026-10-10T09:00:00Z",
+                  "can_review": true,
+                  "frozen": true,
+                  "id_check": true,
+                  "pep_sanctions_screening": true,
+                  "reviewed_at": "2026-10-10T09:00:00Z",
+                  "reviewer_id": 1,
+                  "reviewer_name": "text",
+                  "sanctions_hit": true,
+                  "status": "none",
+                  "ubo_check": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/KycRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Compliance only"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record the KYC review",
+        "tags": [
+          "Compliance"
         ]
       }
     },
@@ -9068,8 +9875,10 @@
                   "client_name": "client_name",
                   "closed_at": "2026-10-10T09:00:00Z",
                   "code_name": "code_name",
+                  "conflict_status": "clear",
                   "created_at": "2026-10-10T09:00:00Z",
                   "estimated_ev": "estimated_ev",
+                  "frozen": true,
                   "id": 1,
                   "lead_partner_id": 1,
                   "lead_partner_name": "lead_partner_name",
@@ -9159,8 +9968,10 @@
                   "client_name": "client_name",
                   "closed_at": "2026-10-10T09:00:00Z",
                   "code_name": "code_name",
+                  "conflict_status": "clear",
                   "created_at": "2026-10-10T09:00:00Z",
                   "estimated_ev": "estimated_ev",
+                  "frozen": true,
                   "id": 1,
                   "lead_partner_id": 1,
                   "lead_partner_name": "lead_partner_name",
@@ -9235,8 +10046,10 @@
                   "client_name": "client_name",
                   "closed_at": "2026-10-10T09:00:00Z",
                   "code_name": "code_name",
+                  "conflict_status": "clear",
                   "created_at": "2026-10-10T09:00:00Z",
                   "estimated_ev": "estimated_ev",
+                  "frozen": true,
                   "id": 1,
                   "lead_partner_id": 1,
                   "lead_partner_name": "lead_partner_name",
@@ -9519,6 +10332,81 @@
         "summary": "Remove a team member (deal partner or director)",
         "tags": [
           "Mandates"
+        ]
+      }
+    },
+    "/api/v1/mandates/{mandate_id}/unfreeze": {
+      "post": {
+        "description": "Compliance only, with a reason.",
+        "operationId": "unfreeze_api_v1_mandates__mandate_id__unfreeze_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mandate_id",
+            "required": true,
+            "schema": {
+              "title": "Mandate Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "reason": "Different teams, no overlap"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/Unfreeze"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "approved_at": "2026-10-10T09:00:00Z",
+                  "can_review": true,
+                  "frozen": true,
+                  "id_check": true,
+                  "pep_sanctions_screening": true,
+                  "reviewed_at": "2026-10-10T09:00:00Z",
+                  "reviewer_id": 1,
+                  "reviewer_name": "text",
+                  "sanctions_hit": true,
+                  "status": "none",
+                  "ubo_check": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/KycRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Compliance only"
+          },
+          "404": {
+            "description": "Not found, or not visible to you"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unfreeze a deal after a sanctions hit",
+        "tags": [
+          "Compliance"
         ]
       }
     },

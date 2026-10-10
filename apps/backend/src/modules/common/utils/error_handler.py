@@ -13,6 +13,7 @@ from ....infrastructure.logging import get_logger
 from ..constants import EXCEPTION_MAPPING, GENERIC_ERROR_MESSAGE, SUPPORT_ID_LENGTH
 from ..exceptions import (
     DealClosedError,
+    DealFrozenError,
     DomainError,
     InsufficientCreditsError,
     UserExistsError,
@@ -81,7 +82,7 @@ def register_exception_handlers(app: FastAPI) -> None:
                 content["errors"] = [{"field": exc.field, "message": str(exc)}]
             return JSONResponse(status_code=http_exception.status_code, content=content)
 
-        if isinstance(exc, (UserExistsError, DealClosedError)):
+        if isinstance(exc, (UserExistsError, DealClosedError, DealFrozenError)):
             return JSONResponse(
                 status_code=http_exception.status_code, content={"detail": http_exception.detail, "support_id": support_id}
             )

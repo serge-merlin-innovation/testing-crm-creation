@@ -82,6 +82,10 @@ class DealClosedError(DealForbiddenError):
     pass
 
 
+class DealFrozenError(DealForbiddenError):
+    pass
+
+
 class StageCriterionExistsError(ResourceExistsError):
     pass
 

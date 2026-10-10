@@ -16,6 +16,17 @@ class MandateType(StrEnum):
     DEBT_ADVISORY = "debt_advisory"
 
 
+class ConflictStatus(StrEnum):
+    CLEAR = "clear"
+    REVIEW = "review"
+    CLEARED = "cleared"
+    REJECTED = "rejected"
+
+
+# Deals in these states are seen only by their creator and compliance (DEAL-01 c4).
+HIDDEN_CONFLICT_STATUSES = (ConflictStatus.REVIEW.value, ConflictStatus.REJECTED.value)
+
+
 class TeamRole(StrEnum):
     LEAD_PARTNER = "lead_partner"
     PARTNER = "partner"
@@ -36,6 +47,9 @@ class MandateCreate(BaseModel):
     lead_partner_id: int
     estimated_ev: EnterpriseValue
     target_id: int | None = None
+    counterparty_ids: Annotated[
+        list[int], Field(max_length=50, description="Known counterparties, checked for conflicts with the client and target")
+    ] = []
 
 
 class MandateUpdate(BaseModel):
@@ -77,6 +91,8 @@ class MandateRead(MandateSummary):
     can_manage_team: bool
     can_close: bool
     can_reopen: bool
+    conflict_status: ConflictStatus
+    frozen: bool
 
 
 class TeamMemberCreate(BaseModel):

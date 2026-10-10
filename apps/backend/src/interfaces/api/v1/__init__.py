@@ -13,6 +13,8 @@ from ....modules.api_access.routes import oauth_router
 from ....modules.api_access.routes import tokens_router as api_tokens_router
 from ....modules.audit.routes import router as audit_router
 from ....modules.company.routes import router as companies_router
+from ....modules.compliance.routes import reviews_router as conflict_reviews_router
+from ....modules.compliance.routes import router as compliance_router
 from ....modules.contact.routes import router as contacts_router
 from ....modules.fee.routes import deal_router as deal_fees_router
 from ....modules.fee.routes import router as fees_router
@@ -37,6 +39,8 @@ router.include_router(picklists_router, prefix="/picklists")
 router.include_router(mandates_router, prefix="/mandates")
 router.include_router(deal_fees_router, prefix="/mandates")
 router.include_router(fees_router, prefix="/fees")
+router.include_router(compliance_router, prefix="/mandates")
+router.include_router(conflict_reviews_router, prefix="/conflict-reviews")
 router.include_router(criteria_router, prefix="/stage-criteria")
 router.include_router(notifications_router, prefix="/notifications")
 router.include_router(activities_router, prefix="/activities")

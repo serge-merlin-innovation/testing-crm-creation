@@ -227,7 +227,7 @@ async def test_deal_access_matrix_holds_over_api_tokens(world, endpoint):
         milestone_id=milestone.json()["id"],
         invoice_id=invoice.json()["id"],
     )
-    context = {"version": lambda: version, "spare_user_id": spare.id}
+    context = {"version": lambda: version, "spare_user_id": spare.id, "company_id": world.client_id}
 
     for persona, actor in (("other_partner", world.outsider), ("member", world.analyst)):
         token = await issue_token(actor, f"{persona}-{endpoint.method}")

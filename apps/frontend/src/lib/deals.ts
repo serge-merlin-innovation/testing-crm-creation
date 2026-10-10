@@ -48,6 +48,8 @@ export type Mandate = {
   can_manage_team: boolean;
   can_close: boolean;
   can_reopen: boolean;
+  conflict_status: string;
+  frozen: boolean;
 };
 
 export type HistoryEntry = {

@@ -1,3 +1,4 @@
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -27,6 +28,7 @@ from ..user.models import User
 from .models import DealLink, DealTeamMember, Mandate, WallCrossing
 from .policy import DealGrant, DealPolicy
 from .schemas import (
+    ConflictStatus,
     DealFilters,
     DealLinkCreate,
     HistoryEntry,
@@ -47,6 +49,23 @@ from .stages import DealStage, stages_for
 # Words that say nothing about who the company is, so a code name may contain them.
 GENERIC_NAME_WORDS = {"holding", "holdings", "group", "groep", "groupe", "company", "international", "the", "and", "de", "et"}
 TRACKED_FIELDS = ("code_name", "client_id", "target_id", "type", "sector_id", "lead_partner_id", "estimated_ev", "stage")
+
+
+# The conflict check (AUTHZ-05) lives in the compliance slice, which plugs in through
+# `set_conflict_check`. It runs inside the creating transaction, so a deal is never saved unchecked.
+ConflictCheck = Callable[[AsyncSession, Mandate, list[int], AuditContext], Awaitable[None]]
+
+
+async def no_conflict_check(db: AsyncSession, mandate: Mandate, counterparty_ids: list[int], context: AuditContext) -> None:
+    return None
+
+
+_conflict_check: ConflictCheck = no_conflict_check
+
+
+def set_conflict_check(check: ConflictCheck) -> None:
+    global _conflict_check
+    _conflict_check = check
 
 
 class StaleVersionError(Exception):
@@ -156,6 +175,8 @@ class MandateService:
             can_manage_team=grant is None or grant.can_manage_team,
             can_close=grant is None or (grant.is_closer and not grant.is_closed),
             can_reopen=grant is not None and grant.is_closer and grant.is_closed,
+            conflict_status=ConflictStatus(mandate.conflict_status),
+            frozen=mandate.frozen_at is not None,
         ).model_dump(mode="json")
 
     def _deal_message(self, mandate: Mandate, user: User, kind: str, title: str, body: str) -> Message:
@@ -193,6 +214,7 @@ class MandateService:
             created_at=now,
             updated_at=now,
             target_id=values.target_id,
+            created_by=context.user_id,
         )
         db.add(mandate)
         try:
@@ -208,6 +230,7 @@ class MandateService:
         self.audit.record(
             db, context, "mandate.created", record_type="mandate", record_id=mandate.id, new_values=_snapshot(mandate)
         )
+        await _conflict_check(db, mandate, values.counterparty_ids, context)
         await db.commit()
         await self.notifications.flush_emails()
         return await self.read(db, mandate, None)

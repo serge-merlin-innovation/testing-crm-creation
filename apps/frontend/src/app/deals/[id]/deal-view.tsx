@@ -25,6 +25,8 @@ import type { MessageKey } from "@/lib/i18n/messages";
 import { stageLabel } from "@/lib/pipeline";
 import { sendJson, useApiData } from "@/lib/use-api";
 import { canRecordInvoices, canSeeFees } from "@/lib/fees";
+import { apiFetch } from "@/services/api";
+import { ComplianceTab } from "./compliance-tab";
 import { FeesTab } from "./fees-tab";
 import { ClosingTab, MilestonesTab } from "./pipeline-tabs";
 
@@ -428,17 +430,18 @@ export function DealView({
 }: {
   initial: Mandate;
   permissions: string[];
-  /** Back-office reading a deal it is not staffed on: summary, fees and invoices only (ROLE-01 c4). */
+  /** Back-office on a deal it is not staffed on: summary, compliance (conflicts, KYC), fees and invoices (ROLE-01 c4). */
   summaryOnly: boolean;
   messages: Messages;
 }) {
   const [mandate, setMandate] = useState(initial);
   const fees = canSeeFees(permissions);
-  const feesTab = fees ? (
-    <TabsContent value="fees">
-      <FeesTab mandateId={mandate.id} canRecordInvoices={canRecordInvoices(permissions)} messages={messages} />
-    </TabsContent>
-  ) : null;
+
+  async function refresh() {
+    const path = summaryOnly ? `/api/v1/mandates/${mandate.id}/summary` : `/api/v1/mandates/${mandate.id}`;
+    const response = await apiFetch(path).catch(() => null);
+    if (response?.ok) setMandate((await response.json()) as Mandate);
+  }
 
   return (
     <Card>
@@ -448,49 +451,54 @@ export function DealView({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {summaryOnly ? (
-          <Tabs defaultValue="summary">
-            <TabsList>
-              <TabsTrigger value="summary">{messages["deals.summary"]}</TabsTrigger>
-              {fees ? <TabsTrigger value="fees">{messages["fees.title"]}</TabsTrigger> : null}
-            </TabsList>
-            <TabsContent value="summary">
-              <Summary mandate={mandate} onSaved={setMandate} messages={messages} />
+        <Tabs defaultValue="summary">
+          <TabsList>
+            <TabsTrigger value="summary">{messages["deals.summary"]}</TabsTrigger>
+            {summaryOnly ? null : (
+              <>
+                <TabsTrigger value="team">{messages["deals.team"]}</TabsTrigger>
+                <TabsTrigger value="links">{messages["deals.links"]}</TabsTrigger>
+                <TabsTrigger value="milestones">{messages["milestones.title"]}</TabsTrigger>
+                <TabsTrigger value="closing">{messages["closing.title"]}</TabsTrigger>
+              </>
+            )}
+            <TabsTrigger value="compliance">{messages["compliance.title"]}</TabsTrigger>
+            {fees ? <TabsTrigger value="fees">{messages["fees.title"]}</TabsTrigger> : null}
+            {summaryOnly ? null : <TabsTrigger value="history">{messages["deals.history"]}</TabsTrigger>}
+          </TabsList>
+          <TabsContent value="summary">
+            <Summary mandate={mandate} onSaved={setMandate} messages={messages} />
+          </TabsContent>
+          {summaryOnly ? null : (
+            <>
+              <TabsContent value="team">
+                <TeamTab mandateId={mandate.id} messages={messages} />
+              </TabsContent>
+              <TabsContent value="links">
+                <LinksTab mandateId={mandate.id} canEdit={mandate.can_edit} messages={messages} />
+              </TabsContent>
+              <TabsContent value="milestones">
+                <MilestonesTab key={mandate.version} mandate={mandate} messages={messages} />
+              </TabsContent>
+              <TabsContent value="closing">
+                <ClosingTab key={mandate.version} mandate={mandate} onSaved={setMandate} messages={messages} />
+              </TabsContent>
+            </>
+          )}
+          <TabsContent value="compliance">
+            <ComplianceTab mandate={mandate} onChanged={refresh} messages={messages} />
+          </TabsContent>
+          {fees ? (
+            <TabsContent value="fees">
+              <FeesTab mandateId={mandate.id} canRecordInvoices={canRecordInvoices(permissions)} messages={messages} />
             </TabsContent>
-            {feesTab}
-          </Tabs>
-        ) : (
-          <Tabs defaultValue="summary">
-            <TabsList>
-              <TabsTrigger value="summary">{messages["deals.summary"]}</TabsTrigger>
-              <TabsTrigger value="team">{messages["deals.team"]}</TabsTrigger>
-              <TabsTrigger value="links">{messages["deals.links"]}</TabsTrigger>
-              <TabsTrigger value="milestones">{messages["milestones.title"]}</TabsTrigger>
-              <TabsTrigger value="closing">{messages["closing.title"]}</TabsTrigger>
-              {fees ? <TabsTrigger value="fees">{messages["fees.title"]}</TabsTrigger> : null}
-              <TabsTrigger value="history">{messages["deals.history"]}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="summary">
-              <Summary mandate={mandate} onSaved={setMandate} messages={messages} />
-            </TabsContent>
-            <TabsContent value="team">
-              <TeamTab mandateId={mandate.id} messages={messages} />
-            </TabsContent>
-            <TabsContent value="links">
-              <LinksTab mandateId={mandate.id} canEdit={mandate.can_edit} messages={messages} />
-            </TabsContent>
-            <TabsContent value="milestones">
-              <MilestonesTab key={mandate.version} mandate={mandate} messages={messages} />
-            </TabsContent>
-            <TabsContent value="closing">
-              <ClosingTab key={mandate.version} mandate={mandate} onSaved={setMandate} messages={messages} />
-            </TabsContent>
-            {feesTab}
+          ) : null}
+          {summaryOnly ? null : (
             <TabsContent value="history">
               <HistoryTab mandateId={mandate.id} version={mandate.version} messages={messages} />
             </TabsContent>
-          </Tabs>
-        )}
+          )}
+        </Tabs>
       </CardContent>
     </Card>
   );

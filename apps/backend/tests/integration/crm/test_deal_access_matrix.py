@@ -140,6 +140,37 @@ ENDPOINTS: list[Endpoint] = [
         hidden_from_unstaffed(member=FORBIDDEN, lead=FORBIDDEN, compliance=OK),
         body=lambda ctx: {"paid_date": "2026-10-05"},
     ),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/counterparties", hidden_from_unstaffed(member=OK, lead=OK)),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/counterparties",
+        hidden_from_unstaffed(member=OK, lead=OK),
+        body=lambda ctx: {"company_id": ctx["company_id"]},
+    ),
+    # Compliance-only: the team sees the deal (403), nobody else learns it exists (404). The matrix deal has
+    # no conflict and is not frozen, so compliance's decision and unfreeze are refused on their merits (422).
+    Endpoint(
+        "GET", "/api/v1/mandates/{mandate_id}/conflicts", hidden_from_unstaffed(member=FORBIDDEN, lead=FORBIDDEN, compliance=OK)
+    ),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/conflicts/decision",
+        hidden_from_unstaffed(member=FORBIDDEN, lead=FORBIDDEN, compliance=422),
+        body=lambda ctx: {"decision": "clear", "reason": "No overlap"},
+    ),
+    Endpoint("GET", "/api/v1/mandates/{mandate_id}/kyc", hidden_from_unstaffed(member=OK, lead=OK, compliance=OK)),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/kyc",
+        hidden_from_unstaffed(member=FORBIDDEN, lead=FORBIDDEN, compliance=OK),
+        body=lambda ctx: {"ubo_check": True, "id_check": True, "pep_sanctions_screening": True},
+    ),
+    Endpoint(
+        "POST",
+        "/api/v1/mandates/{mandate_id}/unfreeze",
+        hidden_from_unstaffed(member=FORBIDDEN, lead=FORBIDDEN, compliance=422),
+        body=lambda ctx: {"reason": "Cleared"},
+    ),
 ]
 
 # Under /mandates but about no existing deal: creating one, and picking its lead partner.
@@ -235,7 +266,7 @@ async def test_deal_access_matrix(world, endpoint: Endpoint, persona: str):
         return (await lead.client.get(f"/api/v1/mandates/{mandate_id}", headers=lead.headers)).json()["version"]
 
     version = await current_version()
-    context = {"version": lambda: version, "spare_user_id": spare.id}
+    context = {"version": lambda: version, "spare_user_id": spare.id, "company_id": world.client_id}
     path = endpoint.path.format(
         mandate_id=mandate_id,
         user_id=victim.id,
