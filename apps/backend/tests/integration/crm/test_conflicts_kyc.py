@@ -286,13 +286,15 @@ async def test_adding_a_counterparty_later_reruns_the_check(world):
     assert [(h["company_name"], h["other_code_name"]) for h in found] == [("Quasar Capital", "Kite")]
     names = [c["name"] for c in (await get(world.partner, f"/api/v1/mandates/{mandate['id']}/counterparties")).json()]
     assert names == ["Nebula Partners", "Quasar Capital"]
-    # A running deal stays with its team while compliance reviews the new party, but cannot move on.
-    deal = await get(world.analyst, f"/api/v1/mandates/{mandate['id']}")
-    assert deal.status_code == 200
-    blocked = await post(
-        world.analyst, f"/api/v1/mandates/{mandate['id']}/stage", {"version": deal.json()["version"], "stage": "marketing"}
-    )
-    assert "Compliance must clear the conflict check." in blocked.json()["detail"]["reasons"]
+    # The hit puts the running deal back into Conflict review: hidden from its team until compliance decides.
+    deal = (await get(world.partner, f"/api/v1/mandates/{mandate['id']}")).json()
+    assert deal["stage"] == "conflict_review"
+    assert (await get(world.analyst, f"/api/v1/mandates/{mandate['id']}")).status_code == 404
+
+    assert (await decide(world.compliance, mandate["id"], "clear")).status_code == 200
+    back = await get(world.analyst, f"/api/v1/mandates/{mandate['id']}")
+    assert back.status_code == 200
+    assert back.json()["stage"] == "preparation"
 
 
 # DEAL-01 c2: creation runs the check and puts the creator on the deal team.

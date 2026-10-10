@@ -139,6 +139,12 @@ class ConflictService:
     async def _open_review(self, db: AsyncSession, mandate: Mandate, hits: list[ConflictHit], context: AuditContext) -> None:
         now = context.clock.now()
         review = ConflictReview(mandate_id=mandate.id, opened_at=now)
+        if mandate.closed_at is None and mandate.stage != DealStage.CONFLICT_REVIEW.value:
+            review.resume_stage = mandate.stage
+            mandate.stage = DealStage.CONFLICT_REVIEW.value
+            mandate.stage_changed_at = now
+            mandate.updated_at = now
+            mandate.version += 1
         db.add(review)
         await db.flush()
         for hit in hits:
@@ -279,10 +285,11 @@ class ConflictService:
             review.decided_by = context.user_id
             review.decided_at = now
         old = {"conflict_status": mandate.conflict_status, "stage": mandate.stage}
+        resume = next((review.resume_stage for review in reviews if review.resume_stage), None)
         if values.decision == ConflictDecisionKind.CLEAR:
             mandate.conflict_status = ConflictStatus.CLEARED.value
             if mandate.stage == DealStage.CONFLICT_REVIEW.value:
-                mandate.stage = DealStage.PREPARATION.value
+                mandate.stage = resume or DealStage.PREPARATION.value
                 mandate.stage_changed_at = now
         else:
             mandate.conflict_status = ConflictStatus.REJECTED.value
