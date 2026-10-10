@@ -121,49 +121,9 @@ jobs:
             apps/frontend/test-results/
           retention-days: 7
 
-  # NFR-02 c1: 50 concurrent users on 200,000 contacts; k6 fails the job when page p95 >= 2 s or
-  # search p95 >= 1 s. Runs on the CI runner's own throwaway Postgres; never against production.
+  # NFR-02 c1: defined in load-test.yml, which also runs on pull requests touching apps/backend/src.
   load-test:
-    name: load test (k6, 50 users, 200k contacts)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: crm
-        ports: ["5432:5432"]
-        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
-    env:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/crm
-      SECRET_KEY: ci-load-test-secret
-      SCHEDULED_JOBS_ENABLED: "false"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-        with:
-          python: "true"
-      - working-directory: apps/backend
-        run: |
-          uv run alembic upgrade head
-          uv run python -m scripts.setup_initial_data
-          uv run python -m scripts.seed_load_test
-          uv run fastapi run src/interfaces/main.py --port 8000 > api.log 2>&1 &
-          for attempt in $(seq 1 60); do curl -sf http://localhost:8000/health/ready && break; sleep 1; done
-      - uses: grafana/setup-k6-action@v1
-      - working-directory: apps/backend/perf/k6
-        run: k6 run --quiet load.js
-        env:
-          BASE_URL: http://localhost:8000
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: load-test
-          path: |
-            apps/backend/perf/k6/summary.json
-            apps/backend/api.log
-          retention-days: 14
+    uses: ./.github/workflows/load-test.yml
 
   # NFR-01 c3: OWASP Top 10 baseline. ZAP scans the production build of both apps; any High
   # (or Critical) alert fails the job, and so a release, because `version` needs it.

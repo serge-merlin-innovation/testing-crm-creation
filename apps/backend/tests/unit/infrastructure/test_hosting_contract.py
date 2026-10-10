@@ -161,6 +161,12 @@ class TestReleaseGates:
     def test_the_k6_load_test_runs_50_users_on_200k_contacts_and_gates_the_release(self):
         jobs = self.workflow()["jobs"]
         assert "load-test" in jobs["version"]["needs"]
+        assert jobs["load-test"]["uses"] == "./.github/workflows/load-test.yml"
+        load_test = yaml.safe_load(text(WORKFLOWS / "load-test.yml"))
+        triggers = load_test[True]  # PyYAML reads the bare `on:` key as the boolean True.
+        assert triggers["pull_request"]["paths"] == ["apps/backend/src/**"]
+        assert "workflow_call" in triggers
+        assert any(step.get("run", "").startswith("k6 run") for step in load_test["jobs"]["load-test"]["steps"])
         script = text(INFRA.parent / "apps" / "backend" / "perf" / "k6" / "load.js")
         assert "vus: 50" in script
         assert '"http_req_duration{kind:page}": ["p(95)<2000"]' in script

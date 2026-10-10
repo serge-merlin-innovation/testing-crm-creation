@@ -1,0 +1,55 @@
+name: Load test
+
+# NFR-02 c1 on every pull request that changes backend code, and as a gate of the CI release run
+# (ci.yml calls this workflow). Runs on the runner's own throwaway Postgres, never production.
+on:
+  pull_request:
+    paths:
+      - "apps/backend/src/**"
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  load-test:
+    name: load test (k6, 50 users, 200k contacts)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crm
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/crm
+      SECRET_KEY: ci-load-test-secret
+      SCHEDULED_JOBS_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python: "true"
+      - working-directory: apps/backend
+        run: |
+          uv run alembic upgrade head
+          uv run python -m scripts.setup_initial_data
+          uv run python -m scripts.seed_load_test
+          uv run fastapi run src/interfaces/main.py --port 8000 > api.log 2>&1 &
+          for attempt in $(seq 1 60); do curl -sf http://localhost:8000/health/ready && break; sleep 1; done
+      - uses: grafana/setup-k6-action@v1
+      - working-directory: apps/backend/perf/k6
+        run: k6 run --quiet load.js
+        env:
+          BASE_URL: http://localhost:8000
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test
+          path: |
+            apps/backend/perf/k6/summary.json
+            apps/backend/api.log
+          retention-days: 14
