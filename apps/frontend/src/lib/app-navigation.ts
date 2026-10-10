@@ -1,22 +1,27 @@
 import type { MessageKey } from "./i18n/messages";
 import { audienceFor, satisfiesAudience, type Viewer } from "./page-audience";
+import { hasRecordAccess } from "./reports";
 
 export type NavigationItem = {
   label: MessageKey;
   href: string;
   /** Hides the link (not the page) from roles that would only ever find it empty. */
   requires?: string;
+  /** Shown to dashboard-only roles (Read-only); every other link needs record access (ROLE-01 c3). */
+  aggregate?: boolean;
 };
 
 const PRIMARY_NAVIGATION: NavigationItem[] = [
-  { label: "nav.overview", href: "/overview" },
+  { label: "nav.overview", href: "/overview", aggregate: true },
   { label: "nav.search", href: "/search" },
   { label: "nav.deals", href: "/deals", requires: "deals.read_staffed" },
   { label: "nav.origination", href: "/origination", requires: "deals.read_staffed" },
   { label: "nav.fees", href: "/fees" },
   { label: "nav.companies", href: "/companies" },
   { label: "nav.contacts", href: "/contacts" },
-  { label: "nav.analytics", href: "/analytics" },
+  { label: "nav.analytics", href: "/analytics", aggregate: true },
+  { label: "nav.feeForecast", href: "/fee-forecast" },
+  { label: "nav.winLoss", href: "/win-loss" },
   { label: "nav.users", href: "/users" },
   { label: "nav.permissions", href: "/permissions" },
   { label: "nav.picklists", href: "/picklists" },
@@ -40,6 +45,7 @@ export function getPrimaryNavigation(viewer: Viewer): NavigationItem[] {
   return PRIMARY_NAVIGATION.filter(
     (item) =>
       satisfiesAudience(audienceFor(item.href), viewer) &&
+      (item.aggregate || hasRecordAccess(viewer.permissions)) &&
       (!item.requires || viewer.permissions.includes(item.requires)),
   );
 }
