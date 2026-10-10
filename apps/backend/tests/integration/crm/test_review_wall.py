@@ -122,7 +122,5 @@ async def test_a_staffed_admin_or_compliance_user_reads_their_deal(world, person
     assert read.json()["can_edit"] is False
     listed = (await member.client.get("/api/v1/mandates/", headers=member.headers)).json()
     assert "Falcon" in str(listed)
-    edit = await member.client.patch(
-        url, json={"version": read.json()["version"], "estimated_ev": "1"}, headers=member.headers
-    )
+    edit = await member.client.patch(url, json={"version": read.json()["version"], "estimated_ev": "1"}, headers=member.headers)
     assert edit.status_code == 403, edit.text

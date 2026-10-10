@@ -428,7 +428,10 @@ async def test_export_person_excludes_others_private_notes_and_names_deals_by_co
             "type": "meeting",
             "occurred_at": NOW.isoformat(),
             "note": "Teaser walk-through",
-            "links": [{"record_type": "contact", "record_id": contact_id}, {"record_type": "mandate", "record_id": mandate["id"]}],
+            "links": [
+                {"record_type": "contact", "record_id": contact_id},
+                {"record_type": "mandate", "record_id": mandate["id"]},
+            ],
         },
         headers=world.partner.headers,
     )
