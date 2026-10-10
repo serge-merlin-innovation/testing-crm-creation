@@ -129,6 +129,6 @@ async function gate(request: NextRequest, audience: ReturnType<typeof audienceFo
  */
 export const config = {
   matcher: [
-    "/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.[^/]+$).*)",
+    "/((?!api(?:/|$)|health/ready$|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.[^/]+$).*)",
   ],
 };
