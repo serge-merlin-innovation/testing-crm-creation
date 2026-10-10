@@ -83,8 +83,9 @@ async def link_portfolio(
 
 @companies_router.get("/{company_id}/exclusions", response_model=list[ExclusionRead], summary="The client's exclusion list")
 async def get_exclusions(
-    company_id: int, db: AsyncSessionDep, service: InvestorProfileServiceDep, _: CurrentUserDep
+    company_id: int, db: AsyncSessionDep, service: InvestorProfileServiceDep, user: CurrentUserDep, clock: ClockDep
 ) -> list[dict[str, Any]]:
+    await service.client_grants(db, user, company_id, clock.now())
     return await service.exclusions(db, company_id)
 
 
@@ -99,9 +100,10 @@ async def add_exclusion(
     values: CompanyRef,
     db: AsyncSessionDep,
     service: InvestorProfileServiceDep,
-    _: CurrentUserDep,
+    user: CurrentUserDep,
     context: AuditContextDep,
 ) -> dict[str, Any]:
+    await service.require_exclusion_manager(db, user, company_id, context.clock.now())
     return await service.add_exclusion(db, company_id, values.company_id, context)
 
 
@@ -111,9 +113,10 @@ async def remove_exclusion(
     excluded_id: int,
     db: AsyncSessionDep,
     service: InvestorProfileServiceDep,
-    _: CurrentUserDep,
+    user: CurrentUserDep,
     context: AuditContextDep,
 ) -> Response:
+    await service.require_exclusion_manager(db, user, company_id, context.clock.now())
     await service.remove_exclusion(db, company_id, excluded_id, context)
     return Response(status_code=204)
 

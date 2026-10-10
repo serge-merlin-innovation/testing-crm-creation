@@ -16,7 +16,7 @@ from ..company.models import Company
 from ..compliance.service import ConflictService
 from ..contact.models import Contact
 from ..mandate.models import DealTeamMember, Mandate
-from ..mandate.policy import DealGrant, DealPolicy
+from ..mandate.policy import DealAction, DealGrant, DealPolicy
 from ..mandate.stages import DealStage
 from ..notification.ports import LoggingEmailSender
 from ..notification.schemas import EventKind
@@ -206,6 +206,23 @@ class InvestorProfileService:
         )
         await db.commit()
         return await self.read(db, fund_id, user, context.clock.now())
+
+    async def client_grants(self, db: AsyncSession, user: dict[str, Any], client_id: int, now: datetime) -> list[DealGrant]:
+        """The caller's grants on deals for this client. None: the list does not exist for them (404),
+        since its existence alone shows the company is a client."""
+        policy = DealPolicy(now)
+        mandate_ids = list(
+            (await db.execute(policy.visible(user, select(Mandate.id).where(Mandate.client_id == client_id)))).scalars()
+        )
+        grants = [await policy.authorize(db, user, mandate_id, DealAction.READ) for mandate_id in mandate_ids]
+        if not grants:
+            raise CompanyNotFoundError(f"Company {client_id} not found")
+        return grants
+
+    async def require_exclusion_manager(self, db: AsyncSession, user: dict[str, Any], client_id: int, now: datetime) -> None:
+        grants = await self.client_grants(db, user, client_id, now)
+        if not any(BuyerService.can_approve(grant) for grant in grants):
+            raise DealForbiddenError("Only the deal partner, director or a buyers.manage member edits the exclusion list")
 
     async def exclusions(self, db: AsyncSession, client_id: int) -> list[dict[str, Any]]:
         await self._company(db, client_id)

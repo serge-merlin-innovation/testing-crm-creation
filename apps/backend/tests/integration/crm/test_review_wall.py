@@ -83,3 +83,26 @@ async def test_break_glass_cannot_export_the_buyer_list(world):
     assert (await world.admin.client.get(url, headers=world.admin.headers)).status_code == 200
     exported = await world.admin.client.get(f"{url}/export", headers=world.admin.headers)
     assert exported.status_code == 403, exported.text
+
+
+# Review S1: a client's exclusion list is the deal team's; nobody else learns the company is a client.
+async def test_exclusion_list_is_for_the_client_deal_team_only(world):
+    mandate = await create_mandate(world, world.partner, world.client_id)
+    await staff(world, mandate["id"], world.analyst)
+    rival = await world.company("Rival Industries", "strategic_buyer")
+    url = f"/api/v1/companies/{world.client_id}/exclusions"
+
+    added = await world.partner.client.post(url, json={"company_id": rival}, headers=world.partner.headers)
+    assert added.status_code == 201, added.text
+    assert (await world.analyst.client.get(url, headers=world.analyst.headers)).status_code == 200
+    by_analyst = await world.analyst.client.post(url, json={"company_id": rival}, headers=world.analyst.headers)
+    assert by_analyst.status_code == 403, by_analyst.text
+
+    for outsider in (world.outsider, world.admin):
+        assert (await outsider.client.get(url, headers=outsider.headers)).status_code == 404
+        refused = await outsider.client.post(url, json={"company_id": rival}, headers=outsider.headers)
+        assert refused.status_code == 404
+        removed = await outsider.client.delete(f"{url}/{rival}", headers=outsider.headers)
+        assert removed.status_code == 404
+    rows = (await world.partner.client.get(url, headers=world.partner.headers)).json()
+    assert [row["company_id"] for row in rows] == [rival]
