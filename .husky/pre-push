@@ -1,0 +1,14 @@
+# The slow tiers, once per push, before anything leaves this machine.
+# Both need Docker: testcontainers starts its own Postgres, the browser tier needs
+# the compose Postgres the app itself connects to.
+set -e
+
+if ! docker info >/dev/null 2>&1; then
+  echo "pre-push: Docker is not running — integration and end-to-end tests cannot run." >&2
+  exit 1
+fi
+
+pnpm test:integration
+
+pnpm db:up
+pnpm test:e2e

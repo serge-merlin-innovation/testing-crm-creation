@@ -1,0 +1,182 @@
+name: Prepare Key Vault secrets
+description: Bootstrap optional GitHub secrets and verify required deployment secrets exist.
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/resolve-resource-name-stem
+
+    - id: resource_group
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/ressource-group.bicepparam
+
+    - id: key_vault
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/keyvault.bicepparam
+
+    - id: postgres_server
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/postgres-server.bicepparam
+
+    - id: frontend
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/frontend-container-app.bicepparam
+
+    - id: backend
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/backend-container-app.bicepparam
+
+    # REQUIRE_*, BOOTSTRAP_* read below come from the caller's `env:` on this action's `uses:`
+    # step (e.g. infra.yml, cd.yml) — composite actions inherit the calling step's environment.
+    - name: Bootstrap and verify secrets
+      shell: bash
+      env:
+        COMPILED_RESOURCE_GROUP_PARAMETERS_FILE: ${{ steps.resource_group.outputs.compiled-file }}
+        COMPILED_KEY_VAULT_PARAMETERS_FILE: ${{ steps.key_vault.outputs.compiled-file }}
+        COMPILED_POSTGRES_SERVER_PARAMETERS_FILE: ${{ steps.postgres_server.outputs.compiled-file }}
+        COMPILED_FRONTEND_PARAMETERS_FILE: ${{ steps.frontend.outputs.compiled-file }}
+        COMPILED_BACKEND_PARAMETERS_FILE: ${{ steps.backend.outputs.compiled-file }}
+      run: |
+        set -euo pipefail
+
+        for required_flag in REQUIRE_POSTGRES_SECRET REQUIRE_GHCR_SECRET REQUIRE_BACKEND_SECRET_KEY; do
+          if [[ "${!required_flag:-}" != "true" && "${!required_flag:-}" != "false" ]]; then
+            echo "$required_flag must be either true or false." >&2
+            exit 1
+          fi
+        done
+
+        resource_group_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_RESOURCE_GROUP_PARAMETERS_FILE")"
+        key_vault_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_KEY_VAULT_PARAMETERS_FILE")"
+        postgres_key_vault_resource_id="$(jq -er '.parameters.administratorLoginPassword.reference.keyVault.id | strings | select(length > 0)' "$COMPILED_POSTGRES_SERVER_PARAMETERS_FILE")"
+        postgres_secret_name="$(jq -er '.parameters.administratorLoginPassword.reference.secretName | strings | select(length > 0)' "$COMPILED_POSTGRES_SERVER_PARAMETERS_FILE")"
+        frontend_registry_key_vault_resource_id="$(jq -er '.parameters.registryPassword.reference.keyVault.id | strings | select(length > 0)' "$COMPILED_FRONTEND_PARAMETERS_FILE")"
+        frontend_registry_secret_name="$(jq -er '.parameters.registryPassword.reference.secretName | strings | select(length > 0)' "$COMPILED_FRONTEND_PARAMETERS_FILE")"
+        backend_registry_key_vault_resource_id="$(jq -er '.parameters.registryPassword.reference.keyVault.id | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        backend_registry_secret_name="$(jq -er '.parameters.registryPassword.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        backend_postgres_key_vault_resource_id="$(jq -er '.parameters.secretEnvironmentVariableValue1.reference.keyVault.id | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        backend_postgres_secret_name="$(jq -er '.parameters.secretEnvironmentVariableValue1.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        backend_secret_key_vault_resource_id="$(jq -er '.parameters.secretEnvironmentVariableValue2.reference.keyVault.id | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        backend_secret_key_name="$(jq -er '.parameters.secretEnvironmentVariableValue2.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        subscription_id="$(az account show --query id --output tsv --only-show-errors)"
+        expected_key_vault_resource_id="/subscriptions/$subscription_id/resourceGroups/$resource_group_name/providers/Microsoft.KeyVault/vaults/$key_vault_name"
+
+        if [[ "${postgres_key_vault_resource_id,,}" != "${expected_key_vault_resource_id,,}" ]]; then
+          echo "PostgreSQL parameters reference a Key Vault that does not match infra/parameters/keyvault.bicepparam." >&2
+          exit 1
+        fi
+
+        for container_key_vault_resource_id in \
+          "$frontend_registry_key_vault_resource_id" \
+          "$backend_registry_key_vault_resource_id" \
+          "$backend_postgres_key_vault_resource_id" \
+          "$backend_secret_key_vault_resource_id"; do
+          if [[ "${container_key_vault_resource_id,,}" != "${expected_key_vault_resource_id,,}" ]]; then
+            echo "Container App parameters reference a Key Vault that does not match infra/parameters/keyvault.bicepparam." >&2
+            exit 1
+          fi
+        done
+
+        if [[ "$frontend_registry_secret_name" != "$backend_registry_secret_name" ]]; then
+          echo "Frontend and backend Container App parameters must reference the same registry secret." >&2
+          exit 1
+        fi
+
+        if [[ "$postgres_secret_name" != "$backend_postgres_secret_name" ]]; then
+          echo "Backend Container App and PostgreSQL server parameters must reference the same database password secret." >&2
+          exit 1
+        fi
+
+        if [[ "$(az group exists --name "$resource_group_name")" != "true" ]]; then
+          echo "Resource group $resource_group_name does not exist. Select deploy_resource_group or create it first." >&2
+          exit 1
+        fi
+
+        if ! template_deployment_enabled="$(az keyvault show \
+          --name "$key_vault_name" \
+          --resource-group "$resource_group_name" \
+          --query properties.enabledForTemplateDeployment \
+          --only-show-errors \
+          --output tsv)"; then
+          echo "Key Vault $key_vault_name does not exist. Select deploy_key_vault or deploy it first." >&2
+          exit 1
+        fi
+
+        if [[ "$template_deployment_enabled" != "true" ]]; then
+          echo "Key Vault $key_vault_name must enable ARM template deployment for secure parameter references." >&2
+          exit 1
+        fi
+
+        sync_secret() {
+          local secret_name="$1"
+          local bootstrap_value="$2"
+          local required="$3"
+          local current_value
+
+          if [[ -n "$bootstrap_value" ]]; then
+            current_value="$(az keyvault secret show \
+              --vault-name "$key_vault_name" \
+              --name "$secret_name" \
+              --query value \
+              --only-show-errors \
+              --output tsv 2>/dev/null || true)"
+
+            if [[ -n "$current_value" ]]; then
+              echo "::add-mask::$current_value"
+            fi
+
+            if [[ "$current_value" != "$bootstrap_value" ]]; then
+              az keyvault secret set \
+                --vault-name "$key_vault_name" \
+                --name "$secret_name" \
+                --value "$bootstrap_value" \
+                --only-show-errors \
+                --output none
+            fi
+          fi
+
+          if [[ "$required" == "true" ]]; then
+            if ! az keyvault secret show \
+              --vault-name "$key_vault_name" \
+              --name "$secret_name" \
+              --query id \
+              --only-show-errors \
+              --output tsv >/dev/null; then
+              echo "Required Key Vault secret $secret_name is missing. Configure its GitHub bootstrap secret or seed the vault." >&2
+              exit 1
+            fi
+          fi
+        }
+
+        for attempt in {1..30}; do
+          if az keyvault secret list \
+            --vault-name "$key_vault_name" \
+            --maxresults 1 \
+            --only-show-errors \
+            --output none 2>/dev/null; then
+            break
+          fi
+          if [[ "$attempt" -eq 30 ]]; then
+            echo "Could not access secrets after waiting for Key Vault RBAC propagation." >&2
+            exit 1
+          fi
+          sleep 10
+        done
+
+        sync_secret \
+          "$postgres_secret_name" \
+          "${BOOTSTRAP_POSTGRES_ADMIN_PASSWORD:-}" \
+          "$REQUIRE_POSTGRES_SECRET"
+        sync_secret \
+          "$frontend_registry_secret_name" \
+          "${BOOTSTRAP_GHCR_TOKEN:-}" \
+          "$REQUIRE_GHCR_SECRET"
+        sync_secret \
+          "$backend_secret_key_name" \
+          "${BOOTSTRAP_BACKEND_SECRET_KEY:-}" \
+          "$REQUIRE_BACKEND_SECRET_KEY"

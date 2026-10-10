@@ -1,0 +1,18 @@
+# Build context is apps/backend (see Dockerfile). Allowlist rather than denylist: the
+# image needs six things, and a denylist silently ships every tool cache invented later.
+*
+
+!pyproject.toml
+!uv.lock
+!alembic.ini
+!src
+!tests
+!migrations
+
+# Re-excluded inside the directories admitted above.
+**/__pycache__
+**/*.pyc
+
+# Belt and braces: secrets stay out even if the allowlist above ever widens.
+.env
+.env.*

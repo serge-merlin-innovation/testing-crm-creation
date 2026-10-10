@@ -1,0 +1,34 @@
+# Build context is the repo root, used by apps/frontend/Dockerfile. The backend image
+# builds from apps/backend with its own .dockerignore.
+#
+# Patterns match the whole context-relative path, so a bare `.venv` would miss
+# apps/backend/.venv. The backend is excluded wholesale instead — the frontend build needs
+# exactly one file from it, the workspace manifest pnpm reads to validate the lockfile.
+apps/backend/**
+!apps/backend/package.json
+
+# Tests never run in the image, and tests/e2e/.auth holds banked session cookies. Excluding
+# them also stops a test-only edit invalidating the COPY layer and forcing a rebuild.
+apps/frontend/tests
+apps/frontend/test-results
+
+# Installed and built in the image, never copied in — these dominate context size.
+**/node_modules
+**/.next
+**/.turbo
+**/.pnpm-store
+
+.git
+.claude
+.agents
+.github
+.azuredevops
+docs
+site
+infra
+
+# Secrets never enter the build context
+**/.env
+**/.env.*
+
+**/*.tsbuildinfo

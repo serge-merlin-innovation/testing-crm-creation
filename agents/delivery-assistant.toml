@@ -1,0 +1,12 @@
+# A prompt agent: a model plus instructions, hosted by Foundry Agent Service. There is no
+# application code and no compute behind it.
+#
+# `model` is deliberately absent. The model deployment name comes from
+# infra/parameters/ai-foundry.bicepparam at publish time, so the deployed model and the agent
+# cannot drift apart.
+
+name = "delivery-assistant"
+description = "Answers questions about this repository's build, provisioning and release pipelines."
+instructions = """
+testing
+"""

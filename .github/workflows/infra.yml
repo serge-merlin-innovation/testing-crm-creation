@@ -1,0 +1,415 @@
+name: Infra
+
+# Required GitHub Actions variables: AZURE_CLIENT_ID, AZURE_TENANT_ID,
+# AZURE_SUBSCRIPTION_ID, AZURE_PRINCIPAL_OBJECT_ID, AZURE_BUDGET_ALERT_EMAIL, and AZURE_LOCATION.
+# Every deployable Azure resource reads that shared location from its matching Bicep parameters
+# file. Other non-secret values are versioned in matching infra/parameters/*.bicepparam files.
+# The frontend origin is derived from the Container Apps environment's assigned domain by CD alone,
+# for the applications' own URLs and for Blob CORS.
+# Authentication uses an OIDC federated credential. The principal must be able
+# to deploy the selected resources, create the vault-scoped Key Vault
+# Secrets Officer assignment, and create the account-scoped Foundry assignments
+# that let it deploy models and publish agent versions.
+#
+# POSTGRES_ADMIN_PASSWORD, GHCR_TOKEN, and BACKEND_SECRET_KEY are optional GitHub bootstrap
+# secrets when the matching values already exist in Key Vault; a new vault requires all three.
+# Their values are never stored in the checked-in Bicep parameter files.
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_infrastructure:
+        description: Apply the selected infrastructure changes
+        required: true
+        type: boolean
+        default: false
+      deploy_resource_group:
+        description: Deploy the resource group
+        required: true
+        type: boolean
+        default: true
+      deploy_resource_group_budget:
+        description: Deploy the monthly resource group cost budget
+        required: true
+        type: boolean
+        default: true
+      deploy_key_vault:
+        description: Deploy Key Vault and grant the workflow secret access
+        required: true
+        type: boolean
+        default: true
+      deploy_postgres_server:
+        description: Deploy the PostgreSQL flexible server
+        required: true
+        type: boolean
+        default: true
+      deploy_postgres_database:
+        description: Deploy the PostgreSQL database
+        required: true
+        type: boolean
+        default: true
+      deploy_storage_account:
+        description: Deploy the storage account
+        required: true
+        type: boolean
+        default: true
+      deploy_blob_container:
+        description: Deploy the blob container
+        required: true
+        type: boolean
+        default: true
+      deploy_container_app_environment:
+        description: Deploy the Container Apps environment
+        required: true
+        type: boolean
+        default: true
+      deploy_ai_foundry:
+        description: Deploy the Foundry account, project, and model deployments
+        required: true
+        type: boolean
+        default: true
+concurrency:
+  group: azure-infrastructure
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+
+jobs:
+  validate-selection:
+    name: Validate deployment selection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check selected services
+        env:
+          DEPLOY_INFRASTRUCTURE: ${{ inputs.deploy_infrastructure }}
+          DEPLOY_RESOURCE_GROUP: ${{ inputs.deploy_resource_group }}
+          DEPLOY_RESOURCE_GROUP_BUDGET: ${{ inputs.deploy_resource_group_budget }}
+          DEPLOY_KEY_VAULT: ${{ inputs.deploy_key_vault }}
+          DEPLOY_POSTGRES_SERVER: ${{ inputs.deploy_postgres_server }}
+          DEPLOY_POSTGRES_DATABASE: ${{ inputs.deploy_postgres_database }}
+          DEPLOY_STORAGE_ACCOUNT: ${{ inputs.deploy_storage_account }}
+          DEPLOY_BLOB_CONTAINER: ${{ inputs.deploy_blob_container }}
+          DEPLOY_CONTAINER_APP_ENVIRONMENT: ${{ inputs.deploy_container_app_environment }}
+          DEPLOY_AI_FOUNDRY: ${{ inputs.deploy_ai_foundry }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$DEPLOY_INFRASTRUCTURE" != "true" ]]; then
+            {
+              echo "## Azure infrastructure selection"
+              echo
+              echo "Infrastructure deployment is disabled; no Azure authentication or changes were attempted."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [[ "$DEPLOY_RESOURCE_GROUP" != "true" \
+            && "$DEPLOY_RESOURCE_GROUP_BUDGET" != "true" \
+            && "$DEPLOY_KEY_VAULT" != "true" \
+            && "$DEPLOY_POSTGRES_SERVER" != "true" \
+            && "$DEPLOY_POSTGRES_DATABASE" != "true" \
+            && "$DEPLOY_STORAGE_ACCOUNT" != "true" \
+            && "$DEPLOY_BLOB_CONTAINER" != "true" \
+            && "$DEPLOY_CONTAINER_APP_ENVIRONMENT" != "true" \
+            && "$DEPLOY_AI_FOUNDRY" != "true" ]]; then
+            echo "Select at least one Azure service." >&2
+            exit 1
+          fi
+
+  validate-contract:
+    name: Validate Azure deployment contract
+    needs: validate-selection
+    if: ${{ inputs.deploy_infrastructure }}
+    runs-on: ubuntu-latest
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_PRINCIPAL_OBJECT_ID: ${{ vars.AZURE_PRINCIPAL_OBJECT_ID }}
+      AZURE_BUDGET_ALERT_EMAIL: ${{ vars.AZURE_BUDGET_ALERT_EMAIL }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate Azure deployment variables
+        run: |
+          set -euo pipefail
+
+          for variable_name in \
+            AZURE_CLIENT_ID \
+            AZURE_TENANT_ID \
+            AZURE_SUBSCRIPTION_ID \
+            AZURE_PRINCIPAL_OBJECT_ID \
+            AZURE_BUDGET_ALERT_EMAIL \
+            AZURE_LOCATION; do
+            if [[ -z "${!variable_name:-}" ]]; then
+              echo "Missing GitHub Actions variable: $variable_name" >&2
+              exit 1
+            fi
+          done
+
+      - name: Resolve resource name stem
+        uses: ./.github/actions/resolve-resource-name-stem
+
+      - name: Validate Bicep parameter files
+        run: |
+          set -euo pipefail
+
+          # The Container App and blob service parameters belong to CD and are deliberately
+          # excluded: they read origin variables CD sets, so they cannot compile here.
+          for parameters_file in \
+            infra/parameters/ressource-group.bicepparam \
+            infra/parameters/resource-group-budget.bicepparam \
+            infra/parameters/keyvault.bicepparam \
+            infra/parameters/postgres-server.bicepparam \
+            infra/parameters/postgres-database.bicepparam \
+            infra/parameters/storage-account.bicepparam \
+            infra/parameters/blob-container.bicepparam \
+            infra/parameters/container-app-environment.bicepparam \
+            infra/parameters/ai-foundry.bicepparam; do
+            az bicep build-params \
+              --file "$parameters_file" \
+              --stdout \
+              --only-show-errors >/dev/null
+          done
+
+  deploy-resource-group:
+    name: Deploy resource group
+    needs: validate-contract
+    if: ${{ inputs.deploy_infrastructure }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - if: ${{ inputs.deploy_resource_group }}
+        uses: actions/checkout@v7
+
+      - name: Log in to Azure with OIDC
+        if: ${{ inputs.deploy_resource_group }}
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy resource group
+        if: ${{ inputs.deploy_resource_group }}
+        uses: ./.github/actions/deploy-bicep
+        with:
+          template-file: infra/ressource-group.bicep
+          parameters-file: infra/parameters/ressource-group.bicepparam
+          deployment-name: cd-resource-group
+          scope: subscription
+
+  deploy-resource-group-budget:
+    name: Deploy resource group budget
+    needs: deploy-resource-group
+    if: ${{ inputs.deploy_infrastructure && inputs.deploy_resource_group_budget }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_BUDGET_ALERT_EMAIL: ${{ vars.AZURE_BUDGET_ALERT_EMAIL }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy resource group budget
+        uses: ./.github/actions/deploy-bicep
+        with:
+          template-file: infra/resource-group-budget.bicep
+          parameters-file: infra/parameters/resource-group-budget.bicepparam
+          deployment-name: cd-resource-group-budget
+
+  deploy-data-services:
+    name: Deploy data services
+    needs: deploy-resource-group
+    if: ${{ inputs.deploy_infrastructure && (inputs.deploy_key_vault || inputs.deploy_postgres_server || inputs.deploy_postgres_database) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_PRINCIPAL_OBJECT_ID: ${{ vars.AZURE_PRINCIPAL_OBJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Key Vault
+        if: ${{ inputs.deploy_key_vault }}
+        uses: ./.github/actions/deploy-bicep
+        with:
+          template-file: infra/keyvault.bicep
+          parameters-file: infra/parameters/keyvault.bicepparam
+          deployment-name: cd-key-vault
+
+      - name: Prepare Key Vault secrets
+        if: ${{ inputs.deploy_key_vault || inputs.deploy_postgres_server }}
+        uses: ./.github/actions/prepare-key-vault-secrets
+        env:
+          BOOTSTRAP_POSTGRES_ADMIN_PASSWORD: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+          BOOTSTRAP_GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          BOOTSTRAP_BACKEND_SECRET_KEY: ${{ secrets.BACKEND_SECRET_KEY }}
+          REQUIRE_POSTGRES_SECRET: ${{ inputs.deploy_key_vault || inputs.deploy_postgres_server }}
+          REQUIRE_GHCR_SECRET: ${{ inputs.deploy_key_vault }}
+          REQUIRE_BACKEND_SECRET_KEY: ${{ inputs.deploy_key_vault }}
+
+      - name: Deploy PostgreSQL server
+        if: ${{ inputs.deploy_postgres_server }}
+        uses: ./.github/actions/deploy-postgres-server
+
+      - name: Deploy PostgreSQL database
+        if: ${{ inputs.deploy_postgres_database }}
+        uses: ./.github/actions/deploy-postgres-database
+
+  deploy-container-apps-environment:
+    name: Deploy Container Apps environment
+    needs: deploy-resource-group
+    if: ${{ inputs.deploy_infrastructure && inputs.deploy_container_app_environment }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_PRINCIPAL_OBJECT_ID: ${{ vars.AZURE_PRINCIPAL_OBJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Container Apps environment
+        uses: ./.github/actions/deploy-bicep
+        with:
+          template-file: infra/container-app-environment.bicep
+          parameters-file: infra/parameters/container-app-environment.bicepparam
+          deployment-name: cd-container-apps-environment
+
+  deploy-storage:
+    name: Deploy storage
+    needs: deploy-resource-group
+    if: ${{ inputs.deploy_infrastructure && (inputs.deploy_storage_account || inputs.deploy_blob_container) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy storage account
+        if: ${{ inputs.deploy_storage_account }}
+        uses: ./.github/actions/deploy-bicep
+        with:
+          template-file: infra/storage-account.bicep
+          parameters-file: infra/parameters/storage-account.bicepparam
+          deployment-name: cd-storage-account
+
+      - name: Deploy blob container
+        if: ${{ inputs.deploy_blob_container }}
+        uses: ./.github/actions/deploy-blob-container
+
+  deploy-ai-foundry:
+    name: Deploy Foundry
+    needs: deploy-resource-group
+    if: ${{ inputs.deploy_infrastructure && inputs.deploy_ai_foundry }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    # The Foundry parameters file reads this to grant the workflow principal the roles it needs to
+    # deploy models and publish agent versions. It builds no cross-resource ARM ID and reads no
+    # vault secret, so it needs no other identifier.
+    env:
+      AZURE_PRINCIPAL_OBJECT_ID: ${{ vars.AZURE_PRINCIPAL_OBJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Foundry
+        uses: ./.github/actions/deploy-bicep
+        with:
+          template-file: infra/ai-foundry.bicep
+          parameters-file: infra/parameters/ai-foundry.bicepparam
+          deployment-name: cd-ai-foundry
+
+  deployment-summary:
+    name: Write deployment summary
+    needs:
+      - validate-contract
+      - deploy-resource-group
+      - deploy-resource-group-budget
+      - deploy-data-services
+      - deploy-storage
+      - deploy-container-apps-environment
+      - deploy-ai-foundry
+    if: ${{ always() && inputs.deploy_infrastructure && !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write deployment summary
+        env:
+          DEPLOY_RESOURCE_GROUP: ${{ inputs.deploy_resource_group }}
+          DEPLOY_RESOURCE_GROUP_BUDGET: ${{ inputs.deploy_resource_group_budget }}
+          DEPLOY_KEY_VAULT: ${{ inputs.deploy_key_vault }}
+          DEPLOY_POSTGRES_SERVER: ${{ inputs.deploy_postgres_server }}
+          DEPLOY_POSTGRES_DATABASE: ${{ inputs.deploy_postgres_database }}
+          DEPLOY_STORAGE_ACCOUNT: ${{ inputs.deploy_storage_account }}
+          DEPLOY_BLOB_CONTAINER: ${{ inputs.deploy_blob_container }}
+          DEPLOY_CONTAINER_APP_ENVIRONMENT: ${{ inputs.deploy_container_app_environment }}
+          DEPLOY_AI_FOUNDRY: ${{ inputs.deploy_ai_foundry }}
+        run: |
+          {
+            echo "## Azure infrastructure selection"
+            echo
+            echo "Parameters: matching \`infra/parameters/*.bicepparam\` files"
+            echo
+            echo "| Service | Selected |"
+            echo "| --- | --- |"
+            echo "| Resource group | $DEPLOY_RESOURCE_GROUP |"
+            echo "| Resource group monthly cost budget | $DEPLOY_RESOURCE_GROUP_BUDGET |"
+            echo "| Key Vault | $DEPLOY_KEY_VAULT |"
+            echo "| PostgreSQL server | $DEPLOY_POSTGRES_SERVER |"
+            echo "| PostgreSQL database | $DEPLOY_POSTGRES_DATABASE |"
+            echo "| Storage account | $DEPLOY_STORAGE_ACCOUNT |"
+            echo "| Blob container | $DEPLOY_BLOB_CONTAINER |"
+            echo "| Container Apps environment | $DEPLOY_CONTAINER_APP_ENVIRONMENT |"
+            echo "| Foundry account, project and models | $DEPLOY_AI_FOUNDRY |"
+          } >> "$GITHUB_STEP_SUMMARY"

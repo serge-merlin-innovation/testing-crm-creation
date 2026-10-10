@@ -1,0 +1,37 @@
+name: Set up workspace
+description: >
+  Node + pnpm for the whole workspace, and optionally uv plus the backend's Python
+  dependencies.
+
+inputs:
+  python:
+    description: Also install uv and sync apps/backend. Needed by any job that runs ruff, mypy or pytest.
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    # Takes the pnpm version from the root package.json `packageManager` field.
+    - uses: pnpm/action-setup@v6
+
+    - uses: actions/setup-node@v7
+      with:
+        node-version-file: .node-version
+        cache: pnpm
+
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+
+    # uv provisions the interpreter itself from the root .python-version.
+    - if: inputs.python == 'true'
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+        cache-dependency-glob: apps/backend/uv.lock
+
+    # ruff, mypy and pytest live in the `dev` extra; a bare `uv sync` omits them and the
+    # backend's scripts fail with "Failed to spawn: ruff".
+    - if: inputs.python == 'true'
+      run: uv sync --frozen --extra dev
+      shell: bash
+      working-directory: apps/backend

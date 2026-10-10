@@ -1,0 +1,74 @@
+name: Resolve application origins
+description: Resolve the HTTPS origins the frontend and backend use to reach each other, and export them to the job environment.
+
+inputs:
+  frontend-backend-url:
+    description: Optional override for the origin the frontend uses to reach the backend.
+    default: ""
+  backend-frontend-base-url:
+    description: Optional override for the origin the backend uses to reach the frontend.
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/resolve-frontend-origin
+
+    - id: backend
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/backend-container-app.bicepparam
+
+    # The frontend reaches the backend over the Container Apps environment's internal domain; the
+    # backend builds its OAuth redirects from the frontend's public origin. Both default to the
+    # domain Azure assigns the environment; the two inputs above override those defaults with a
+    # custom origin.
+    - name: Resolve application origins
+      shell: bash
+      env:
+        COMPILED_BACKEND_PARAMETERS_FILE: ${{ steps.backend.outputs.compiled-file }}
+        CONFIGURED_FRONTEND_BACKEND_URL: ${{ inputs.frontend-backend-url }}
+        CONFIGURED_BACKEND_FRONTEND_BASE_URL: ${{ inputs.backend-frontend-base-url }}
+      run: |
+        set -euo pipefail
+
+        backend_app_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        backend_external_ingress="$(jq -er '.parameters.externalIngress.value | booleans | tostring' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        backend_environment_id="$(jq -er '.parameters.environmentId.value | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+
+        if [[ "${backend_environment_id,,}" != "${CONTAINER_APPS_ENVIRONMENT_ID,,}" ]]; then
+          echo "Backend parameters reference an environment that does not match the environment parameters file." >&2
+          exit 1
+        fi
+
+        if [[ "$backend_external_ingress" != "false" ]]; then
+          echo "Default origin derivation requires internal backend ingress." >&2
+          exit 1
+        fi
+
+        frontend_backend_url="${CONFIGURED_FRONTEND_BACKEND_URL:-https://${backend_app_name}.internal.${CONTAINER_APPS_DEFAULT_DOMAIN}}"
+        backend_frontend_base_url="${CONFIGURED_BACKEND_FRONTEND_BASE_URL:-$FRONTEND_DEFAULT_ORIGIN}"
+        frontend_backend_url_source="${CONFIGURED_FRONTEND_BACKEND_URL:+GitHub variable}"
+        backend_frontend_base_url_source="${CONFIGURED_BACKEND_FRONTEND_BASE_URL:+GitHub variable}"
+        frontend_backend_url_source="${frontend_backend_url_source:-Azure default}"
+        backend_frontend_base_url_source="${backend_frontend_base_url_source:-Azure default}"
+
+        require_https_url() {
+          local variable_name="$1"
+          local variable_value="$2"
+
+          if [[ ! "$variable_value" =~ ^https://[^[:space:]]+$ ]]; then
+            echo "$variable_name must be an HTTPS URL without whitespace." >&2
+            exit 1
+          fi
+        }
+
+        require_https_url FRONTEND_BACKEND_URL "$frontend_backend_url"
+        require_https_url BACKEND_FRONTEND_BASE_URL "$backend_frontend_base_url"
+
+        {
+          echo "FRONTEND_BACKEND_URL=$frontend_backend_url"
+          echo "BACKEND_FRONTEND_BASE_URL=$backend_frontend_base_url"
+          echo "FRONTEND_BACKEND_URL_SOURCE=$frontend_backend_url_source"
+          echo "BACKEND_FRONTEND_BASE_URL_SOURCE=$backend_frontend_base_url_source"
+        } >> "$GITHUB_ENV"

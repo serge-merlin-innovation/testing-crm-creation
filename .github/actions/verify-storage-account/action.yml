@@ -1,0 +1,53 @@
+name: Verify storage account
+description: Verify a storage child contract targets the configured storage account, and that the account exists.
+
+inputs:
+  parameters-file:
+    description: Repository-relative path to the child contract's Bicep parameters file.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/resolve-resource-name-stem
+
+    - id: parameters
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: ${{ inputs.parameters-file }}
+
+    - id: resource_group
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/ressource-group.bicepparam
+
+    - id: storage_account
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/storage-account.bicepparam
+
+    - name: Verify storage account exists
+      shell: bash
+      env:
+        PARAMETERS_FILE: ${{ inputs.parameters-file }}
+        COMPILED_PARAMETERS_FILE: ${{ steps.parameters.outputs.compiled-file }}
+        COMPILED_RESOURCE_GROUP_PARAMETERS_FILE: ${{ steps.resource_group.outputs.compiled-file }}
+        COMPILED_STORAGE_ACCOUNT_PARAMETERS_FILE: ${{ steps.storage_account.outputs.compiled-file }}
+      run: |
+        set -euo pipefail
+
+        resource_group_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_RESOURCE_GROUP_PARAMETERS_FILE")"
+        storage_account_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_STORAGE_ACCOUNT_PARAMETERS_FILE")"
+        child_account_name="$(jq -er '.parameters.accountName.value | strings | select(length > 0)' "$COMPILED_PARAMETERS_FILE")"
+
+        if [[ "$child_account_name" != "$storage_account_name" ]]; then
+          echo "$PARAMETERS_FILE references a storage account that does not match infra/parameters/storage-account.bicepparam." >&2
+          exit 1
+        fi
+
+        subscription_id="$(az account show --query id --output tsv --only-show-errors)"
+        storage_account_id="/subscriptions/$subscription_id/resourceGroups/$resource_group_name/providers/Microsoft.Storage/storageAccounts/$storage_account_name"
+        if ! az resource show --ids "$storage_account_id" --only-show-errors --output none; then
+          echo "Storage account $storage_account_name does not exist. Run the Infra workflow with deploy_storage_account first." >&2
+          exit 1
+        fi

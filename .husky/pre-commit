@@ -1,0 +1,14 @@
+# Fast gates, every commit. The slow tiers run on push; see .husky/pre-push.
+set -e
+
+pnpm lint
+pnpm typecheck
+pnpm test
+
+# gitleaks is not a workspace dependency, so it may be absent on a fresh machine.
+# The merge queue always runs it (ci.yml `secret scan`); this is the earlier catch.
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --staged --config .gitleaks.toml --no-banner --redact
+else
+  echo "pre-commit: gitleaks not installed, secret scan skipped — install it (brew install gitleaks)"
+fi

@@ -1,0 +1,52 @@
+name: Deploy blob-service.bicep
+description: Allow the deployed frontend's origin through Blob CORS, then deploy the blob service configuration.
+
+inputs:
+  frontend-origin:
+    description: The frontend origin allowed through Blob CORS.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # Runs before anything compiles blob-service.bicepparam: that file reads
+    # BLOB_CORS_ALLOWED_ORIGIN without a default, so compiling it first would fail.
+    - name: Resolve the origin allowed through Blob CORS
+      shell: bash
+      env:
+        CONFIGURED_FRONTEND_ORIGIN: ${{ inputs.frontend-origin }}
+      run: |
+        set -euo pipefail
+
+        # Checked before stripping: stripping an absent prefix is a no-op, so a scheme-less value
+        # would otherwise be silently promoted to https.
+        if [[ "$CONFIGURED_FRONTEND_ORIGIN" != https://* ]]; then
+          echo "The frontend origin must be an HTTPS URL: got \"$CONFIGURED_FRONTEND_ORIGIN\"." >&2
+          exit 1
+        fi
+
+        # CD treats the frontend origin as a base URL and accepts a path, so a path is dropped rather
+        # than rejected here. A browser's Origin header never carries one.
+        host_and_port="${CONFIGURED_FRONTEND_ORIGIN#https://}"
+        blob_cors_allowed_origin="https://${host_and_port%%/*}"
+
+        # A browser's Origin header is a bare scheme, host and optional port. Anything else -- a
+        # userinfo prefix, a query, a fragment, an underscore in the host -- deploys happily and
+        # then rejects every upload, so it has to fail here instead.
+        if [[ ! "$blob_cors_allowed_origin" =~ ^https://[A-Za-z0-9.-]+(:[0-9]+)?$ ]]; then
+          echo "Blob CORS needs a bare HTTPS origin: got \"$blob_cors_allowed_origin\"." >&2
+          exit 1
+        fi
+
+        echo "Allowing $blob_cors_allowed_origin through Blob CORS."
+        echo "BLOB_CORS_ALLOWED_ORIGIN=$blob_cors_allowed_origin" >> "$GITHUB_ENV"
+
+    - uses: ./.github/actions/verify-storage-account
+      with:
+        parameters-file: infra/parameters/blob-service.bicepparam
+
+    - uses: ./.github/actions/deploy-bicep
+      with:
+        template-file: infra/blob-service.bicep
+        parameters-file: infra/parameters/blob-service.bicepparam
+        deployment-name: cd-blob-service

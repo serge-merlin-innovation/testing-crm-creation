@@ -1,0 +1,17 @@
+merlin-delivery-boilerplate
+Copyright (c) 2026 Merlin Innovation
+
+This product incorporates code and patterns from the following open-source
+projects. Their licenses are preserved where their code is vendored.
+
+- ixartz/SaaS-Boilerplate ........ MIT  (apps/web base)
+- Benav Labs FastAPI-boilerplate .. MIT  (apps/api base)
+- Kiranism/next-shadcn-dashboard-starter .. MIT (dashboard layout patterns)
+- Origin UI ....................... MIT  (refined form components)
+- Magic UI ........................ MIT  (marketing-page animations only)
+- shadcn/ui ....................... MIT  (component primitives)
+- mattpocock/skills ............... MIT  (agent skills in .claude/skills, each with its LICENSE)
+
+Runtime services used by this software are NOT bundled code and carry their
+own commercial terms: Stripe, Azure (Container Apps, PostgreSQL, AI Foundry,
+Document Intelligence, Communication Services), Sentry. See docs/license-audit.md.

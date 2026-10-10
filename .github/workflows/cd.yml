@@ -1,0 +1,229 @@
+name: CD
+
+# A successful main CI run publishes immutable frontend and backend images, then creates the
+# matching vX.Y.Z Git tag. This workflow runs Alembic from the exact backend image on the CD
+# runner, then deploys that same image and the matching frontend image to Container Apps; it never
+# deploys the mutable :main aliases.
+#
+# Starting the run is itself the confirmation to deploy, and it is also the rollback path. Infra
+# must provision the Key Vault and Container Apps environment before any release can deploy.
+#
+# Required GitHub Actions variables: AZURE_CLIENT_ID, AZURE_TENANT_ID,
+# AZURE_SUBSCRIPTION_ID, AZURE_PRINCIPAL_OBJECT_ID, and AZURE_LOCATION. Every deployable Azure
+# resource reads that shared location from its matching Bicep parameters file. Azure authentication
+# uses OIDC. FRONTEND_BACKEND_URL and BACKEND_FRONTEND_BASE_URL are optional custom-origin
+# overrides; CD derives the default Azure Container Apps origins when either variable is absent.
+# Registry, database, and backend application secrets are resolved from Key Vault during ARM
+# deployment; this workflow deliberately does not read their GitHub bootstrap secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version (for example 1.2.3); empty selects the latest release tag
+        required: false
+        type: string
+
+concurrency:
+  group: azure-cd-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+
+jobs:
+  resolve-release:
+    name: Resolve release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      frontend_container_image: ${{ steps.release.outputs.frontend_container_image }}
+      backend_container_image: ${{ steps.release.outputs.backend_container_image }}
+      commit: ${{ steps.release.outputs.commit }}
+    steps:
+      # Refused here rather than skipped, so a wrong-ref dispatch explains itself instead of
+      # leaving a grey run, and refused before authenticating rather than minutes later.
+      - name: Validate the dispatch ref
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "CD deploys from main only; this run was started on $GITHUB_REF." >&2
+            echo "The federated credential is scoped to one branch, so azure/login would fail." >&2
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+        with:
+          # Every release tag, not just this ref's history: the resolver scans them all.
+          fetch-depth: 0
+
+      - id: release
+        name: Resolve immutable application images
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          release_version="${REQUESTED_VERSION#v}"
+          if [[ -z "$release_version" ]]; then
+            release_tag="$(git tag --list \
+              | sed -nE '/^v[0-9]+\.[0-9]+\.[0-9]+$/p' \
+              | sort -V \
+              | tail -n 1)"
+            if [[ -z "$release_tag" ]]; then
+              echo "No vX.Y.Z release tag exists." >&2
+              exit 1
+            fi
+            release_version="${release_tag#v}"
+          fi
+
+          if [[ ! "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release version must use X.Y.Z format, received: $release_version" >&2
+            exit 1
+          fi
+
+          if ! release_commit="$(git rev-parse --short --verify --quiet "refs/tags/v${release_version}^{commit}")"; then
+            echo "Release tag v${release_version} does not exist." >&2
+            exit 1
+          fi
+
+          repository="${GITHUB_REPOSITORY,,}"
+          {
+            echo "version=$release_version"
+            echo "frontend_container_image=ghcr.io/${repository}/frontend:${release_version}"
+            echo "backend_container_image=ghcr.io/${repository}/backend:${release_version}"
+            echo "commit=$release_commit"
+          } >> "$GITHUB_OUTPUT"
+
+  deploy-applications:
+    name: Deploy frontend and backend release
+    needs: [resolve-release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_PRINCIPAL_OBJECT_ID: ${{ vars.AZURE_PRINCIPAL_OBJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ format('v{0}', needs.resolve-release.outputs.version) }}
+
+      - name: Validate migration history
+        run: |
+          set -euo pipefail
+          if ! compgen -G "$GITHUB_WORKSPACE/apps/backend/migrations/versions/*.py" >/dev/null; then
+            echo "No Alembic revision files exist. Generate and commit a baseline migration before deploying production." >&2
+            exit 1
+          fi
+
+      - name: Log in to GHCR for release verification
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify published application images
+        env:
+          FRONTEND_CONTAINER_IMAGE: ${{ needs.resolve-release.outputs.frontend_container_image }}
+          BACKEND_CONTAINER_IMAGE: ${{ needs.resolve-release.outputs.backend_container_image }}
+        run: |
+          set -euo pipefail
+          docker manifest inspect "$FRONTEND_CONTAINER_IMAGE" >/dev/null
+          docker manifest inspect "$BACKEND_CONTAINER_IMAGE" >/dev/null
+
+      - name: Validate Azure deployment variables
+        run: |
+          set -euo pipefail
+
+          for variable_name in \
+            AZURE_CLIENT_ID \
+            AZURE_TENANT_ID \
+            AZURE_SUBSCRIPTION_ID \
+            AZURE_PRINCIPAL_OBJECT_ID \
+            AZURE_LOCATION; do
+            if [[ -z "${!variable_name:-}" ]]; then
+              echo "Missing GitHub Actions variable: $variable_name" >&2
+              exit 1
+            fi
+          done
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Resolve application origins
+        uses: ./.github/actions/resolve-application-origins
+        with:
+          frontend-backend-url: ${{ vars.FRONTEND_BACKEND_URL }}
+          backend-frontend-base-url: ${{ vars.BACKEND_FRONTEND_BASE_URL }}
+
+      - name: Verify Key Vault application secrets
+        uses: ./.github/actions/prepare-key-vault-secrets
+        env:
+          REQUIRE_POSTGRES_SECRET: "true"
+          REQUIRE_GHCR_SECRET: "true"
+          REQUIRE_BACKEND_SECRET_KEY: "true"
+
+      - name: Run backend database migrations
+        uses: ./.github/actions/run-backend-migrations
+        with:
+          backend-container-image: ${{ needs.resolve-release.outputs.backend_container_image }}
+
+      - name: Deploy backend Container App release
+        uses: ./.github/actions/deploy-container-app
+        with:
+          container-image: ${{ needs.resolve-release.outputs.backend_container_image }}
+          template-file: infra/backend-container-app.bicep
+          parameters-file: infra/parameters/backend-container-app.bicepparam
+
+      - name: Deploy frontend Container App release
+        uses: ./.github/actions/deploy-container-app
+        with:
+          container-image: ${{ needs.resolve-release.outputs.frontend_container_image }}
+          template-file: infra/frontend-container-app.bicep
+          parameters-file: infra/parameters/frontend-container-app.bicepparam
+
+      # Asserted on every release so Blob CORS always matches the frontend that is actually live.
+      # CD owns this rather than Infra; see infra/blob-service.bicep for why it cannot be shared.
+      - name: Deploy blob service configuration
+        uses: ./.github/actions/deploy-blob-service
+        with:
+          frontend-origin: ${{ env.BACKEND_FRONTEND_BASE_URL }}
+
+      - name: Write deployment summary
+        if: ${{ always() && !cancelled() }}
+        env:
+          FRONTEND_CONTAINER_IMAGE: ${{ needs.resolve-release.outputs.frontend_container_image }}
+          BACKEND_CONTAINER_IMAGE: ${{ needs.resolve-release.outputs.backend_container_image }}
+          RELEASE_VERSION: ${{ needs.resolve-release.outputs.version }}
+          RELEASE_COMMIT: ${{ needs.resolve-release.outputs.commit }}
+        run: |
+          {
+            echo "## Application release deployment"
+            echo
+            echo "Release commit: \`$RELEASE_COMMIT\` — main can sit ahead of the newest tag."
+            echo
+            echo "| Application | Version | Image | Template | Parameters |"
+            echo "| --- | --- | --- | --- | --- |"
+            echo "| Frontend | \`$RELEASE_VERSION\` | \`$FRONTEND_CONTAINER_IMAGE\` | \`frontend-container-app.bicep\` | \`frontend-container-app.bicepparam\` |"
+            echo "| Backend | \`$RELEASE_VERSION\` | \`$BACKEND_CONTAINER_IMAGE\` | \`backend-container-app.bicep\` | \`backend-container-app.bicepparam\` |"
+            echo
+            echo "Database migration: \`${MIGRATION_STATUS:-not completed}\`."
+            echo
+            echo "Origins: frontend to backend — ${FRONTEND_BACKEND_URL_SOURCE:-unresolved}; backend to frontend — ${BACKEND_FRONTEND_BASE_URL_SOURCE:-unresolved}."
+            echo
+            echo "Blob CORS allowed origin: \`${BLOB_CORS_ALLOWED_ORIGIN:-not applied}\`."
+            echo
+            echo "Secrets: Key Vault references."
+          } >> "$GITHUB_STEP_SUMMARY"

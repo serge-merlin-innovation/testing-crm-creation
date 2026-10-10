@@ -1,0 +1,36 @@
+name: Compile Bicep parameters
+description: Compile a .bicepparam file to ARM parameters JSON and expose the compiled path.
+
+inputs:
+  parameters-file:
+    description: Repository-relative path to the Bicep parameters file.
+    required: true
+
+outputs:
+  compiled-file:
+    description: Absolute path to the compiled ARM parameters JSON.
+    value: ${{ steps.compile.outputs.compiled-file }}
+
+runs:
+  using: composite
+  steps:
+    - id: compile
+      shell: bash
+      env:
+        BICEP_PARAMETERS_FILE: ${{ inputs.parameters-file }}
+      run: |
+        set -euo pipefail
+
+        parameters_file="$GITHUB_WORKSPACE/$BICEP_PARAMETERS_FILE"
+        if [[ ! -f "$parameters_file" ]]; then
+          echo "Bicep parameters file not found: $parameters_file" >&2
+          exit 1
+        fi
+
+        compiled_file="$RUNNER_TEMP/$(basename "$BICEP_PARAMETERS_FILE" .bicepparam)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.parameters.json"
+        az bicep build-params \
+          --file "$parameters_file" \
+          --outfile "$compiled_file" \
+          --only-show-errors
+
+        echo "compiled-file=$compiled_file" >> "$GITHUB_OUTPUT"

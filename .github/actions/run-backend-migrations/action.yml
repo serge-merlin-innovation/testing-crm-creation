@@ -1,0 +1,222 @@
+name: Run backend database migrations
+description: Run Alembic against the production database from the exact backend release image, before that image is rolled out.
+
+inputs:
+  backend-container-image:
+    description: Exact backend image reference to run migrations from.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/resolve-resource-name-stem
+
+    - id: postgres_server
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/postgres-server.bicepparam
+
+    - id: postgres_database
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/postgres-database.bicepparam
+
+    - id: backend
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/backend-container-app.bicepparam
+
+    # The runner reaches PostgreSQL through a temporary firewall rule scoped to its own public
+    # IPv4. The rule is removed on success and on failure; the EXIT trap is the only thing
+    # guaranteeing that, so it must stay installed for the whole window the rule exists.
+    - name: Run backend database migrations
+      shell: bash
+      env:
+        BACKEND_CONTAINER_IMAGE: ${{ inputs.backend-container-image }}
+        COMPILED_POSTGRES_SERVER_PARAMETERS_FILE: ${{ steps.postgres_server.outputs.compiled-file }}
+        COMPILED_POSTGRES_DATABASE_PARAMETERS_FILE: ${{ steps.postgres_database.outputs.compiled-file }}
+        COMPILED_BACKEND_PARAMETERS_FILE: ${{ steps.backend.outputs.compiled-file }}
+      run: |
+        set -euo pipefail
+
+        # rg-<stem> and kv-<stem> are pure interpolation in ressource-group.bicepparam and
+        # keyvault.bicepparam — no other field of either file is read here, so building the name
+        # from the already-resolved stem skips a compile with nothing to verify against.
+        resource_group_name="rg-${AZURE_RESOURCE_NAME_STEM}"
+        key_vault_name="kv-${AZURE_RESOURCE_NAME_STEM}"
+        postgres_server_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_POSTGRES_SERVER_PARAMETERS_FILE")"
+        postgres_user="$(jq -er '.parameters.administratorLogin.value | strings | select(length > 0)' "$COMPILED_POSTGRES_SERVER_PARAMETERS_FILE")"
+        database_server_name="$(jq -er '.parameters.serverName.value | strings | select(length > 0)' "$COMPILED_POSTGRES_DATABASE_PARAMETERS_FILE")"
+        postgres_database_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_POSTGRES_DATABASE_PARAMETERS_FILE")"
+        postgres_password_secret_name="$(jq -er '.parameters.administratorLoginPassword.reference.secretName | strings | select(length > 0)' "$COMPILED_POSTGRES_SERVER_PARAMETERS_FILE")"
+        backend_postgres_password_secret_name="$(jq -er '.parameters.secretEnvironmentVariableValue1.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        backend_secret_key_name="$(jq -er '.parameters.secretEnvironmentVariableValue2.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+
+        backend_environment_variable() {
+          local environment_variable_name="$1"
+          jq -er --arg environment_variable_name "$environment_variable_name" '
+            .parameters.environmentVariables.value
+            | map(select(.name == $environment_variable_name))
+            | if length == 1 then .[0].value else error("expected exactly one value") end
+            | strings
+            | select(length > 0)
+          ' "$COMPILED_BACKEND_PARAMETERS_FILE"
+        }
+
+        backend_postgres_user="$(backend_environment_variable POSTGRES_USER)"
+        backend_postgres_server="$(backend_environment_variable POSTGRES_SERVER)"
+        postgres_port="$(backend_environment_variable POSTGRES_PORT)"
+        backend_postgres_database="$(backend_environment_variable POSTGRES_DB)"
+        postgres_sync_prefix="$(backend_environment_variable POSTGRES_SYNC_PREFIX)"
+        postgres_async_prefix="$(backend_environment_variable POSTGRES_ASYNC_PREFIX)"
+
+        if [[ "$database_server_name" != "$postgres_server_name" ]]; then
+          echo "PostgreSQL database parameters do not match the configured server." >&2
+          exit 1
+        fi
+        if [[ "$backend_postgres_user" != "$postgres_user" ]]; then
+          echo "Backend POSTGRES_USER does not match the PostgreSQL administrator login." >&2
+          exit 1
+        fi
+        if [[ "$backend_postgres_server" != "${postgres_server_name}.postgres.database.azure.com" ]]; then
+          echo "Backend POSTGRES_SERVER does not match the PostgreSQL server parameters." >&2
+          exit 1
+        fi
+        if [[ "$backend_postgres_database" != "$postgres_database_name" ]]; then
+          echo "Backend POSTGRES_DB does not match the PostgreSQL database parameters." >&2
+          exit 1
+        fi
+        if [[ "$backend_postgres_password_secret_name" != "$postgres_password_secret_name" ]]; then
+          echo "Backend and PostgreSQL parameters do not reference the same password secret." >&2
+          exit 1
+        fi
+
+        public_network_access="$(az postgres flexible-server show \
+          --resource-group "$resource_group_name" \
+          --name "$postgres_server_name" \
+          --query network.publicNetworkAccess \
+          --output tsv \
+          --only-show-errors)"
+        if [[ "$public_network_access" != "Enabled" ]]; then
+          echo "Direct CD migrations require public PostgreSQL access or a self-hosted runner on the database network." >&2
+          exit 1
+        fi
+
+        postgres_password="$(az keyvault secret show \
+          --vault-name "$key_vault_name" \
+          --name "$postgres_password_secret_name" \
+          --query value \
+          --output tsv \
+          --only-show-errors)"
+        backend_secret_key="$(az keyvault secret show \
+          --vault-name "$key_vault_name" \
+          --name "$backend_secret_key_name" \
+          --query value \
+          --output tsv \
+          --only-show-errors)"
+        if [[ -z "$postgres_password" || -z "$backend_secret_key" ]]; then
+          echo "Migration secrets resolved to empty values." >&2
+          exit 1
+        fi
+        echo "::add-mask::$postgres_password"
+        echo "::add-mask::$backend_secret_key"
+
+        reported_runner_ip="$(curl --fail --silent --show-error --retry 3 --max-time 15 https://api4.ipify.org)"
+        runner_ip="$(python3 -c 'import ipaddress, sys; print(ipaddress.IPv4Address(sys.argv[1]))' "$reported_runner_ip")"
+        # The production concurrency group serializes this workflow. Reusing one rule name
+        # means a later run replaces a rule left behind by a force-cancelled runner instead
+        # of accumulating permanent runner-IP exceptions.
+        firewall_rule_name="github-cd-runner"
+        firewall_rule_created=false
+
+        delete_firewall_rule() {
+          az postgres flexible-server firewall-rule delete \
+            --resource-group "$resource_group_name" \
+            --server-name "$postgres_server_name" \
+            --name "$firewall_rule_name" \
+            --yes \
+            --only-show-errors \
+            --output none
+        }
+
+        cleanup_firewall_rule() {
+          local command_status=$?
+          local cleanup_status=0
+          trap - EXIT
+          set +e
+
+          if [[ "$firewall_rule_created" == "true" ]]; then
+            delete_firewall_rule
+            cleanup_status=$?
+            if [[ "$cleanup_status" -ne 0 ]]; then
+              echo "Failed to remove temporary PostgreSQL firewall rule $firewall_rule_name." >&2
+            fi
+          fi
+
+          if [[ "$command_status" -ne 0 ]]; then
+            exit "$command_status"
+          fi
+          exit "$cleanup_status"
+        }
+        trap cleanup_firewall_rule EXIT
+
+        firewall_rule_created=true
+        az postgres flexible-server firewall-rule create \
+          --resource-group "$resource_group_name" \
+          --server-name "$postgres_server_name" \
+          --name "$firewall_rule_name" \
+          --start-ip-address "$runner_ip" \
+          --end-ip-address "$runner_ip" \
+          --only-show-errors \
+          --output none
+
+        database_reachable=false
+        for _ in {1..30}; do
+          if python3 -c 'import socket, sys; socket.create_connection((sys.argv[1], int(sys.argv[2])), timeout=2).close()' \
+            "$backend_postgres_server" "$postgres_port"; then
+            database_reachable=true
+            break
+          fi
+          sleep 2
+        done
+        if [[ "$database_reachable" != "true" ]]; then
+          echo "PostgreSQL did not become reachable after creating the temporary runner firewall rule." >&2
+          exit 1
+        fi
+
+        export ENVIRONMENT=production
+        export CONFIRM_PRODUCTION_MIGRATION=yes
+        export POSTGRES_USER="$postgres_user"
+        export POSTGRES_PASSWORD="$postgres_password"
+        export POSTGRES_SERVER="$backend_postgres_server"
+        export POSTGRES_PORT="$postgres_port"
+        export POSTGRES_DB="$postgres_database_name"
+        export POSTGRES_SYNC_PREFIX="$postgres_sync_prefix"
+        export POSTGRES_ASYNC_PREFIX="$postgres_async_prefix"
+        export SECRET_KEY="$backend_secret_key"
+        # The application composes this URL without percent-encoding its parts, so a password containing
+        # @ : / or # would break it. Building it here keeps migrations correct regardless.
+        DATABASE_URL="$(python3 -c 'import os; from urllib.parse import quote; print(os.environ["POSTGRES_ASYNC_PREFIX"] + quote(os.environ["POSTGRES_USER"], safe="") + ":" + quote(os.environ["POSTGRES_PASSWORD"], safe="") + "@" + os.environ["POSTGRES_SERVER"] + ":" + os.environ["POSTGRES_PORT"] + "/" + quote(os.environ["POSTGRES_DB"], safe=""))')"
+        export DATABASE_URL
+        echo "::add-mask::$DATABASE_URL"
+
+        docker run --rm --pull=always \
+          --entrypoint alembic \
+          --workdir /app \
+          --env ENVIRONMENT \
+          --env CONFIRM_PRODUCTION_MIGRATION \
+          --env POSTGRES_USER \
+          --env POSTGRES_PASSWORD \
+          --env POSTGRES_SERVER \
+          --env POSTGRES_PORT \
+          --env POSTGRES_DB \
+          --env POSTGRES_SYNC_PREFIX \
+          --env POSTGRES_ASYNC_PREFIX \
+          --env SECRET_KEY \
+          --env DATABASE_URL \
+          "$BACKEND_CONTAINER_IMAGE" \
+          -c /app/alembic.ini upgrade head
+        delete_firewall_rule
+        firewall_rule_created=false
+        trap - EXIT
+        echo "MIGRATION_STATUS=Succeeded on CD runner" >> "$GITHUB_ENV"

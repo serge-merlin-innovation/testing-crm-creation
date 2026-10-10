@@ -1,0 +1,161 @@
+name: Agents
+
+# Required GitHub Actions variables: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
+# AZURE_PRINCIPAL_OBJECT_ID, and AZURE_LOCATION. No GitHub secret is involved: the Foundry account
+# has local authentication disabled, so this workflow only ever holds an Entra token.
+#
+# The Foundry account, project, and model deployment this publishes into are provisioned by the
+# Infra workflow. Authentication uses the same OIDC federated credential; the account-scoped
+# Foundry role assignments that let the principal publish agent versions are created there too.
+on:
+  workflow_dispatch:
+    inputs:
+      publish_prompt_agents:
+        description: Publish a new version of every agent definition in agents/
+        required: true
+        type: boolean
+        default: false
+concurrency:
+  group: azure-foundry-agents
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+
+jobs:
+  validate-selection:
+    name: Validate publish selection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check publish selection
+        env:
+          PUBLISH_PROMPT_AGENTS: ${{ inputs.publish_prompt_agents }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$PUBLISH_PROMPT_AGENTS" != "true" ]]; then
+            {
+              echo "## Prompt agent publication"
+              echo
+              echo "Publication is disabled; no Azure authentication or changes were attempted."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+  publish-prompt-agents:
+    name: Publish prompt agents
+    needs: validate-selection
+    if: ${{ inputs.publish_prompt_agents }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_PRINCIPAL_OBJECT_ID: ${{ vars.AZURE_PRINCIPAL_OBJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate Azure deployment variables
+        run: |
+          set -euo pipefail
+
+          for variable_name in \
+            AZURE_CLIENT_ID \
+            AZURE_TENANT_ID \
+            AZURE_SUBSCRIPTION_ID \
+            AZURE_PRINCIPAL_OBJECT_ID \
+            AZURE_LOCATION; do
+            if [[ -z "${!variable_name:-}" ]]; then
+              echo "Missing GitHub Actions variable: $variable_name" >&2
+              exit 1
+            fi
+          done
+
+      - name: Resolve resource name stem
+        uses: ./.github/actions/resolve-resource-name-stem
+
+      - id: ai_foundry
+        uses: ./.github/actions/compile-bicep-parameters
+        with:
+          parameters-file: infra/parameters/ai-foundry.bicepparam
+
+      - id: resource_group
+        uses: ./.github/actions/compile-bicep-parameters
+        with:
+          parameters-file: infra/parameters/ressource-group.bicepparam
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Resolve the Foundry project endpoint
+        env:
+          COMPILED_AI_FOUNDRY_PARAMETERS_FILE: ${{ steps.ai_foundry.outputs.compiled-file }}
+          COMPILED_RESOURCE_GROUP_PARAMETERS_FILE: ${{ steps.resource_group.outputs.compiled-file }}
+        run: |
+          set -euo pipefail
+
+          account_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_AI_FOUNDRY_PARAMETERS_FILE")"
+          project_name="$(jq -er '.parameters.projectName.value | strings | select(length > 0)' "$COMPILED_AI_FOUNDRY_PARAMETERS_FILE")"
+          # Prompt agents run on the first model descriptor. Later descriptors are deployed for
+          # other consumers and do not change which model an agent is published against.
+          model_deployment_name="$(jq -er '.parameters.modelDeployments.value[0].name | strings | select(length > 0)' "$COMPILED_AI_FOUNDRY_PARAMETERS_FILE")"
+          resource_group_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_RESOURCE_GROUP_PARAMETERS_FILE")"
+          subscription_id="$(az account show --query id --output tsv)"
+
+          project_resource_id="/subscriptions/${subscription_id}/resourceGroups/${resource_group_name}/providers/Microsoft.CognitiveServices/accounts/${account_name}/projects/${project_name}"
+
+          if ! az resource show --ids "$project_resource_id" --only-show-errors --output none; then
+            echo "Foundry project $project_name not found in $resource_group_name. Run the Infra workflow with deploy_ai_foundry selected first." >&2
+            exit 1
+          fi
+
+          if ! az cognitiveservices account deployment show \
+            --name "$account_name" \
+            --resource-group "$resource_group_name" \
+            --deployment-name "$model_deployment_name" \
+            --only-show-errors \
+            --output none; then
+            echo "Model deployment $model_deployment_name not found on $account_name. Run the Infra workflow with deploy_ai_foundry selected first." >&2
+            exit 1
+          fi
+
+          {
+            echo "FOUNDRY_PROJECT_ENDPOINT=https://${account_name}.services.ai.azure.com/api/projects/${project_name}"
+            echo "FOUNDRY_MODEL_DEPLOYMENT_NAME=${model_deployment_name}"
+            echo "AGENT_PUBLICATION_RUN=run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          } >> "$GITHUB_ENV"
+
+      # uv provisions the interpreter and the publisher's own dependencies from its inline metadata.
+      # This is the same action, at the same version, that ./.github/actions/setup uses. That action
+      # is deliberately not reused here: it also installs Node, runs pnpm install, and syncs the
+      # backend's Python dependencies, which would make publishing an agent fail whenever the
+      # JavaScript lockfile or the backend dependency tree is broken. This job builds neither app.
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Publish prompt agents
+        run: uv run --script agents/publish_prompt_agents.py
+
+      - name: Write publication summary
+        if: ${{ always() && !cancelled() }}
+        run: |
+          set -euo pipefail
+
+          {
+            echo "## Prompt agent publication"
+            echo
+            echo "Project: \`${FOUNDRY_PROJECT_ENDPOINT:-unresolved}\`"
+            echo
+            echo "Publication run: \`${AGENT_PUBLICATION_RUN:-unresolved}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

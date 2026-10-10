@@ -1,0 +1,17 @@
+{
+  "name": "@merlin/backend",
+  "version": "0.1.0",
+  "private": true,
+  "comment": "Turbo shim for the Python FastAPI app. No node deps — every script delegates to `uv run` against apps/backend/.venv. Canonical command list lives in the root CLAUDE.md.",
+  "scripts": {
+    "dev": "uv run fastapi dev src/interfaces/main.py",
+    "build": "echo \"[backend] no build step (Python)\"",
+    "lint": "node ../../scripts/check-failures/run.mjs lint -- uv run ruff check src tests scripts migrations && node ../../scripts/check-failures/run.mjs format -- uv run ruff format --check src tests scripts migrations",
+    "lint:fix": "uv run ruff check --fix src tests scripts migrations && uv run ruff format src tests scripts migrations",
+    "typecheck": "node ../../scripts/check-failures/run.mjs typecheck -- uv run mypy src",
+    "test": "node ../../scripts/check-failures/run.mjs test:unit -- uv run pytest tests/unit",
+    "test:integration": "node ../../scripts/check-failures/run.mjs test:integration -- uv run pytest tests/integration",
+    "db:migrate": "uv run alembic upgrade head",
+    "db:seed": "uv run python -m scripts.setup_initial_data"
+  }
+}

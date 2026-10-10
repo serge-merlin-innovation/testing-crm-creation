@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "skills": {
+    "code-review": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/code-review/SKILL.md",
+      "computedHash": "0f431c4b37ac1a904525af0cf94b97a8120473ce7a0262ccedf778d71ddf5062"
+    },
+    "codebase-design": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/codebase-design/SKILL.md",
+      "computedHash": "5a17552cc1482f1a40124bf4e6c9dbd90ac0dbb47e71c07d47369f9e5f2ae3b5"
+    },
+    "diagnosing-bugs": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/diagnosing-bugs/SKILL.md",
+      "computedHash": "37b5e9c624513551da790b52864dc8c84bff996a6d03a380cc6facdcc0a88354"
+    },
+    "domain-modeling": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/domain-modeling/SKILL.md",
+      "computedHash": "a11713c0ff7870efa3c331b2e273f09116158485246edc89ae5088eefd1b0b48"
+    },
+    "grill-with-docs": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/grill-with-docs/SKILL.md",
+      "computedHash": "35e62aa423aaeab6a414bcac273f56dfb17802ef2334b41b6a3b00f28196c8cf"
+    },
+    "grilling": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/grilling/SKILL.md",
+      "computedHash": "4dd886b0196bf43729d954ae326016f2bd9f5f79d892500b407c33a753362f14"
+    },
+    "implement": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/implement/SKILL.md",
+      "computedHash": "cdaed9885e2309b2b07006cae67a31f9b91fd59d1c3a80051527260235154df0"
+    },
+    "improve-codebase-architecture": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/improve-codebase-architecture/SKILL.md",
+      "computedHash": "2449db6ab1ded9581f69fcc56c1f64818112d05e271fd4c5da23c6523f9d3d9d"
+    },
+    "improve-codebase-architecture-afk": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/improve-codebase-architecture-afk/SKILL.md",
+      "computedHash": "fd18ecfc0587e485a7f95b93c27126b6bcb15064f8ed9ce8a293118032b05663"
+    },
+    "install-design-system": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/install-design-system/SKILL.md",
+      "computedHash": "f31b4118e26bc704a60f7b1130ac09b5f6daed84388fe8e94a31e348741f76e9"
+    },
+    "prototype": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/prototype/SKILL.md",
+      "computedHash": "d3fc74689bd993e39c44bfae510d014eecffbeec2922764b065377fd1327c0f6"
+    },
+    "research": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/research/SKILL.md",
+      "computedHash": "c8c1cba327a6f824b554cd978079a3dadd7406d73174f8fb9bfef58824691970"
+    },
+    "resolving-merge-conflicts": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/resolving-merge-conflicts/SKILL.md",
+      "computedHash": "63b2dcadbe9124caeb3448f1378286fe18dcefb2494f60e136831b8b4986ca27"
+    },
+    "setup": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/setup/SKILL.md",
+      "computedHash": "42df295f41fc2cfd37447e9fb683ea29590ab5e1d860aca2e320efb2ba5c263e"
+    },
+    "tdd": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/tdd/SKILL.md",
+      "computedHash": "e753a5da75292bbe59d302d89566bc2c53d0e73944da2f0e944a7578883c07d0"
+    },
+    "to-estimate": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/to-estimate/SKILL.md",
+      "computedHash": "b98640a4208e5492cd52f9fd3bf488d27ad9748441aa397723f0e76b67998929"
+    },
+    "to-spec": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/to-spec/SKILL.md",
+      "computedHash": "060439c75679b03f48cd50473b666c63db323b9e4c676d0c41bb4d66cf504ed4"
+    },
+    "to-tickets": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/to-tickets/SKILL.md",
+      "computedHash": "c69e7cd728dc5e2be94e86e21c01ca2205cf5690b3c8f55c87728f0512050043"
+    },
+    "triage": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/triage/SKILL.md",
+      "computedHash": "4330ed39989ba6d49e1da1c1c5bb3e7d14fa6a30e1e8db98efa0797f7b3ec7d0"
+    },
+    "wait-what": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/wait-what/SKILL.md",
+      "computedHash": "71a9a1f1773d4b1ff70a9d496db63855ef83a7fe906c72b70cdebf4815a2c4c1"
+    },
+    "wayfinder": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/wayfinder/SKILL.md",
+      "computedHash": "cf8c476eba3cf467b9d4e53bf6fda43b882de6e32bae200cabb49d5521600f37"
+    },
+    "wizard": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/wizard/SKILL.md",
+      "computedHash": "dee7f1a523994a1e063c69fe09c2f5b4da97a41ad68107722664e6e472cb2423"
+    },
+    "writing-for-agents": {
+      "source": "merlin-ai-labs/merlin-skills-registry",
+      "sourceType": "github",
+      "skillPath": "skills/writing-for-agents/SKILL.md",
+      "computedHash": "95da47fc97af998e85b7d7e6d57b3ac76727c1e290cfe9ea09005aacb826959f"
+    }
+  }
+}

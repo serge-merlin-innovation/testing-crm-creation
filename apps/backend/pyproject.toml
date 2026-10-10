@@ -1,0 +1,127 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fastapi-boilerplate"
+version = "0.19.0"
+description = "Modular FastAPI starter — vertical slices, swappable infrastructure, plugin-ready."
+authors = [{ name = "Benav Labs", email = "contact@benav.io" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aiosqlite>=0.21.0",
+    "alembic>=1.16.4",
+    "asyncpg>=0.30.0",
+    "crudauth[oauth,useragent]>=0.6.0,<0.7.0",
+    "faker>=37.1.0",
+    "fastapi[standard]>=0.115.8",
+    "fastcrud>=0.21.0",
+    "greenlet>=3.1.1",
+    "httpx>=0.28.1",
+    "jinja2>=3.1.6",
+    "pydantic>=2.10.6",
+    "pydantic-settings>=2.7.1",
+    "sqlalchemy>=2.0.37",
+    "user-agents>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.14.1",
+    "ruff>=0.9.4",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.25.3",
+    "testcontainers[postgres]>=4.10.0",
+    "pytest-xdist[psutil]>=3.8.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+python_classes = ["Test*"]
+asyncio_mode = "auto"
+addopts = ["-v", "--strict-markers", "--tb=short", "--disable-warnings"]
+env = ["ENVIRONMENT=pytest", "PYTEST_CURRENT_TEST=true"]
+markers = [
+    "unit: Unit tests that don't require external dependencies",
+    "integration: Integration tests that may require external services",
+    "asyncio: Tests that use asyncio",
+    "slow: marks tests as slow running",
+]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+strict_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+namespace_packages = true
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = "user_agents"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "sqlalchemy.ext.asyncio"
+ignore_errors = true
+
+[tool.ruff]
+line-length = 128
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+extend-select = [
+    "UP006",
+    "UP007",
+    "UP035",
+    "UP039",
+    "PLC0415",
+    "ASYNC",  # blocking call inside `async def`
+    "T20",    # print() - log through get_logger()
+    "S608",   # SQL built by string interpolation - bind parameters instead
+    "DTZ",    # naive datetime - the codebase uses datetime.now(UTC)
+    "PT",     # pytest style
+    "TID251", # banned-api, configured below
+]
+
+# Deliberately NOT selected, so a later session does not add them without knowing the cost:
+# TID252 (152 hits - relative imports are the house style), B904 (82), S101 (asserts in tests
+# are correct), G (54) and ARG (94) (style noise, not house rules), BLE001 (fires on all 24
+# sanctioned handle_exception(e) route handlers).
+
+# The declared home for a "never call X" rule. Add the symbol here with a message giving the
+# reason, rather than stating the ban in prose only. Catches both `logging.getLogger(...)` and
+# `from logging import getLogger`.
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"logging.getLogger".msg = "Use get_logger() from infrastructure.logging - it configures logging on first use, which plain getLogger does not do in a worker process."
+
+[tool.ruff.lint.per-file-ignores]
+# Only two places genuinely cannot call get_logger: logging/ IS the plumbing, and settings.py
+# is imported by it, so reaching back would be a cycle. Everything else under infrastructure/
+# uses get_logger. A test writing its own debug output is not application code.
+"src/infrastructure/logging/**" = ["TID251"]
+"src/infrastructure/config/settings.py" = ["TID251"]
+"tests/**" = ["TID251"]
+# The agent publisher is a standalone CLI linted with this config by the `agents` CI job.
+# Writing to stdout is its whole job, so the no-print rule does not apply to it.
+"**/agents/*.py" = ["T20"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]

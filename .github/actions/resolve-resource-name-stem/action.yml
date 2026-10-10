@@ -1,0 +1,25 @@
+name: Resolve resource name stem
+description: Compute the shared Azure resource-name stem once per job and export it as AZURE_RESOURCE_NAME_STEM.
+
+runs:
+  using: composite
+  steps:
+    # infra/shared/naming.bicepparam is the only definition of the naming algorithm; it depends on
+    # uniqueString(), which has no shell equivalent, so the value is read back out of Bicep rather
+    # than recomputed here. The `if:` skips recompiling it for every later action in the same job.
+    - name: Resolve resource name stem
+      if: ${{ env.AZURE_RESOURCE_NAME_STEM == '' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        parameters_file="$GITHUB_WORKSPACE/infra/shared/naming.bicepparam"
+        compiled_file="$RUNNER_TEMP/naming-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.parameters.json"
+
+        az bicep build-params \
+          --file "$parameters_file" \
+          --outfile "$compiled_file" \
+          --only-show-errors
+
+        resource_name_stem="$(jq -er '.parameters.resourceNameStem.value | strings | select(length > 0)' "$compiled_file")"
+        echo "AZURE_RESOURCE_NAME_STEM=$resource_name_stem" >> "$GITHUB_ENV"

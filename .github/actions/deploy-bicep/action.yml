@@ -1,0 +1,83 @@
+name: Deploy Bicep template
+description: Compile a Bicep parameters file and deploy its template at subscription or resource group scope.
+
+inputs:
+  template-file:
+    description: Repository-relative path to the Bicep template.
+    required: true
+  parameters-file:
+    description: Repository-relative path to its Bicep parameters file.
+    required: true
+  deployment-name:
+    description: Deployment name prefix; the run id and attempt are appended.
+    required: true
+  scope:
+    description: '"group" deploys into the resource group; "subscription" deploys the group itself.'
+    default: group
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/resolve-resource-name-stem
+
+    - id: parameters
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: ${{ inputs.parameters-file }}
+
+    - if: ${{ inputs.scope == 'group' }}
+      id: resource_group
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/ressource-group.bicepparam
+
+    - name: Deploy ${{ inputs.deployment-name }}
+      shell: bash
+      env:
+        BICEP_TEMPLATE_FILE: ${{ inputs.template-file }}
+        DEPLOYMENT_NAME: ${{ inputs.deployment-name }}
+        DEPLOYMENT_SCOPE: ${{ inputs.scope }}
+        COMPILED_PARAMETERS_FILE: ${{ steps.parameters.outputs.compiled-file }}
+        COMPILED_RESOURCE_GROUP_PARAMETERS_FILE: ${{ steps.resource_group.outputs.compiled-file }}
+      run: |
+        set -euo pipefail
+
+        if [[ "$DEPLOYMENT_SCOPE" != "group" && "$DEPLOYMENT_SCOPE" != "subscription" ]]; then
+          echo "Unsupported deployment scope: $DEPLOYMENT_SCOPE. Use \"group\" or \"subscription\"." >&2
+          exit 1
+        fi
+
+        template_file="$GITHUB_WORKSPACE/$BICEP_TEMPLATE_FILE"
+        if [[ ! -f "$template_file" ]]; then
+          echo "Bicep template not found: $template_file" >&2
+          exit 1
+        fi
+
+        azure_deployment_name="${DEPLOYMENT_NAME}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+        if [[ "$DEPLOYMENT_SCOPE" == "subscription" ]]; then
+          location="$(jq -er '.parameters.location.value | strings | select(length > 0)' "$COMPILED_PARAMETERS_FILE")"
+          az deployment sub create \
+            --name "$azure_deployment_name" \
+            --location "$location" \
+            --template-file "$template_file" \
+            --parameters "@$COMPILED_PARAMETERS_FILE" \
+            --only-show-errors \
+            --output none
+          exit 0
+        fi
+
+        resource_group_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_RESOURCE_GROUP_PARAMETERS_FILE")"
+
+        if [[ "$(az group exists --name "$resource_group_name")" != "true" ]]; then
+          echo "Resource group $resource_group_name does not exist. Select deploy_resource_group or create it first." >&2
+          exit 1
+        fi
+
+        az deployment group create \
+          --resource-group "$resource_group_name" \
+          --name "$azure_deployment_name" \
+          --template-file "$template_file" \
+          --parameters "@$COMPILED_PARAMETERS_FILE" \
+          --only-show-errors \
+          --output none

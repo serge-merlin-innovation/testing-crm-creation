@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+.next/
+dist/
+build/
+out/
+.turbo/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.ruff_cache/
+.pytest_cache/
+
+# Local dev database (pglite)
+.pglite-data/
+
+# Local uploaded documents (blob fallback)
+.uploads/
+apps/api/.uploads/
+apps/api/local.db
+
+# Local screenshot output (design review)
+apps/web/screenshots/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs
+*.log
+check-failures.log.lock/
+check-failures.log.*.tmp
+npm-debug.log*
+*.egg-info/
+# Playwright
+apps/frontend/tests/e2e/.auth/
+apps/frontend/playwright-report/
+apps/frontend/test-results/
+apps/frontend/blob-report/
+
+# Postmortems (local reports, folder kept as the retro-auto switch)
+postmortem/*
+!postmortem/README.md

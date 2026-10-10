@@ -1,0 +1,58 @@
+name: Deploy postgres-database.bicep
+description: Verify the database targets the configured PostgreSQL server, then deploy the database.
+
+inputs:
+  parameters-file:
+    description: Repository-relative path to the PostgreSQL database Bicep parameters file.
+    default: infra/parameters/postgres-database.bicepparam
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/resolve-resource-name-stem
+
+    - id: parameters
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: ${{ inputs.parameters-file }}
+
+    - id: resource_group
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/ressource-group.bicepparam
+
+    - id: postgres_server
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/postgres-server.bicepparam
+
+    - name: Verify PostgreSQL server exists
+      shell: bash
+      env:
+        COMPILED_PARAMETERS_FILE: ${{ steps.parameters.outputs.compiled-file }}
+        COMPILED_RESOURCE_GROUP_PARAMETERS_FILE: ${{ steps.resource_group.outputs.compiled-file }}
+        COMPILED_POSTGRES_SERVER_PARAMETERS_FILE: ${{ steps.postgres_server.outputs.compiled-file }}
+      run: |
+        set -euo pipefail
+
+        resource_group_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_RESOURCE_GROUP_PARAMETERS_FILE")"
+        postgres_server_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_POSTGRES_SERVER_PARAMETERS_FILE")"
+        database_server_name="$(jq -er '.parameters.serverName.value | strings | select(length > 0)' "$COMPILED_PARAMETERS_FILE")"
+
+        if [[ "$database_server_name" != "$postgres_server_name" ]]; then
+          echo "Database parameters reference a PostgreSQL server that does not match infra/parameters/postgres-server.bicepparam." >&2
+          exit 1
+        fi
+
+        subscription_id="$(az account show --query id --output tsv --only-show-errors)"
+        postgres_server_id="/subscriptions/$subscription_id/resourceGroups/$resource_group_name/providers/Microsoft.DBforPostgreSQL/flexibleServers/$postgres_server_name"
+        if ! az resource show --ids "$postgres_server_id" --only-show-errors --output none; then
+          echo "PostgreSQL server $postgres_server_name does not exist. Select deploy_postgres_server or deploy it first." >&2
+          exit 1
+        fi
+
+    - uses: ./.github/actions/deploy-bicep
+      with:
+        template-file: infra/postgres-database.bicep
+        parameters-file: ${{ inputs.parameters-file }}
+        deployment-name: cd-postgres-database

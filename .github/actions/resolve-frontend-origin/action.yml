@@ -1,0 +1,73 @@
+name: Resolve frontend origin
+description: Read the Container Apps environment's assigned domain and derive the frontend's public origin from it.
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/resolve-resource-name-stem
+
+    - id: resource_group
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/ressource-group.bicepparam
+
+    - id: environment
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/container-app-environment.bicepparam
+
+    - id: frontend
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/frontend-container-app.bicepparam
+
+    # Azure assigns a Container App the FQDN <app name>.<environment default domain>, so the
+    # frontend's origin is known as soon as the environment exists and does not require the app to
+    # have been deployed.
+    - name: Resolve frontend origin
+      shell: bash
+      env:
+        COMPILED_RESOURCE_GROUP_PARAMETERS_FILE: ${{ steps.resource_group.outputs.compiled-file }}
+        COMPILED_ENVIRONMENT_PARAMETERS_FILE: ${{ steps.environment.outputs.compiled-file }}
+        COMPILED_FRONTEND_PARAMETERS_FILE: ${{ steps.frontend.outputs.compiled-file }}
+      run: |
+        set -euo pipefail
+
+        resource_group_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_RESOURCE_GROUP_PARAMETERS_FILE")"
+        environment_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_ENVIRONMENT_PARAMETERS_FILE")"
+        frontend_app_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_FRONTEND_PARAMETERS_FILE")"
+        frontend_external_ingress="$(jq -er '.parameters.externalIngress.value | booleans | tostring' "$COMPILED_FRONTEND_PARAMETERS_FILE")"
+        frontend_environment_id="$(jq -er '.parameters.environmentId.value | strings | select(length > 0)' "$COMPILED_FRONTEND_PARAMETERS_FILE")"
+        subscription_id="$(az account show --query id --output tsv --only-show-errors)"
+        expected_environment_id="/subscriptions/$subscription_id/resourceGroups/$resource_group_name/providers/Microsoft.App/managedEnvironments/$environment_name"
+
+        if [[ "${frontend_environment_id,,}" != "${expected_environment_id,,}" ]]; then
+          echo "Frontend parameters reference an environment that does not match the environment parameters file." >&2
+          exit 1
+        fi
+
+        # An internal-ingress frontend is reachable at <app>.internal.<domain> instead, so the
+        # derivation below would hand out an origin that resolves to nothing.
+        if [[ "$frontend_external_ingress" != "true" ]]; then
+          echo "Deriving the frontend origin requires external frontend ingress." >&2
+          exit 1
+        fi
+
+        if ! environment_default_domain="$(az resource show \
+          --ids "$expected_environment_id" \
+          --query properties.defaultDomain \
+          --output tsv \
+          --only-show-errors)"; then
+          echo "Container Apps environment $environment_name does not exist. Run the Infra workflow with deploy_container_app_environment first." >&2
+          exit 1
+        fi
+        if [[ -z "$environment_default_domain" || "$environment_default_domain" == "null" ]]; then
+          echo "Container Apps environment $environment_name has no default domain." >&2
+          exit 1
+        fi
+
+        {
+          echo "CONTAINER_APPS_ENVIRONMENT_ID=$expected_environment_id"
+          echo "CONTAINER_APPS_DEFAULT_DOMAIN=$environment_default_domain"
+          echo "FRONTEND_DEFAULT_ORIGIN=https://${frontend_app_name}.${environment_default_domain}"
+        } >> "$GITHUB_ENV"

@@ -1,0 +1,195 @@
+name: Deploy Container App
+description: Compile one app-specific Container App Bicep contract and deploy its immutable image.
+
+inputs:
+  container-image:
+    description: Exact image reference to deploy; empty uses the value from the Bicep parameters file.
+    required: false
+    default: ""
+  template-file:
+    description: Repository-relative path to the app-specific Container App Bicep template.
+    required: true
+  parameters-file:
+    description: Repository-relative path to the Container App Bicep parameters file.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/resolve-resource-name-stem
+
+    - id: parameters
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: ${{ inputs.parameters-file }}
+
+    - id: resource_group
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/ressource-group.bicepparam
+
+    - id: environment
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/container-app-environment.bicepparam
+
+    - id: key_vault
+      uses: ./.github/actions/compile-bicep-parameters
+      with:
+        parameters-file: infra/parameters/keyvault.bicepparam
+
+    - name: Deploy Container App
+      shell: bash
+      env:
+        CONTAINER_IMAGE: ${{ inputs.container-image }}
+        BICEP_TEMPLATE_FILE: ${{ inputs.template-file }}
+        BICEP_PARAMETERS_FILE: ${{ inputs.parameters-file }}
+        COMPILED_PARAMETERS_FILE: ${{ steps.parameters.outputs.compiled-file }}
+        COMPILED_RESOURCE_GROUP_PARAMETERS_FILE: ${{ steps.resource_group.outputs.compiled-file }}
+        COMPILED_ENVIRONMENT_PARAMETERS_FILE: ${{ steps.environment.outputs.compiled-file }}
+        COMPILED_KEY_VAULT_PARAMETERS_FILE: ${{ steps.key_vault.outputs.compiled-file }}
+      run: |
+        set -euo pipefail
+
+        template_file="$GITHUB_WORKSPACE/$BICEP_TEMPLATE_FILE"
+        if [[ ! -f "$template_file" ]]; then
+          echo "Container App template not found: $template_file" >&2
+          exit 1
+        fi
+
+        template_stem="$(basename "$template_file" .bicep)"
+        parameters_stem="$(basename "$BICEP_PARAMETERS_FILE" .bicepparam)"
+        if [[ "$template_stem" != "$parameters_stem" ]]; then
+          echo "Container App template and parameters file must have the same base name: $BICEP_TEMPLATE_FILE, $BICEP_PARAMETERS_FILE." >&2
+          exit 1
+        fi
+
+        if [[ -n "$CONTAINER_IMAGE" ]]; then
+          overridden_parameters_file="$RUNNER_TEMP/container-app-override-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.parameters.json"
+          jq \
+            --arg container_image "$CONTAINER_IMAGE" \
+            '.parameters.containerImage = {value: $container_image}' \
+            "$COMPILED_PARAMETERS_FILE" > "$overridden_parameters_file"
+          mv "$overridden_parameters_file" "$COMPILED_PARAMETERS_FILE"
+        fi
+
+        resource_group_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_RESOURCE_GROUP_PARAMETERS_FILE")"
+        environment_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_ENVIRONMENT_PARAMETERS_FILE")"
+        key_vault_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_KEY_VAULT_PARAMETERS_FILE")"
+        container_app_name="$(jq -er '.parameters.name.value | strings | select(length > 0)' "$COMPILED_PARAMETERS_FILE")"
+        container_image="$(jq -er '.parameters.containerImage.value | strings | select(length > 0)' "$COMPILED_PARAMETERS_FILE")"
+        environment_id="$(jq -er '.parameters.environmentId.value | strings | select(length > 0)' "$COMPILED_PARAMETERS_FILE")"
+        key_vault_resource_id="$(jq -er '.parameters.registryPassword.reference.keyVault.id | strings | select(length > 0)' "$COMPILED_PARAMETERS_FILE")"
+        subscription_id="$(az account show --query id --output tsv --only-show-errors)"
+        expected_environment_id="/subscriptions/$subscription_id/resourceGroups/$resource_group_name/providers/Microsoft.App/managedEnvironments/$environment_name"
+        expected_key_vault_resource_id="/subscriptions/$subscription_id/resourceGroups/$resource_group_name/providers/Microsoft.KeyVault/vaults/$key_vault_name"
+
+        if [[ "${environment_id,,}" != "${expected_environment_id,,}" ]]; then
+          echo "Container App parameters reference an environment that does not match infra/parameters/container-app-environment.bicepparam." >&2
+          exit 1
+        fi
+
+        if [[ "${key_vault_resource_id,,}" != "${expected_key_vault_resource_id,,}" ]]; then
+          echo "Container App parameters reference a Key Vault that does not match infra/parameters/keyvault.bicepparam." >&2
+          exit 1
+        fi
+
+        if [[ -n "$CONTAINER_IMAGE" && "$container_image" != "$CONTAINER_IMAGE" ]]; then
+          echo "Compiled Container App image does not match the requested release image." >&2
+          exit 1
+        fi
+
+        validate_https_environment_variable() {
+          local environment_variable_name="$1"
+          local match_count
+          local environment_variable_value
+
+          match_count="$(jq -er --arg environment_variable_name "$environment_variable_name" '
+            .parameters.environmentVariables.value
+            | arrays
+            | map(select(.name == $environment_variable_name))
+            | length
+          ' "$COMPILED_PARAMETERS_FILE")"
+          if [[ "$match_count" != "1" ]]; then
+            echo "Container App parameters must define $environment_variable_name exactly once." >&2
+            exit 1
+          fi
+
+          environment_variable_value="$(jq -er --arg environment_variable_name "$environment_variable_name" '
+            .parameters.environmentVariables.value
+            | map(select(.name == $environment_variable_name))[0].value
+            | strings
+          ' "$COMPILED_PARAMETERS_FILE")"
+          if [[ ! "$environment_variable_value" =~ ^https://[^[:space:]]+$ ]]; then
+            echo "Container App environment variable $environment_variable_name must be an HTTPS URL without whitespace." >&2
+            exit 1
+          fi
+
+          printf '%s' "$environment_variable_value"
+        }
+
+        case "$template_stem" in
+          frontend-container-app)
+            validate_https_environment_variable BACKEND_URL >/dev/null
+            ;;
+          backend-container-app)
+            frontend_base_url="$(validate_https_environment_variable FRONTEND_BASE_URL)"
+            oauth_redirect_base_url="$(validate_https_environment_variable OAUTH_REDIRECT_BASE_URL)"
+            if [[ "$frontend_base_url" != "$oauth_redirect_base_url" ]]; then
+              echo "FRONTEND_BASE_URL and OAUTH_REDIRECT_BASE_URL must use the same frontend origin." >&2
+              exit 1
+            fi
+            ;;
+          *)
+            echo "Unsupported Container App template: $BICEP_TEMPLATE_FILE." >&2
+            exit 1
+            ;;
+        esac
+
+        if ! az resource show --ids "$environment_id" --only-show-errors --output none; then
+          echo "Container Apps environment $environment_name does not exist. Run the Infra workflow to deploy it first." >&2
+          exit 1
+        fi
+
+        if ! az resource show --ids "$key_vault_resource_id" --only-show-errors --output none; then
+          echo "Key Vault $key_vault_name does not exist. Run the Infra workflow to deploy it first." >&2
+          exit 1
+        fi
+
+        if ! jq -e '
+          .parameters.registryPassword
+          | has("reference") and (has("value") | not)
+        ' "$COMPILED_PARAMETERS_FILE" >/dev/null; then
+          echo "Container registry password must use a Key Vault reference." >&2
+          exit 1
+        fi
+
+        if ! jq -e '
+          .parameters.secretEnvironmentVariables.value
+          | arrays
+          | all(.[]; (.name | strings | length > 0) and (.secretName | strings | length > 0))
+        ' "$COMPILED_PARAMETERS_FILE" >/dev/null; then
+          echo "Secret environment-variable descriptors must contain non-empty name and secretName values." >&2
+          exit 1
+        fi
+
+        secret_environment_variable_count="$(jq -er '.parameters.secretEnvironmentVariables.value | arrays | length' "$COMPILED_PARAMETERS_FILE")"
+        for ((index = 1; index <= secret_environment_variable_count; index++)); do
+          secure_parameter_name="secretEnvironmentVariableValue${index}"
+          if ! jq -e --arg parameter_name "$secure_parameter_name" '
+            .parameters[$parameter_name]
+            | has("reference") and (has("value") | not)
+          ' "$COMPILED_PARAMETERS_FILE" >/dev/null; then
+            echo "$secure_parameter_name must use a Key Vault reference." >&2
+            exit 1
+          fi
+        done
+
+        deployment_app_name="${container_app_name:0:24}"
+        az deployment group create \
+          --resource-group "$resource_group_name" \
+          --name "container-app-${deployment_app_name}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+          --template-file "$template_file" \
+          --parameters "@$COMPILED_PARAMETERS_FILE" \
+          --only-show-errors \
+          --output none

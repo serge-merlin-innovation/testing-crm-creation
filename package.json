@@ -1,0 +1,27 @@
+{
+  "name": "merlin-delivery-boilerplate",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Merlin Innovation's internal product boilerplate: Next.js + FastAPI, forked per client.",
+  "license": "MIT",
+  "packageManager": "pnpm@11.8.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "db:up": "docker compose -f apps/backend/docker-compose.yml up -d --wait db",
+    "db:down": "docker compose -f apps/backend/docker-compose.yml down",
+    "lint": "turbo run lint --continue",
+    "typecheck": "turbo run typecheck --continue",
+    "test": "turbo run test --continue",
+    "test:integration": "pnpm --filter @merlin/backend run test:integration",
+    "test:e2e": "turbo run test:e2e"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "turbo": "^2.5.8"
+  }
+}

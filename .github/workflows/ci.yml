@@ -1,0 +1,269 @@
+name: CI
+
+# Quality gates for both apps, then the build artifact: container images published to GitHub
+# Packages (ghcr.io).
+#
+# Delivery is intentionally split: the manual Infra workflow provisions selected Azure services,
+# while CD deploys the immutable release produced by a successful main run.
+#
+# The gates run here, on the push to `main` that a merge creates — deliberately not on the pull
+# request. Branch verification is local: `.husky/pre-commit` and `.husky/pre-push` run the same
+# tiers before anything leaves the machine. The consequence is accepted and stated in
+# `CONSTITUTION.md` § 4 — `main` can go red, and `version` needs every gate, so nothing that failed
+# is ever published or tagged. Markdown carries no check at all, so a prose-only commit is skipped
+# rather than verified.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+# A release version is selected before the images are built and committed as a Git tag only
+# after every image publishes. Serializing runs for the same ref prevents two main builds from
+# selecting the same next version — so a main run must never be interrupted mid-flight. A
+# dispatch off main selects no version, and its superseded run is pure waste.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+
+jobs:
+  # One setup per app, then every gate as its own step. Setup costs more than the gates it
+  # serves, so a job per gate paid for it eight times over. `!cancelled()` is what keeps a red
+  # run naming each failing dimension instead of stopping at the first: a failed gate no longer
+  # skips the ones after it. The quotes are required — a bare `!` starts a YAML tag.
+  frontend:
+    name: frontend gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter @merlin/frontend run lint
+      - if: '!cancelled()'
+        run: pnpm --filter @merlin/frontend run typecheck
+      - if: '!cancelled()'
+        run: pnpm --filter @merlin/frontend run test
+      # Last, as it was when each gate had its own job: building first would newly expose
+      # .next/types to tsc, which is a change in what typecheck covers, not a reordering.
+      - if: '!cancelled()'
+        run: pnpm --filter @merlin/frontend run build
+
+  backend:
+    name: backend gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python: "true"
+      - run: pnpm --filter @merlin/backend run lint
+      - if: '!cancelled()'
+        run: pnpm --filter @merlin/backend run typecheck
+      - if: '!cancelled()'
+        run: pnpm --filter @merlin/backend run test
+      # The agent publisher is a standalone uv script outside both apps, so no workspace gate
+      # reaches it. It rides this job because it needs the same Python setup, and its ruff comes
+      # from the backend's dev extra pointed at the backend's configuration, so one pinned
+      # version and one style govern every Python file in the repository.
+      - if: '!cancelled()'
+        run: |
+          uv run --project apps/backend ruff check --config apps/backend/pyproject.toml agents
+          uv run --project apps/backend ruff format --check --config apps/backend/pyproject.toml agents
+
+  # Split from the gates above because it is the slow one and the only gate that needs a
+  # Docker daemon: testcontainers starts a real Postgres, which ubuntu-latest provides.
+  backend-integration:
+    name: backend integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python: "true"
+      - run: pnpm --filter @merlin/backend run test:integration
+
+  # The browser tier. Slow and Docker-dependent like backend-integration, but it also needs a
+  # Postgres the app itself connects to (testcontainers only serves the pytest process)
+  # and a Chromium binary. Playwright boots the backend and a production frontend build itself.
+  frontend-e2e:
+    name: frontend end-to-end tests
+    runs-on: ubuntu-latest
+    # It boots two servers, a browser and Postgres, so it is the one job that can wedge.
+    # No run is ever cancelled by a newer one, so a hang would hold the ref for hours.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python: "true"
+      # Gives compose and the backend one agreed database name; the suite itself pins only the
+      # switches it depends on (see apps/frontend/playwright.config.ts).
+      - run: cp apps/backend/.env.example apps/backend/.env
+      - run: pnpm db:up
+      # Keyed on the browser's own version, not the whole lockfile, which moves whenever any
+      # workspace dependency does.
+      - id: playwright-version
+        run: echo "value=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+        working-directory: apps/frontend
+      - id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.value }}
+      - run: pnpm --filter @merlin/frontend exec playwright install-deps chromium
+      - if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @merlin/frontend exec playwright install chromium
+      - run: pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/frontend/playwright-report/
+            apps/frontend/test-results/
+          retention-days: 7
+
+  secret-scan:
+    name: secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Scans the checked-out tree rather than history, so the push is judged on what it
+      # actually ships. Allowlist lives in .gitleaks.toml.
+      - run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz gitleaks
+          ./gitleaks dir . --config .gitleaks.toml --no-banner --redact
+        env:
+          GITLEAKS_VERSION: 8.30.1
+
+  # Select one monotonically increasing release version after every quality gate passes.
+  # The repository tag is created only after every image publishes successfully below.
+  version:
+    name: select release version
+    needs: [frontend, backend, backend-integration, frontend-e2e, secret-scan]
+    # A dispatch can be started on any ref: without this guard one off main would burn the next
+    # version, publish it and the `main` alias from unmerged code, and tag a release there.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      git_tag: ${{ steps.version.outputs.git_tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The next version is derived from all repository tags, not only the checked-out
+          # commit's history.
+          fetch-depth: 0
+
+      - id: version
+        name: Increment patch version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          latest_tag="$({ git tag --list | sed -nE '/^v[0-9]+\.[0-9]+\.[0-9]+$/p' | sort -V | tail -n 1; } || true)"
+
+          if [[ -n "$latest_tag" ]]; then
+            current_version="${latest_tag#v}"
+          else
+            current_version="0.0.0"
+          fi
+
+          IFS=. read -r major minor patch <<< "$current_version"
+          version="${major}.${minor}.$((patch + 1))"
+          git_tag="v${version}"
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "git_tag=$git_tag" >> "$GITHUB_OUTPUT"
+          echo "Selected $git_tag for $GITHUB_SHA"
+
+  # The deployable artifacts: one runtime image per app, published to this repo's GitHub
+  # Packages (ghcr.io). The version job makes every gate above a precondition, so nothing
+  # that failed review is ever tagged or published. The backend image also carries Alembic.
+  publish-images:
+    name: publish ${{ matrix.app }} image
+    needs: [version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Build contexts differ per app: the frontend installs from the workspace lockfile
+          # at the repo root, the backend from its own uv.lock.
+          - app: frontend
+            context: .
+          - app: backend
+            context: apps/backend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # Automatic per-run token; `packages: write` above is what makes it sufficient.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Lowercases the owner (ghcr.io rejects uppercase), applies the immutable release version,
+      # and updates the main convenience alias. CD always deploys the immutable version.
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.app }}
+          tags: |
+            type=raw,value=${{ needs.version.outputs.version }},priority=900
+            type=raw,value=main,priority=800
+          labels: |
+            org.opencontainers.image.title=merlin-delivery-boilerplate ${{ matrix.app }}
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          file: apps/${{ matrix.app }}/Dockerfile
+          target: prod
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Scoped per app: the default scope is shared, so the two concurrent matrix legs
+          # would overwrite each other's index and every restore would miss.
+          cache-from: type=gha,scope=${{ matrix.app }}
+          # A build off main must read this scope without writing it: a cache saved from a pull
+          # request is readable only by that pull request, so writing there evicts entries every
+          # branch can use in favour of ones only one branch can.
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+          # BuildKit's own attestation would turn the push into a multi-arch index whose
+          # digest is not the plain image digest; keep the published artifact a flat manifest.
+          provenance: false
+
+      # No build-provenance attestation step: GitHub does not persist attestations for this
+      # private repo on merlin-ai-labs' Team plan (confirmed via the API error, not a
+      # misconfigured `attestations`/`id-token` permission). Accepted tradeoff — revisit if the
+      # org moves to a higher tier or this repo goes public.
+
+  release-tag:
+    name: tag repository ${{ needs.version.outputs.git_tag }}
+    needs: [version, publish-images]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Tag released commit
+        env:
+          RELEASE_TAG: ${{ needs.version.outputs.git_tag }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag --annotate "$RELEASE_TAG" --message "Release $RELEASE_TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$RELEASE_TAG"

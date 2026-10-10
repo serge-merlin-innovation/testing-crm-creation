@@ -1,0 +1,21 @@
+# Secret scanning config (gitleaks). Run in CI on every PR
+# (see .github/workflows/ci.yml).
+# Extends the built-in ruleset; only the allowlist below is project-specific.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known non-secrets in this repo"
+paths = [
+  '''.*\.env\.example$''',
+  '''.*\.md$''',
+  # Backend tests are where fake credentials belong: invalid API keys the service must
+  # reject, and a high-entropy SECRET_KEY the production validator must accept. Everything
+  # that ships — src, migrations, scripts, infra, frontend — is still scanned.
+  '''^apps/backend/tests/.*''',
+]
+regexes = [
+  # The documented local-only placeholder; never a real secret.
+  '''dev-only-insecure-secret-change-me''',
+  '''merlin:merlin@''', # local docker-compose Postgres creds
+]

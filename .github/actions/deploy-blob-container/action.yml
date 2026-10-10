@@ -1,0 +1,20 @@
+name: Deploy blob-container.bicep
+description: Verify the container targets the configured storage account, then deploy the container.
+
+inputs:
+  parameters-file:
+    description: Repository-relative path to the blob container Bicep parameters file.
+    default: infra/parameters/blob-container.bicepparam
+
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/verify-storage-account
+      with:
+        parameters-file: ${{ inputs.parameters-file }}
+
+    - uses: ./.github/actions/deploy-bicep
+      with:
+        template-file: infra/blob-container.bicep
+        parameters-file: ${{ inputs.parameters-file }}
+        deployment-name: cd-blob-container
