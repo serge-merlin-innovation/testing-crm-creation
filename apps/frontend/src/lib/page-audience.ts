@@ -34,6 +34,7 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/companies": { kind: "authenticated" },
   "/contacts": { kind: "authenticated" },
   "/picklists": { kind: "permission", permission: "settings.manage" },
+  "/stage-criteria": { kind: "permission", permission: "settings.manage" },
 };
 
 const GATED_BY_DEFAULT: PageAudience = { kind: "authenticated" };

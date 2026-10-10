@@ -32,6 +32,7 @@ describe("getPrimaryNavigation", () => {
       "/users",
       "/permissions",
       "/picklists",
+      "/stage-criteria",
     ]);
   });
 
