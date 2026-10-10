@@ -561,7 +561,8 @@ async def test_collections_never_name_a_hidden_deal(world, collection: Collectio
             buyer_company_id=buyer_company_id,
             feed_token=feed_token,
         )
-        response = await caller.client.get(path, headers=caller.headers)
+        # Mass exports ask the 2FA code again (AUTH-02 c5): send it, so the body is still checked.
+        response = await caller.client.get(path, headers=step_up(caller.email, caller.headers))
         assert response.status_code < 300 or response.status_code in (FORBIDDEN, HIDDEN), (persona, response.text)
         body = response.content.decode("utf-8", errors="ignore")
         if path.startswith("/api/v1/search/") and response.status_code == 200:

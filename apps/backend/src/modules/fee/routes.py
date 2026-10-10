@@ -8,6 +8,7 @@ from ...infrastructure.dependencies import AsyncSessionDep
 from ..audit.dependencies import AuditContextDep
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
+from ..security.dependencies import StepUpUserDep
 from .dependencies import FeeGrant, FeeServiceDep, InvoiceGrant
 from .schemas import FeeTermsRead, FeeTermsValues, InvoiceCreate, InvoiceRead, InvoiceUpdate
 
@@ -44,6 +45,7 @@ async def export_fees(
     user: FeeReaderDep,
     clock: ClockDep,
     context: AuditContextDep,
+    _: StepUpUserDep,
     min_expected_fee: Decimal | None = None,
 ) -> Response:
     rows = await service.list_visible(db, user, clock.now(), min_expected_fee)

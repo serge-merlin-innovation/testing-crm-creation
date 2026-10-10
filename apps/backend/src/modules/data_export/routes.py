@@ -6,6 +6,7 @@ from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
+from ..security.dependencies import StepUpUserDep
 from .dependencies import DataExportServiceDep
 from .schemas import ApprovalDecision, ApprovalRead, ApprovalRequest, ContactFilter, ExportPreview
 from .service import APPROVAL_LIMIT, ApprovalRequiredError
@@ -32,7 +33,11 @@ async def preview_contacts_export(
     responses={200: {"content": {"text/csv": {}}}, 403: {"description": "Partner approval required"}},
 )
 async def export_contacts(
-    db: AsyncSessionDep, service: DataExportServiceDep, user: CurrentUserDep, context: AuditContextDep, q: Q = None
+    db: AsyncSessionDep,
+    service: DataExportServiceDep,
+    user: StepUpUserDep,
+    context: AuditContextDep,
+    q: Q = None,
 ) -> Response:
     try:
         body = await service.export_contacts(db, user, ContactFilter(q=q), context)

@@ -1,4 +1,5 @@
 import type { MessageKey } from "./i18n/messages";
+import { readString } from "./json-field";
 
 export type RequestStatus = "pending" | "approved" | "rejected";
 
@@ -71,6 +72,25 @@ export const STATUS_LABEL: Record<RequestStatus, MessageKey> = {
 /** Header the backend reads for a sensitive action (AUTH-02 c5): the current 2FA code, spaces removed. */
 export function stepUpHeaders(code: string): Record<string, string> {
   return { "X-Step-Up-Code": code.replace(/\s+/g, "") };
+}
+
+export type StepUpDownload = { kind: "file"; blob: Blob } | { kind: "code" } | { kind: "error"; message: string };
+
+type Fetcher = (path: string, init: { headers: Record<string, string> }) => Promise<Response>;
+
+/** A mass export (AUTH-02 c5): sends the 2FA code; `code` means the backend wants it again. */
+export async function downloadWithStepUp(fetcher: Fetcher, path: string, code: string): Promise<StepUpDownload> {
+  const response = await fetcher(path, { headers: stepUpHeaders(code) }).catch(() => null);
+  if (!response) {
+    return { kind: "error", message: "" };
+  }
+  if (response.ok) {
+    return { kind: "file", blob: await response.blob() };
+  }
+  if (response.status === 401 && response.headers.get("X-Step-Up") === "required") {
+    return { kind: "code" };
+  }
+  return { kind: "error", message: readString(await response.json().catch(() => null), "detail") ?? "" };
 }
 
 /** `YYYY-MM-DD` of `days` after `from`, the default end of a wall crossing. */

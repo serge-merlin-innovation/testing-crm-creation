@@ -19,6 +19,7 @@ from src.modules.privacy.jobs import MONTHLY, RETENTION_JOB
 from src.modules.privacy.service import PrivacyService
 from src.modules.role.permissions import RoleName
 from tests.integration.crm.deal_helpers import build_world, create_mandate
+from tests.integration.foundation.helpers import step_up
 
 pytestmark = pytest.mark.asyncio
 
@@ -368,7 +369,7 @@ async def bulk_contacts(world, count: int) -> None:
 async def test_an_analyst_exporting_more_than_500_contacts_needs_partner_approval(world):
     await bulk_contacts(world, 501)
 
-    refused = await world.analyst.client.get("/api/v1/exports/contacts")
+    refused = await world.analyst.client.get("/api/v1/exports/contacts", headers=step_up(world.analyst.email))
     assert refused.status_code == 403
     assert "approval" in refused.json()["detail"]
 
@@ -387,17 +388,17 @@ async def test_an_analyst_exporting_more_than_500_contacts_needs_partner_approva
     )
     assert approved.json()["status"] == "approved"
 
-    allowed = await world.analyst.client.get("/api/v1/exports/contacts")
+    allowed = await world.analyst.client.get("/api/v1/exports/contacts", headers=step_up(world.analyst.email))
     assert allowed.status_code == 200
     assert len(allowed.text.strip().splitlines()) == 502
-    assert (await world.analyst.client.get("/api/v1/exports/contacts")).status_code == 403
+    assert (await world.analyst.client.get("/api/v1/exports/contacts", headers=step_up(world.analyst.email))).status_code == 403
 
 
 async def test_500_contacts_or_a_non_analyst_export_needs_no_approval(world):
     await bulk_contacts(world, 500)
-    assert (await world.analyst.client.get("/api/v1/exports/contacts")).status_code == 200
+    assert (await world.analyst.client.get("/api/v1/exports/contacts", headers=step_up(world.analyst.email))).status_code == 200
     await bulk_contacts(world, 1)
-    assert (await world.partner.client.get("/api/v1/exports/contacts")).status_code == 200
+    assert (await world.partner.client.get("/api/v1/exports/contacts", headers=step_up(world.partner.email))).status_code == 200
 
 
 # REP-06 c2: every export logs user, time, filter and row count.
@@ -405,7 +406,9 @@ async def test_every_export_logs_user_time_filter_and_row_count(world):
     await bulk_contacts(world, 3)
     await contact(world.partner, first="Zed", last="Unique")
 
-    response = await world.partner.client.get("/api/v1/exports/contacts", params={"q": "Bulk"})
+    response = await world.partner.client.get(
+        "/api/v1/exports/contacts", params={"q": "Bulk"}, headers=step_up(world.partner.email)
+    )
 
     assert response.status_code == 200
     entry = (
@@ -421,7 +424,7 @@ async def test_every_export_logs_user_time_filter_and_row_count(world):
 async def test_contact_export_quotes_formula_like_values(world):
     await contact(world.partner, first="=HYPERLINK(evil)", last="@Attack")
 
-    body = (await world.partner.client.get("/api/v1/exports/contacts")).text
+    body = (await world.partner.client.get("/api/v1/exports/contacts", headers=step_up(world.partner.email))).text
 
     assert "'=HYPERLINK(evil)" in body
     assert "'@Attack" in body

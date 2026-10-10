@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { EditAction } from "@/components/session-provider";
+import { StepUpExport } from "@/components/step-up-export";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,6 @@ import { readDetail } from "@/lib/deals";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { approvalNotice } from "@/lib/offboarding";
 import { sendJson, useApiData } from "@/lib/use-api";
-import { apiFetch } from "@/services/api";
 
 type Messages = Record<MessageKey, string>;
 type Preview = { row_count: number; needs_approval: boolean; limit: number };
@@ -35,21 +35,6 @@ export function ExportsView({ messages, canApprove }: { messages: Messages; canA
   const [reason, setReason] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-
-  async function download() {
-    setError("");
-    const response = await apiFetch(`/api/v1/exports/contacts${qs}`).catch(() => null);
-    if (!response?.ok) {
-      setError(response ? readDetail(await response.json().catch(() => null), messages["common.loadFailed"]) : messages["common.loadFailed"]);
-      return;
-    }
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(await response.blob());
-    link.download = "contacts.csv";
-    link.click();
-    URL.revokeObjectURL(link.href);
-    await approvals.reload();
-  }
 
   async function request() {
     setNotice("");
@@ -104,9 +89,15 @@ export function ExportsView({ messages, canApprove }: { messages: Messages; canA
               </Alert>
             ) : null}
             <EditAction>
-              <Button className="self-start" onClick={() => void download()}>
-                {messages["exports.download"]}
-              </Button>
+              <div className="self-start">
+                <StepUpExport
+                  path={`/api/v1/exports/contacts${qs}`}
+                  filename="contacts.csv"
+                  label={messages["exports.download"]}
+                  messages={messages}
+                  onDone={approvals.reload}
+                />
+              </div>
             </EditAction>
             {preview.data?.needs_approval ? (
               <div className="flex items-end gap-2">

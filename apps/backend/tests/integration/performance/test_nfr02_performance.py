@@ -13,9 +13,12 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 
 from scripts.load_dataset import seed_load_dataset
+from src.infrastructure.clock import get_clock
 from src.interfaces.main import app
 from src.modules.api_access.rate_limit import limiter
 from src.modules.picklist.service import seed_default_picklists
+from src.modules.security.models import UserSecurity
+from src.modules.security.totp import new_secret, totp_code
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.performance]
 
@@ -47,6 +50,9 @@ ALL_DEAL_REPORTS = [
     "/api/v1/reports/fee-forecast/export",
 ]
 
+# The loaded partner's TOTP secret, for the mass export among the reports.
+STEP_UP_SECRETS: list[str] = []
+
 
 @pytest.fixture
 async def loaded(client, seeded_db):
@@ -62,6 +68,10 @@ async def loaded(client, seeded_db):
         ),
         {"user_id": partner_id},
     )
+    # The fee-forecast export is a mass export (AUTH-02 c5): the partner has a second factor to answer it.
+    secret = new_secret()
+    STEP_UP_SECRETS[:] = [secret]
+    seeded_db.add(UserSecurity(user_id=partner_id, totp_secret=secret, totp_enabled=True))
     await seeded_db.commit()
     session = AsyncClient(
         transport=ASGITransport(app=app),
@@ -76,8 +86,9 @@ async def loaded(client, seeded_db):
 async def timed(session: AsyncClient, path: str) -> float:
     # The 100/min API-token cap is not what is measured here.
     limiter.reset()
+    headers = {"X-Step-Up-Code": totp_code(STEP_UP_SECRETS[0], get_clock().now())} if STEP_UP_SECRETS else {}
     started = time.perf_counter()
-    response = await session.get(path)
+    response = await session.get(path, headers=headers)
     elapsed = time.perf_counter() - started
     assert response.status_code == 200, f"{path}: {response.status_code} {response.text[:300]}"
     return elapsed

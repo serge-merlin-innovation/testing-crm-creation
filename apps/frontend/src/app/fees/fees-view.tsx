@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { StepUpExport } from "@/components/step-up-export";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -33,9 +33,12 @@ export function FeesView({ messages }: { messages: Messages }) {
             <FieldLabel htmlFor="fees-min">{messages["fees.minExpected"]}</FieldLabel>
             <Input id="fees-min" inputMode="decimal" value={minimum} onChange={(event) => setMinimum(event.target.value)} />
           </Field>
-          <Button asChild variant="outline">
-            <a href={`/api/v1/fees/export${query}`}>{messages["fees.export"]}</a>
-          </Button>
+          <StepUpExport
+            path={`/api/v1/fees/export${query}`}
+            filename="fees.csv"
+            label={messages["fees.export"]}
+            messages={messages}
+          />
         </div>
         <Table>
           <TableHeader>

@@ -12,6 +12,7 @@ from openpyxl import load_workbook  # type: ignore[import-untyped]
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
 from src.modules.role.permissions import RoleName
 from tests.integration.crm.deal_helpers import build_world, create_mandate
+from tests.integration.foundation.helpers import step_up
 
 pytestmark = pytest.mark.asyncio
 
@@ -36,6 +37,10 @@ async def world(client, seeded_db):
 
 async def get(actor, path: str, **params):
     return await actor.client.get(path, params=params, headers=actor.headers)
+
+
+async def export_(actor, path: str):
+    return await actor.client.get(path, headers=step_up(actor.email, actor.headers))
 
 
 async def put(actor, path: str, body: dict):
@@ -216,7 +221,7 @@ async def test_fee_forecast_shows_retainers_and_success_fees_per_month_for_12_mo
     assert Decimal(by_month["2027-01"]["success_fees"]) == Decimal("500000.00")
     assert Decimal(by_month["2027-01"]["forecast_total"]) == Decimal("510000.00")
 
-    export = await get(world.backoffice, f"{REPORTS}/fee-forecast/export")
+    export = await export_(world.backoffice, f"{REPORTS}/fee-forecast/export")
     assert export.status_code == 200
     assert export.headers["content-type"].startswith("application/vnd.openxmlformats-officedocument.spreadsheetml")
     sheet = load_workbook(io.BytesIO(export.content)).active
@@ -329,7 +334,7 @@ async def test_reports_and_exports_exclude_deals_i_am_not_staffed_on(world):
     assert Decimal(october["retainers"]) == Decimal("10000.00")
     assert "77777" not in str(forecast_body)
 
-    export = await get(world.partner, f"{REPORTS}/fee-forecast/export")
+    export = await export_(world.partner, f"{REPORTS}/fee-forecast/export")
     rows = list(load_workbook(io.BytesIO(export.content)).active.iter_rows(values_only=True))
     assert rows[1][1] == 10000
 
