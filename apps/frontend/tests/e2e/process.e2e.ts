@@ -247,7 +247,8 @@ test("offers, comparison, a process letter, the funnel and the client report fro
 
   await page.getByRole("tab", { name: "Funnel" }).click();
   await expect(page.locator('[data-step="approached"]')).toContainText("1");
-  await expect(page.locator('[data-step="offers"]')).toContainText("100.0%");
+  await expect(page.locator('[data-step="nda"]')).toContainText("100.0%");
+  await expect(page.locator('[data-step="offers"]')).toHaveText("Offers1-");
   const funnel = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export to PDF" }).click();
   expect((await funnel).suggestedFilename()).toMatch(/-funnel\.pdf$/);
