@@ -1,7 +1,7 @@
 """operations: recovery drills, security findings, maintenance windows; user language (ticket #20)
 
 Revision ID: 53c790ab1c3e
-Revises: 846f5d7b5c39
+Revises: 87dc941ce57c
 Create Date: 2026-10-10 15:11:27.478661
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "53c790ab1c3e"
-down_revision: str | Sequence[str] | None = "846f5d7b5c39"
+down_revision: str | Sequence[str] | None = "87dc941ce57c"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
