@@ -35,6 +35,7 @@ describe("getPrimaryNavigation", () => {
       "/picklists",
       "/merge",
       "/imports",
+      "/exports",
       "/stage-criteria",
     ]);
   });
@@ -47,6 +48,7 @@ describe("getPrimaryNavigation", () => {
       "/companies",
       "/contacts",
       "/merge",
+      "/exports",
     ]);
   });
 
@@ -63,7 +65,15 @@ describe("getPrimaryNavigation", () => {
       "/contacts",
       "/analytics",
       "/merge",
+      "/exports",
     ]);
+  });
+
+  // GDPR-02: person export and erasure belong to compliance.
+  it("offers privacy requests only to compliance", () => {
+    const compliance: Viewer = { isAuthenticated: true, roleName: "Compliance / Back-office", permissions: ["privacy.manage"] };
+    expect(hrefs(getPrimaryNavigation(compliance))).toContain("/privacy");
+    expect(hrefs(getPrimaryNavigation(analyst))).not.toContain("/privacy");
   });
 });
 

@@ -23,6 +23,7 @@ from ..contact.models import Contact, Employment, RelationshipHolder
 from ..contact.service import CONTACT_FIELDS
 from ..mandate.models import Mandate
 from ..mandate.policy import DealPolicy
+from ..privacy.models import LegalHold, RetentionReview
 from ..role.authorization import has_permission
 from ..role.permissions import Permission
 from ..task.models import Task
@@ -77,6 +78,8 @@ REFERENCES: dict[MergeableType, list[Reference]] = {
     MergeableType.CONTACT: [
         Reference("employments", Employment.__table__, "contact_id"),  # type: ignore[arg-type]
         Reference("relationship_holders", RelationshipHolder.__table__, "contact_id", None, ("user_id",)),  # type: ignore[arg-type]
+        Reference("legal_holds", LegalHold.__table__, "contact_id"),  # type: ignore[arg-type]
+        Reference("retention_reviews", RetentionReview.__table__, "contact_id"),  # type: ignore[arg-type]
         *_polymorphic("contact"),
     ],
     MergeableType.COMPANY: [

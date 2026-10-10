@@ -300,7 +300,7 @@ class ImportService:
         assert record.mapping is not None
         results = await self._validate(db, record, record.mapping)
         created = await self._create(
-            db, ImportEntity(record.entity), [r for r in results if r["status"] == RowStatus.NEW.value]
+            db, ImportEntity(record.entity), [r for r in results if r["status"] == RowStatus.NEW.value], record.uploaded_by
         )
         background = record.status == ImportStatus.QUEUED.value
         record.results = [self._public(result) for result in results]
@@ -340,7 +340,7 @@ class ImportService:
                     now,
                 )
 
-    async def _create(self, db: AsyncSession, entity: ImportEntity, rows: list[dict[str, Any]]) -> int:
+    async def _create(self, db: AsyncSession, entity: ImportEntity, rows: list[dict[str, Any]], owner_id: int) -> int:
         if entity == ImportEntity.COMPANY:
             for row in rows:
                 clean = row["clean"]
@@ -370,6 +370,7 @@ class ImportService:
                 language=clean["language"],
                 salutation=clean.get("salutation"),
                 source=clean.get("source") or DEFAULT_SOURCE,
+                owner_id=owner_id,
             )
             db.add(contact)
             contacts.append((contact, clean))

@@ -138,7 +138,7 @@ class ContactService:
         if values.company_id is not None:
             await self._require_company(db, values.company_id)
         duplicates = await self._duplicates(db, values.email, None)
-        contact = Contact(**values.model_dump(mode="json", include=set(CONTACT_FIELDS)))
+        contact = Contact(**values.model_dump(mode="json", include=set(CONTACT_FIELDS)), owner_id=context.user_id)
         db.add(contact)
         await db.flush()
         if values.company_id is not None:

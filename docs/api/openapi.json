@@ -53,6 +53,17 @@
             "title": "Author Id",
             "type": "integer"
           },
+          "author_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Name"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -413,6 +424,149 @@
         ],
         "title": "ApiTokenRead",
         "type": "object"
+      },
+      "ApprovalDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "approve": {
+            "title": "Approve",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "approve"
+        ],
+        "title": "ApprovalDecision",
+        "type": "object"
+      },
+      "ApprovalRead": {
+        "properties": {
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/ContactFilter"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "requested_by": {
+            "title": "Requested By",
+            "type": "integer"
+          },
+          "requested_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By Name"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApprovalStatus"
+          },
+          "used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used At"
+          }
+        },
+        "required": [
+          "id",
+          "requested_by",
+          "requested_by_name",
+          "kind",
+          "filter",
+          "row_count",
+          "reason",
+          "requested_at",
+          "status",
+          "decided_by",
+          "decided_at",
+          "used_at"
+        ],
+        "title": "ApprovalRead",
+        "type": "object"
+      },
+      "ApprovalRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "filter": {
+            "$ref": "#/components/schemas/ContactFilter",
+            "default": {}
+          },
+          "reason": {
+            "examples": [
+              "Mailing for the Benelux PE event"
+            ],
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "ApprovalRequest",
+        "type": "object"
+      },
+      "ApprovalStatus": {
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ],
+        "title": "ApprovalStatus",
+        "type": "string"
       },
       "AuditEntryRead": {
         "properties": {
@@ -1432,6 +1586,25 @@
         "title": "ContactCreate",
         "type": "object"
       },
+      "ContactFilter": {
+        "additionalProperties": false,
+        "properties": {
+          "q": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          }
+        },
+        "title": "ContactFilter",
+        "type": "object"
+      },
       "ContactHit": {
         "properties": {
           "company_id": {
@@ -1798,6 +1971,24 @@
         "title": "CriterionKind",
         "type": "string"
       },
+      "DeactivateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "new_owner_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Owner Id"
+          }
+        },
+        "title": "DeactivateRequest",
+        "type": "object"
+      },
       "DealHit": {
         "properties": {
           "code_name": {
@@ -1982,6 +2173,29 @@
         "title": "EnterpriseNumberLookup",
         "type": "object"
       },
+      "ErasureResult": {
+        "properties": {
+          "activities_cleaned": {
+            "title": "Activities Cleaned",
+            "type": "integer"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "integer"
+          },
+          "notes_cleaned": {
+            "title": "Notes Cleaned",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "contact_id",
+          "activities_cleaned",
+          "notes_cleaned"
+        ],
+        "title": "ErasureResult",
+        "type": "object"
+      },
       "EventKind": {
         "description": "Every event a user can tune. A new notifying feature adds its kind here.",
         "enum": [
@@ -1989,11 +2203,36 @@
           "task.assigned",
           "task.overdue_digest",
           "data_import.completed",
+          "retention.review",
+          "export.approval",
           "milestone.due",
           "conflict.review_overdue"
         ],
         "title": "EventKind",
         "type": "string"
+      },
+      "ExportPreview": {
+        "properties": {
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "needs_approval": {
+            "title": "Needs Approval",
+            "type": "boolean"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "row_count",
+          "needs_approval",
+          "limit"
+        ],
+        "title": "ExportPreview",
+        "type": "object"
       },
       "FigureRead": {
         "properties": {
@@ -2727,6 +2966,92 @@
         ],
         "title": "LegalBasis",
         "type": "string"
+      },
+      "LegalHoldCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "examples": [
+              "AML 10-year retention"
+            ],
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "LegalHoldCreate",
+        "type": "object"
+      },
+      "LegalHoldRead": {
+        "properties": {
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "released_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Released At"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          }
+        },
+        "required": [
+          "id",
+          "contact_id",
+          "reason",
+          "created_at",
+          "until",
+          "released_at"
+        ],
+        "title": "LegalHoldRead",
+        "type": "object"
       },
       "LoginCompleted": {
         "properties": {
@@ -3685,6 +4010,17 @@
             "title": "Author Id",
             "type": "integer"
           },
+          "author_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Name"
+          },
           "body": {
             "title": "Body",
             "type": "string"
@@ -3848,6 +4184,134 @@
         "title": "OAuthToken",
         "type": "object"
       },
+      "OffboardingConfirmation": {
+        "properties": {
+          "api_clients_revoked": {
+            "title": "Api Clients Revoked",
+            "type": "integer"
+          },
+          "api_tokens_revoked": {
+            "title": "Api Tokens Revoked",
+            "type": "integer"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "deal_memberships_removed": {
+            "title": "Deal Memberships Removed",
+            "type": "integer"
+          },
+          "new_owner_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Owner Id"
+          },
+          "new_owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Owner Name"
+          },
+          "reassigned": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedRecord"
+            },
+            "title": "Reassigned",
+            "type": "array"
+          },
+          "sessions_ended": {
+            "title": "Sessions Ended",
+            "type": "integer"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "at",
+          "sessions_ended",
+          "api_tokens_revoked",
+          "api_clients_revoked",
+          "deal_memberships_removed",
+          "new_owner_id",
+          "new_owner_name",
+          "reassigned"
+        ],
+        "title": "OffboardingConfirmation",
+        "type": "object"
+      },
+      "OffboardingPreview": {
+        "properties": {
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedRecord"
+            },
+            "title": "Contacts",
+            "type": "array"
+          },
+          "deal_memberships": {
+            "title": "Deal Memberships",
+            "type": "integer"
+          },
+          "deals": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedRecord"
+            },
+            "title": "Deals",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "needs_new_owner": {
+            "title": "Needs New Owner",
+            "type": "boolean"
+          },
+          "new_owner_must_be_partner": {
+            "title": "New Owner Must Be Partner",
+            "type": "boolean"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedRecord"
+            },
+            "title": "Tasks",
+            "type": "array"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "contacts",
+          "tasks",
+          "deals",
+          "deal_memberships",
+          "needs_new_owner",
+          "new_owner_must_be_partner"
+        ],
+        "title": "OffboardingPreview",
+        "type": "object"
+      },
       "Outcome": {
         "enum": [
           "closed_won",
@@ -3937,6 +4401,29 @@
           "abort_reason"
         ],
         "title": "OutcomeRead",
+        "type": "object"
+      },
+      "OwnedRecord": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "label"
+        ],
+        "title": "OwnedRecord",
         "type": "object"
       },
       "PaginatedListResponse_AuditEntryRead_": {
@@ -4327,6 +4814,36 @@
         "title": "PreviewRead",
         "type": "object"
       },
+      "Reactivated": {
+        "properties": {
+          "deal_memberships": {
+            "title": "Deal Memberships",
+            "type": "integer"
+          },
+          "role_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Name"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "role_name",
+          "deal_memberships"
+        ],
+        "title": "Reactivated",
+        "type": "object"
+      },
       "RecordRef": {
         "properties": {
           "record_id": {
@@ -4424,6 +4941,114 @@
         ],
         "title": "RegisterPrefill",
         "type": "object"
+      },
+      "RetentionPolicyValues": {
+        "additionalProperties": false,
+        "properties": {
+          "inactive_years": {
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Inactive Years",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "inactive_years"
+        ],
+        "title": "RetentionPolicyValues",
+        "type": "object"
+      },
+      "RetentionReviewRead": {
+        "properties": {
+          "asked_at": {
+            "format": "date-time",
+            "title": "Asked At",
+            "type": "string"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "integer"
+          },
+          "contact_name": {
+            "title": "Contact Name",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_interaction_at": {
+            "format": "date-time",
+            "title": "Last Interaction At",
+            "type": "string"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          }
+        },
+        "required": [
+          "id",
+          "contact_id",
+          "contact_name",
+          "owner_id",
+          "asked_at",
+          "last_interaction_at",
+          "decision",
+          "decided_at"
+        ],
+        "title": "RetentionReviewRead",
+        "type": "object"
+      },
+      "ReviewDecide": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/ReviewDecision"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "ReviewDecide",
+        "type": "object"
+      },
+      "ReviewDecision": {
+        "enum": [
+          "keep",
+          "anonymise"
+        ],
+        "title": "ReviewDecision",
+        "type": "string"
       },
       "RolePermissionsUpdate": {
         "properties": {
@@ -6235,6 +6860,7 @@
               "application/json": {
                 "example": {
                   "author_id": 1,
+                  "author_name": "text",
                   "created_at": "2026-10-10T09:00:00Z",
                   "deleted_at": "2026-10-10T09:00:00Z",
                   "edited_at": "2026-10-10T09:00:00Z",
@@ -6374,6 +7000,7 @@
               "application/json": {
                 "example": {
                   "author_id": 1,
+                  "author_name": "text",
                   "created_at": "2026-10-10T09:00:00Z",
                   "deleted_at": "2026-10-10T09:00:00Z",
                   "edited_at": "2026-10-10T09:00:00Z",
@@ -8339,6 +8966,212 @@
         ]
       }
     },
+    "/api/v1/contacts/{contact_id}/erase": {
+      "post": {
+        "operationId": "erase_contact_api_v1_contacts__contact_id__erase_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "activities_cleaned": 1,
+                  "contact_id": 1,
+                  "notes_cleaned": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErasureResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Blocked by a legal hold; the detail gives the reason"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Erase (anonymise) a contact unless a legal hold applies (Compliance)",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
+    "/api/v1/contacts/{contact_id}/export": {
+      "get": {
+        "operationId": "export_person_api_v1_contacts__contact_id__export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export person: everything held about one contact as a JSON file (Compliance)",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
+    "/api/v1/contacts/{contact_id}/legal-holds": {
+      "get": {
+        "operationId": "list_holds_api_v1_contacts__contact_id__legal_holds_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "contact_id": 1,
+                    "created_at": "2026-10-10T09:00:00Z",
+                    "id": 1,
+                    "reason": "reason",
+                    "released_at": "2026-10-10T09:00:00Z",
+                    "until": "2026-10-10T09:00:00Z"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LegalHoldRead"
+                  },
+                  "title": "Response List Holds Api V1 Contacts  Contact Id  Legal Holds Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Legal holds on a contact",
+        "tags": [
+          "Privacy"
+        ]
+      },
+      "post": {
+        "operationId": "add_hold_api_v1_contacts__contact_id__legal_holds_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "reason": "AML 10-year retention",
+                "until": "2026-10-10T09:00:00Z"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/LegalHoldCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "contact_id": 1,
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "id": 1,
+                  "reason": "reason",
+                  "released_at": "2026-10-10T09:00:00Z",
+                  "until": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/LegalHoldRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put a contact under legal hold, e.g. AML 10-year retention (Compliance)",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
     "/api/v1/contacts/{contact_id}/relationship-holders/me": {
       "delete": {
         "operationId": "remove_my_relationship_api_v1_contacts__contact_id__relationship_holders_me_delete",
@@ -8510,6 +9343,286 @@
         "summary": "Add or update myself as a relationship holder",
         "tags": [
           "Contacts"
+        ]
+      }
+    },
+    "/api/v1/exports/approvals": {
+      "get": {
+        "operationId": "list_export_approvals_api_v1_exports_approvals_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "decided_at": "2026-10-10T09:00:00Z",
+                    "decided_by": 1,
+                    "filter": {
+                      "q": "text"
+                    },
+                    "id": 1,
+                    "kind": "kind",
+                    "reason": "reason",
+                    "requested_at": "2026-10-10T09:00:00Z",
+                    "requested_by": 1,
+                    "requested_by_name": "text",
+                    "row_count": 1,
+                    "status": "pending",
+                    "used_at": "2026-10-10T09:00:00Z"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalRead"
+                  },
+                  "title": "Response List Export Approvals Api V1 Exports Approvals Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Export requests: mine, or all for approvers",
+        "tags": [
+          "Exports"
+        ]
+      },
+      "post": {
+        "operationId": "request_export_approval_api_v1_exports_approvals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "filter": {
+                  "q": "text"
+                },
+                "reason": "Mailing for the Benelux PE event"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "decided_at": "2026-10-10T09:00:00Z",
+                  "decided_by": 1,
+                  "filter": {
+                    "q": "text"
+                  },
+                  "id": 1,
+                  "kind": "kind",
+                  "reason": "reason",
+                  "requested_at": "2026-10-10T09:00:00Z",
+                  "requested_by": 1,
+                  "requested_by_name": "text",
+                  "row_count": 1,
+                  "status": "pending",
+                  "used_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask a partner to approve an export",
+        "tags": [
+          "Exports"
+        ]
+      }
+    },
+    "/api/v1/exports/approvals/{approval_id}": {
+      "post": {
+        "operationId": "decide_export_approval_api_v1_exports_approvals__approval_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "approval_id",
+            "required": true,
+            "schema": {
+              "title": "Approval Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "approve": true
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "decided_at": "2026-10-10T09:00:00Z",
+                  "decided_by": 1,
+                  "filter": {
+                    "q": "text"
+                  },
+                  "id": 1,
+                  "kind": "kind",
+                  "reason": "reason",
+                  "requested_at": "2026-10-10T09:00:00Z",
+                  "requested_by": 1,
+                  "requested_by_name": "text",
+                  "row_count": 1,
+                  "status": "pending",
+                  "used_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve or reject an export (Partner)",
+        "tags": [
+          "Exports"
+        ]
+      }
+    },
+    "/api/v1/exports/contacts": {
+      "get": {
+        "description": "An Analyst exporting more than 500 contacts needs an approved request for the same filter.",
+        "operationId": "export_contacts_api_v1_exports_contacts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/csv": {}
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Partner approval required"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export contacts as CSV; logged with user, time, filter and row count",
+        "tags": [
+          "Exports"
+        ]
+      }
+    },
+    "/api/v1/exports/contacts/preview": {
+      "get": {
+        "operationId": "preview_contacts_export_api_v1_exports_contacts_preview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "limit": 1,
+                  "needs_approval": true,
+                  "row_count": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ExportPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "How many rows, and whether approval is needed",
+        "tags": [
+          "Exports"
         ]
       }
     },
@@ -8805,6 +9918,41 @@
         "summary": "Admin: map columns and preview new, duplicate and error rows",
         "tags": [
           "Import"
+        ]
+      }
+    },
+    "/api/v1/legal-holds/{hold_id}": {
+      "delete": {
+        "operationId": "release_hold_api_v1_legal_holds__hold_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hold_id",
+            "required": true,
+            "schema": {
+              "title": "Hold Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Release a legal hold (Compliance)",
+        "tags": [
+          "Privacy"
         ]
       }
     },
@@ -10941,6 +12089,7 @@
               "application/json": {
                 "example": {
                   "author_id": 1,
+                  "author_name": "text",
                   "body": "body",
                   "created_at": "2026-10-10T09:00:00Z",
                   "id": 1,
@@ -11412,6 +12561,163 @@
         "summary": "Rename, translate or deactivate a value (Admin)",
         "tags": [
           "Picklists"
+        ]
+      }
+    },
+    "/api/v1/privacy/retention-policy": {
+      "get": {
+        "operationId": "get_retention_policy_api_v1_privacy_retention_policy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "inactive_years": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionPolicyValues"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Years without interaction",
+        "tags": [
+          "Privacy"
+        ]
+      },
+      "put": {
+        "operationId": "put_retention_policy_api_v1_privacy_retention_policy_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "inactive_years": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/RetentionPolicyValues"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "inactive_years": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionPolicyValues"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change the retention period",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
+    "/api/v1/privacy/retention-reviews": {
+      "get": {
+        "operationId": "list_reviews_api_v1_privacy_retention_reviews_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "asked_at": "2026-10-10T09:00:00Z",
+                    "contact_id": 1,
+                    "contact_name": "contact_name",
+                    "decided_at": "2026-10-10T09:00:00Z",
+                    "decision": "keep",
+                    "id": 1,
+                    "last_interaction_at": "2026-10-10T09:00:00Z",
+                    "owner_id": 1
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RetentionReviewRead"
+                  },
+                  "title": "Response List Reviews Api V1 Privacy Retention Reviews Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Open keep-or-anonymise questions: mine, or all for compliance",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
+    "/api/v1/privacy/retention-reviews/{review_id}": {
+      "post": {
+        "operationId": "decide_review_api_v1_privacy_retention_reviews__review_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "title": "Review Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "decision": "keep"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDecide"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Anonymising is blocked by a legal hold"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Keep or anonymise an inactive contact",
+        "tags": [
+          "Privacy"
         ]
       }
     },
@@ -12735,6 +14041,7 @@
                   "activities": [
                     {
                       "author_id": 1,
+                      "author_name": "text",
                       "created_at": "2026-10-10T09:00:00Z",
                       "deleted_at": "2026-10-10T09:00:00Z",
                       "edited_at": "2026-10-10T09:00:00Z",
@@ -12759,6 +14066,7 @@
                   "notes": [
                     {
                       "author_id": 1,
+                      "author_name": "text",
                       "body": "body",
                       "created_at": "2026-10-10T09:00:00Z",
                       "id": 1,
@@ -12820,7 +14128,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "pattern": "^(invited|active)$",
+                  "pattern": "^(invited|active|inactive)$",
                   "type": "string"
                 },
                 {
@@ -13002,7 +14310,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "pattern": "^(invited|active)$",
+                  "pattern": "^(invited|active|inactive)$",
                   "type": "string"
                 },
                 {
@@ -13190,6 +14498,7 @@
     },
     "/api/v1/users/{user_id}": {
       "delete": {
+        "description": "Same as POST /users/{user_id}/deactivate, with the new owner as a query parameter.",
         "operationId": "delete_user_api_v1_users__user_id__delete",
         "parameters": [
           {
@@ -13200,6 +14509,22 @@
               "title": "User Id",
               "type": "integer"
             }
+          },
+          {
+            "in": "query",
+            "name": "new_owner_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "New Owner Id"
+            }
           }
         ],
         "responses": {
@@ -13207,14 +14532,24 @@
             "content": {
               "application/json": {
                 "example": {
-                  "key": "text"
+                  "api_clients_revoked": 1,
+                  "api_tokens_revoked": 1,
+                  "at": "2026-10-10T09:00:00Z",
+                  "deal_memberships_removed": 1,
+                  "new_owner_id": 1,
+                  "new_owner_name": "text",
+                  "reassigned": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "sessions_ended": 1,
+                  "user_id": 1
                 },
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Delete User Api V1 Users  User Id  Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/OffboardingConfirmation"
                 }
               }
             },
@@ -13381,6 +14716,75 @@
         ]
       }
     },
+    "/api/v1/users/{user_id}/deactivate": {
+      "post": {
+        "description": "Ends every session, revokes API tokens and clients, removes deal team memberships and moves owned contacts, open tasks and led deals to `new_owner_id`, which is required when there is anything to move.",
+        "operationId": "deactivate_user_api_v1_users__user_id__deactivate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "new_owner_id": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "api_clients_revoked": 1,
+                  "api_tokens_revoked": 1,
+                  "at": "2026-10-10T09:00:00Z",
+                  "deal_memberships_removed": 1,
+                  "new_owner_id": 1,
+                  "new_owner_name": "text",
+                  "reassigned": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "sessions_ended": 1,
+                  "user_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OffboardingConfirmation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Last Admin"
+          },
+          "422": {
+            "description": "A new owner is required, or is not allowed"
+          }
+        },
+        "summary": "Deactivate a leaver and hand over their records (Admin)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/api/v1/users/{user_id}/invitation": {
       "post": {
         "operationId": "resend_invitation_api_v1_users__user_id__invitation_post",
@@ -13411,6 +14815,135 @@
           }
         },
         "summary": "Resend the invitation (Admin)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{user_id}/offboarding": {
+      "get": {
+        "operationId": "preview_offboarding_api_v1_users__user_id__offboarding_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "contacts": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "deal_memberships": 1,
+                  "deals": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "name": "name",
+                  "needs_new_owner": true,
+                  "new_owner_must_be_partner": true,
+                  "tasks": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "user_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OffboardingPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "What a deactivation would hand over (Admin)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{user_id}/offboarding/confirmation": {
+      "get": {
+        "operationId": "offboarding_confirmation_api_v1_users__user_id__offboarding_confirmation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "api_clients_revoked": 1,
+                  "api_tokens_revoked": 1,
+                  "at": "2026-10-10T09:00:00Z",
+                  "deal_memberships_removed": 1,
+                  "new_owner_id": 1,
+                  "new_owner_name": "text",
+                  "reassigned": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "sessions_ended": 1,
+                  "user_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OffboardingConfirmation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The confirmation of the last deactivation (Admin)",
         "tags": [
           "Users"
         ]
@@ -13463,6 +14996,53 @@
           }
         },
         "summary": "Anonymise a user's personal data (Admin)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{user_id}/reactivate": {
+      "post": {
+        "operationId": "reactivate_user_api_v1_users__user_id__reactivate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "deal_memberships": 1,
+                  "role_name": "text",
+                  "user_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Reactivated"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reactivate a user: role back, no deal team memberships (Admin)",
         "tags": [
           "Users"
         ]

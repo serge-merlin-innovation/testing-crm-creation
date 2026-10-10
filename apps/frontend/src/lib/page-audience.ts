@@ -22,6 +22,8 @@ export type Viewer = SessionIdentity & {
 export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/": { kind: "public" },
   "/login": { kind: "public" },
+  "/accept-invitation": { kind: "public" },
+  "/reset-password": { kind: "public" },
   "/overview": { kind: "authenticated" },
   "/profile": { kind: "authenticated" },
   "/settings": { kind: "permission", permission: "settings.manage" },
@@ -37,6 +39,8 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/search": { kind: "authenticated" },
   "/merge": { kind: "authenticated" },
   "/imports": { kind: "permission", permission: "settings.manage" },
+  "/privacy": { kind: "authenticated" },
+  "/exports": { kind: "authenticated" },
   "/stage-criteria": { kind: "permission", permission: "settings.manage" },
   "/conflict-reviews": { kind: "permission", permission: "conflicts.register" },
 };

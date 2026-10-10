@@ -20,6 +20,8 @@ const PRIMARY_NAVIGATION: NavigationItem[] = [
   { label: "nav.picklists", href: "/picklists" },
   { label: "nav.merge", href: "/merge" },
   { label: "nav.imports", href: "/imports" },
+  { label: "nav.privacy", href: "/privacy", requires: "privacy.manage" },
+  { label: "nav.exports", href: "/exports" },
   { label: "nav.stageCriteria", href: "/stage-criteria" },
   { label: "nav.conflictReviews", href: "/conflict-reviews" },
 ];

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { login, submitSecondFactor, type LoginStep } from "@/services/auth";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -36,16 +37,19 @@ function downloadCodes(codes: string[]) {
 export function LoginForm({
   returnTo,
   messages,
+  initialStep = null,
 }: {
   returnTo: string;
   messages: Messages;
+  /** Set when another page (an accepted invitation) already did the password step. */
+  initialStep?: LoginStep | null;
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [trustDevice, setTrustDevice] = useState(false);
-  const [step, setStep] = useState<LoginStep | null>(null);
+  const [step, setStep] = useState<LoginStep | null>(initialStep);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -259,6 +263,9 @@ export function LoginForm({
 
               <Button type="submit" disabled={isBusy}>
                 {isBusy ? messages["login.submitting"] : messages["login.submit"]}
+              </Button>
+              <Button asChild variant="link">
+                <Link href="/reset-password">{messages["account.forgotLink"]}</Link>
               </Button>
             </FieldGroup>
           </form>
