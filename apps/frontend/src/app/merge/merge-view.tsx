@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { readDetail } from "@/lib/deals";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatDateTime } from "@/lib/i18n/format";
 import { sendJson, useApiData } from "@/lib/use-api";
 import { apiFetch } from "@/services/api";
 
@@ -189,7 +190,7 @@ export function MergeView({ messages }: { messages: Messages }) {
                     <TableCell>
                       {merge.record_type} {merge.duplicate_id} → {merge.survivor_id}
                     </TableCell>
-                    <TableCell>{new Date(merge.merged_at).toLocaleString()}</TableCell>
+                    <TableCell>{formatDateTime(merge.merged_at, languageOf(messages))}</TableCell>
                     <TableCell>
                       <Button size="sm" variant="outline" onClick={() => void undo(merge)}>
                         {messages["merge.undo"]}

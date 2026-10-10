@@ -8,7 +8,8 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { feesQuery, type FeeTerms } from "@/lib/fees";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatAmount } from "@/lib/i18n/format";
 import { useApiData } from "@/lib/use-api";
 
 type Messages = Record<MessageKey, string>;
@@ -52,7 +53,7 @@ export function FeesView({ messages }: { messages: Messages }) {
                   <Link href={`/deals/${row.mandate_id}`}>{row.code_name}</Link>
                 </TableCell>
                 <TableCell>{row.retainer_monthly}</TableCell>
-                <TableCell>{row.expected_fee}</TableCell>
+                <TableCell>{formatAmount(row.expected_fee, languageOf(messages))}</TableCell>
                 <TableCell>{row.final_fee ?? messages["deals.none"]}</TableCell>
               </TableRow>
             ))}

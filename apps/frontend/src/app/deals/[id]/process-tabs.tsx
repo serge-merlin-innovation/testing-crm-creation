@@ -31,7 +31,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toggle, type BuyerGrid } from "@/lib/buyers";
 import { fieldErrors, readDetail, type Mandate } from "@/lib/deals";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatAmount, formatIsoDate } from "@/lib/i18n/format";
 import {
   earlierVersions,
   FINANCING,
@@ -403,10 +404,10 @@ export function OffersTab({
                       ]
                     }
                   </TableCell>
-                  <TableCell>{bid.ev}</TableCell>
+                  <TableCell>{formatAmount(bid.ev, languageOf(messages), 1)}</TableCell>
                   <TableCell>{bid.equity_value}</TableCell>
                   <TableCell>
-                    {bid.ev_ebitda ? `${bid.ev_ebitda}x` : "-"}
+                    {bid.ev_ebitda ? `${formatAmount(bid.ev_ebitda, languageOf(messages), 1)}x` : "-"}
                   </TableCell>
                   <TableCell>
                     {bid.cash_pct}/{bid.earn_out_pct}/{bid.vendor_loan_pct}/
@@ -420,7 +421,7 @@ export function OffersTab({
                     v{bid.version} ({bid.entered_at.slice(0, 10)})
                     {earlierVersions(data.history, bid).map((old) => (
                       <div key={old.id}>
-                        v{old.version}: {old.ev} ({old.entered_at.slice(0, 10)})
+                        v{old.version}: {formatAmount(old.ev, languageOf(messages), 1)} ({formatIsoDate(old.entered_at, languageOf(messages))})
                       </div>
                     ))}
                   </TableCell>
@@ -692,7 +693,7 @@ export function ActivitiesTasksTab({
         <ul className="flex flex-col gap-2">
           {(tasks.data ?? []).map((task) => (
             <li key={task.id}>
-              {task.title}, {task.assignee_name}, {task.due_date}
+              {task.title}, {task.assignee_name}, {formatIsoDate(task.due_date, languageOf(messages))}
               {task.overdue ? (
                 <Badge variant="destructive">{messages["deal.overdue"]}</Badge>
               ) : null}

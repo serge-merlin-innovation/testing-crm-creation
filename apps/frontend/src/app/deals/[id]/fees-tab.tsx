@@ -19,7 +19,8 @@ import {
   type Invoice,
   type SuccessFeeKind,
 } from "@/lib/fees";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatAmount, formatIsoDate } from "@/lib/i18n/format";
 import { sendJson, useApiData } from "@/lib/use-api";
 
 type Messages = Record<MessageKey, string>;
@@ -179,8 +180,8 @@ function Invoices({ mandateId, canRecord, onChanged, messages }: { mandateId: nu
           {(invoices.data ?? []).map((invoice) => (
             <TableRow key={invoice.id} data-invoice={invoice.id}>
               <TableCell>{invoice.type === "retainer" ? messages["invoices.retainer"] : messages["invoices.successFee"]}</TableCell>
-              <TableCell>{invoice.amount}</TableCell>
-              <TableCell>{invoice.sent_date}</TableCell>
+              <TableCell>{formatAmount(invoice.amount, languageOf(messages), 2)}</TableCell>
+              <TableCell>{formatIsoDate(invoice.sent_date, languageOf(messages))}</TableCell>
               <TableCell>
                 {canRecord ? (
                   <Input
@@ -249,7 +250,7 @@ export function FeesTab({ mandateId, canRecordInvoices, messages }: { mandateId:
             <TableBody>
               <TableRow>
                 <TableHead>{messages["fees.expected"]}</TableHead>
-                <TableCell>{data.expected_fee}</TableCell>
+                <TableCell>{formatAmount(data.expected_fee, languageOf(messages))}</TableCell>
               </TableRow>
               <TableRow>
                 <TableHead>{messages["fees.retainersPaid"]}</TableHead>

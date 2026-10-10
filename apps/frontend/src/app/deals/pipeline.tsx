@@ -21,7 +21,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { DEAL_STAGES, MANDATE_TYPES } from "@/lib/deals";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatAmount } from "@/lib/i18n/format";
 import {
   ANY,
   BOARD_STAGES,
@@ -253,7 +254,7 @@ export function Pipeline({ messages, search }: { messages: Messages; search: str
                     </TableCell>
                     <TableCell>{stageLabel(deal.stage)}</TableCell>
                     <TableCell>{deal.lead_partner_name}</TableCell>
-                    <TableCell>{deal.estimated_ev}</TableCell>
+                    <TableCell>{formatAmount(deal.estimated_ev, languageOf(messages))}</TableCell>
                     <TableCell>{deal.stage_changed_at?.slice(0, 10) ?? ""}</TableCell>
                   </TableRow>
                 ))}

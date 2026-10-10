@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/components/ui/table";
 import { fieldErrors, readDetail } from "@/lib/deals";
 import { FEES_READ } from "@/lib/fees";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatAmount, formatIsoDate } from "@/lib/i18n/format";
 import {
   credentialQuery,
   isClosed,
@@ -76,7 +77,7 @@ export function OpportunityView({
                 label={messages["origination.trigger"]}
                 value={messages[`origination.trigger.${opportunity.trigger}` as MessageKey]}
               />
-              <Row label={messages["origination.ev"]} value={opportunity.estimated_ev} />
+              <Row label={messages["origination.ev"]} value={formatAmount(opportunity.estimated_ev, languageOf(messages))} />
               <Row label={messages["origination.probability"]} value={String(opportunity.probability)} />
               <Row label={messages["origination.owner"]} value={opportunity.owner_name} />
               {opportunity.lost_reason ? (
@@ -86,7 +87,7 @@ export function OpportunityView({
                 <Row label={messages["origination.competitor"]} value={opportunity.competitor_advisor} />
               ) : null}
               {opportunity.revisit_date ? (
-                <Row label={messages["origination.revisitDate"]} value={opportunity.revisit_date} />
+                <Row label={messages["origination.revisitDate"]} value={formatIsoDate(opportunity.revisit_date, languageOf(messages))} />
               ) : null}
             </TableBody>
           </Table>
@@ -435,7 +436,7 @@ function CredentialsCard({
         <ul className="flex flex-col gap-1" aria-label={messages["origination.credentials"]}>
           {(opportunity.credentials ?? []).map((credential) => (
             <li key={credential.id} data-credential={credential.code_name}>
-              {credential.code_name} {credential.ev ? `(${credential.ev})` : ""}
+              {credential.code_name} {credential.ev ? `(${formatAmount(credential.ev, languageOf(messages))})` : ""}
             </li>
           ))}
         </ul>

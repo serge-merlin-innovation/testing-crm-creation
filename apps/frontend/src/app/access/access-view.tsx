@@ -24,7 +24,8 @@ import {
 } from "@/lib/access";
 import { fillTemplate } from "@/lib/compliance";
 import { fieldErrors, readDetail } from "@/lib/deals";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatDateTime, formatIsoDate } from "@/lib/i18n/format";
 import { sendJson, useApiData } from "@/lib/use-api";
 import { apiFetch } from "@/services/api";
 
@@ -32,7 +33,7 @@ type Messages = Record<MessageKey, string>;
 type Me = { id: number; permissions: string[] };
 type Option = { id: number; name: string };
 
-const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB");
+const day = (iso: string, messages: Messages) => formatIsoDate(iso, languageOf(messages));
 
 function RequestAccess({ messages }: { messages: Messages }) {
   const mine = useApiData<MyAccessRequest[]>("/api/v1/access-requests/mine");
@@ -106,7 +107,7 @@ function RequestAccess({ messages }: { messages: Messages }) {
                     <Badge variant={request.status === "rejected" ? "destructive" : "secondary"}>
                       {messages[STATUS_LABEL[request.status]]}
                     </Badge>
-                    {request.expires_at ? ` ${fillTemplate(messages["access.until"], { date: day(request.expires_at) })}` : null}
+                    {request.expires_at ? ` ${fillTemplate(messages["access.until"], { date: day(request.expires_at, messages) })}` : null}
                   </TableCell>
                   <TableCell>{request.decision_reason ?? request.reason}</TableCell>
                 </TableRow>
@@ -324,7 +325,7 @@ function Delegations({ messages }: { messages: Messages }) {
           {(delegations.data ?? []).map((d) => (
             <li key={d.id} className="flex items-center gap-2" data-delegation={d.delegate_name}>
               <Badge variant={d.active ? "default" : "outline"}>{d.delegate_name}</Badge>
-              {day(d.starts_on)} – {day(d.ends_on)}
+              {day(d.starts_on, messages)} – {day(d.ends_on, messages)}
               <Button type="button" variant="ghost" size="sm" onClick={() => void end(d.id)}>
                 {messages["access.endDelegation"]}
               </Button>
@@ -439,7 +440,7 @@ function BreakGlass({ messages }: { messages: Messages }) {
         {opened ? (
           <Alert>
             <AlertDescription>
-              {fillTemplate(messages["access.breakGlassOpened"], { date: new Date(opened.expires_at).toLocaleString("en-GB") })}{" "}
+              {fillTemplate(messages["access.breakGlassOpened"], { date: formatDateTime(opened.expires_at, languageOf(messages)) })}{" "}
               <Button asChild variant="link">
                 <a href={`/deals/${opened.mandate_id}`}>{messages["access.open"]}</a>
               </Button>
@@ -476,7 +477,7 @@ function ReviewCard({ review, messages, onDone }: { review: AccessReview; messag
     <li className="flex flex-col gap-2" data-review={review.code_name}>
       <div className="flex flex-wrap items-center gap-2">
         <strong>{review.code_name}</strong> {review.quarter} · {review.partner_name} ·{" "}
-        {fillTemplate(messages["access.due"], { date: day(review.due_at) })}
+        {fillTemplate(messages["access.due"], { date: day(review.due_at, messages) })}
         {review.completed_at ? <Badge variant="secondary">{messages["access.done"]}</Badge> : null}
         {review.escalated_at ? <Badge variant="destructive">{messages["access.escalated"]}</Badge> : null}
       </div>
