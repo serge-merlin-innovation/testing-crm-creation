@@ -107,7 +107,7 @@ test("a partner records fee terms, sees the expected fee, and must justify a cha
   await page.getByLabel("Retainer (EUR / month)").fill("10000");
   await page.getByLabel("Success fee (% of EV)").fill("2");
   await page.getByRole("button", { name: "Save fees" }).click();
-  await expect(row(page, "Expected fee (EUR)")).toContainText("500000.00");
+  await expect(row(page, "Expected fee (EUR)")).toContainText("500,000");
 
   await page.getByRole("tab", { name: "Documents" }).click();
   await page.getByLabel("Label (e.g. IM, Financials, VDR)").fill("Engagement letter");
@@ -123,7 +123,7 @@ test("a partner records fee terms, sees the expected fee, and must justify a cha
   await page.getByLabel("Reason for the change").fill("Client renegotiated");
   await page.getByLabel("Amended engagement letter (link)").fill("https://files.example.com/el-v2.pdf");
   await page.getByRole("button", { name: "Save fees" }).click();
-  await expect(row(page, "Expected fee (EUR)")).toContainText("750000.00");
+  await expect(row(page, "Expected fee (EUR)")).toContainText("750,000");
 });
 
 // AUTHZ-06 c1 + c3: the staffed analyst sees the deal but no fee tab, no Fees page and no fee filter.
@@ -151,12 +151,12 @@ test("back-office reads the summary and fees of an unstaffed deal and records an
   await expect(page.getByRole("tab", { name: "History" })).toHaveCount(0);
 
   await page.getByRole("tab", { name: "Fees" }).click();
-  await expect(row(page, "Expected fee (EUR)")).toContainText("750000.00");
+  await expect(row(page, "Expected fee (EUR)")).toContainText("750,000");
   await page.getByLabel("Amount (EUR)").fill("10000");
   await page.getByLabel("Sent on").fill("2026-10-01");
   await page.getByRole("button", { name: "Record invoice" }).click();
   await expect(page.locator("[data-invoice]")).toHaveCount(1);
-  await expect(page.locator("[data-invoice]")).toContainText("10000.00");
+  await expect(page.locator("[data-invoice]")).toContainText("10,000.00");
 
   const timeline = await page.request.get(`/api/v1/timeline/mandate/${deal.id}`);
   expect(timeline.status()).toBe(404);

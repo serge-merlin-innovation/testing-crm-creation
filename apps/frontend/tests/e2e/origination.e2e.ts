@@ -203,7 +203,7 @@ test("on hold creates an owner task on the revisit date", async ({ page }) => {
   await choose(page, "Stage", "On hold");
   await page.getByLabel("Revisit on").fill("2031-01-06");
   await page.getByRole("button", { name: "Move" }).click();
-  await expect(page.getByRole("row", { name: /Revisit on/ })).toContainText("2031-01-06");
+  await expect(page.getByRole("row", { name: /Revisit on/ })).toContainText("06/01/2031");
 
   const clock = await page.request.put("/api/v1/test-hooks/clock", { data: { now: "2031-01-06T08:00:00Z" } });
   expect(clock.status(), await clock.text()).toBeLessThan(300);

@@ -218,10 +218,10 @@ test("offers, comparison, a process letter, the funnel and the client report fro
   );
   await expect(
     table.locator(`[data-buyer="${seeded.signedName}"]`),
-  ).toContainText("45.00");
+  ).toContainText("45.0");
   await expect(
     table.locator(`[data-buyer="${seeded.signedName}"]`),
-  ).toContainText("v1: 40.00");
+  ).toContainText("v1: 40.0");
 
   await page.getByRole("tab", { name: "Letters and reports" }).click();
   await page.locator("#letter-template").click();

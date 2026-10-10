@@ -12,6 +12,7 @@ import pytest
 from sqlalchemy import select
 
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
+from src.infrastructure.config.settings import settings
 from src.interfaces.main import app
 from src.modules.audit.models import AuditEntry
 from src.modules.role.permissions import RoleName
@@ -57,7 +58,7 @@ async def test_every_mutating_route_writes_the_audit_log():
     missing = [
         f"{method} {path}"
         for method, path, names in mutating_routes()
-        if (method, path) not in NOT_RECORD_CHANGES and "get_audit_context" not in names
+        if (method, path) not in NOT_RECORD_CHANGES and not names & {"get_audit_context", "get_system_audit_context"}
     ]
     assert not missing, "These change records without an audit context:\n" + "\n".join(missing)
 
@@ -142,3 +143,16 @@ async def test_saved_filters_and_preferences_are_audited(world):
     )
     assert response.status_code == 200, response.text
     assert await actions(world.db, "notification_preferences") == ["notification_preferences.updated"]
+
+
+async def test_the_inbound_mail_webhook_needs_no_session_and_is_audited_as_the_sender(world, client, monkeypatch):
+    monkeypatch.setattr(settings, "INBOUND_EMAIL_SECRET", "hook-secret")
+    address = (await world.partner.client.get("/api/v1/email-logging/address")).json()["address"]
+    response = await client.post(
+        "/api/v1/email-logging/inbound",
+        headers={"X-Inbound-Secret": "hook-secret"},
+        json={"sender": world.partner.email, "to": ["nobody@example.org"], "bcc": [address], "subject": "Hi", "text": "Hello"},
+    )
+    assert response.status_code == 202, response.text
+    rows = await world.db.execute(select(AuditEntry.user_id).where(AuditEntry.action == "email.unmatched"))
+    assert [user_id for (user_id,) in rows] == [world.partner.id]

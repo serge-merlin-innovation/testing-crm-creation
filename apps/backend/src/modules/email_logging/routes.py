@@ -4,7 +4,7 @@ from fastapi import APIRouter, Response
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
-from ..audit.dependencies import AuditContextDep
+from ..audit.dependencies import AuditContextDep, SystemAuditContextDep
 from .dependencies import EmailLoggingServiceDep, InboundSecretDep
 from .schemas import InboundEmail, InboundResult, InteractionRead, LoggingAddressRead, UnmatchedLink, UnmatchedRead
 from .service import interactions
@@ -42,7 +42,7 @@ async def inbound(
     db: AsyncSessionDep,
     service: EmailLoggingServiceDep,
     _: InboundSecretDep,
-    context: AuditContextDep,
+    context: SystemAuditContextDep,
 ) -> InboundResult:
     return await service.receive(db, email, context)
 
