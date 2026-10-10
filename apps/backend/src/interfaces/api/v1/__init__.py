@@ -12,6 +12,7 @@ from ....modules.mandate.routes import router as mandates_router
 from ....modules.notification.routes import router as notifications_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.role.routes import router as roles_router
+from ....modules.security.routes import router as security_router
 from ....modules.task.routes import router as tasks_router
 from ....modules.user.routes import router as users_router
 
@@ -29,6 +30,7 @@ router.include_router(notes_router, prefix="/notes")
 router.include_router(timeline_router, prefix="/timeline")
 router.include_router(tasks_router, prefix="/tasks")
 router.include_router(auth_router, prefix="/auth")
+router.include_router(security_router)
 
 if settings.ENVIRONMENT not in (EnvironmentOption.PRODUCTION, EnvironmentOption.STAGING):
     router.include_router(testing_router, prefix="/test-hooks")
