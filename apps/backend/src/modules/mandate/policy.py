@@ -18,10 +18,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...infrastructure.clock import Clock, get_clock
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
-from ..common.exceptions import DealClosedError, DealForbiddenError, DealNotFoundError
+from ..common.exceptions import DealClosedError, DealForbiddenError, DealFrozenError, DealNotFoundError
 from ..role.authorization import has_permission
 from ..role.permissions import Permission
 from .models import DealTeamMember, Mandate
+from .schemas import ConflictStatus
 
 
 class DealAction(StrEnum):
@@ -29,6 +30,10 @@ class DealAction(StrEnum):
     EDIT = "edit"
     MANAGE_TEAM = "manage_team"
     REOPEN = "reopen"
+    # Compliance work on any deal (conflict decisions, KYC, unfreezing): compliance only.
+    COMPLIANCE = "compliance"
+    # Reading compliance data: compliance, or anyone who may read the deal.
+    COMPLIANCE_READ = "compliance_read"
 
 
 ACTION_PERMISSION = {
@@ -56,12 +61,21 @@ class DealGrant:
         return self.mandate.closed_at is not None
 
     @property
+    def is_frozen(self) -> bool:
+        return self.mandate.frozen_at is not None
+
+    @property
     def can_edit(self) -> bool:
-        return self.membership is not None and not self.is_closed and has_permission(self.user, Permission.DEALS_EDIT_STAFFED)
+        return (
+            self.membership is not None
+            and not self.is_closed
+            and not self.is_frozen
+            and has_permission(self.user, Permission.DEALS_EDIT_STAFFED)
+        )
 
     @property
     def can_manage_team(self) -> bool:
-        if self.membership is None or self.is_closed:
+        if self.membership is None or self.is_closed or self.is_frozen:
             return False
         return self.membership.role in TEAM_MANAGER_ROLES or has_permission(self.user, Permission.DEAL_TEAM_ASSIGN)
 
@@ -74,6 +88,19 @@ class DealGrant:
         )
 
 
+def is_compliance(user: dict[str, Any]) -> bool:
+    return has_permission(user, Permission.CONFLICTS_REGISTER)
+
+
+def in_conflict_hiding() -> Any:
+    """Deals only their creator and compliance may find (DEAL-01 c4): awaiting the first conflict
+    decision, or rejected. A running deal whose new counterparty is under review stays with its team."""
+    return or_(
+        and_(Mandate.conflict_status == ConflictStatus.REVIEW.value, Mandate.stage == "conflict_review"),
+        Mandate.conflict_status == ConflictStatus.REJECTED.value,
+    )
+
+
 class DealPolicy:
     def __init__(self, now: datetime) -> None:
         self.now = now
@@ -84,14 +111,19 @@ class DealPolicy:
     def _compliance_window(self) -> Any:
         return and_(Mandate.closed_at.is_not(None), Mandate.closed_at <= self.now - COMPLIANCE_AFTER_CLOSE)
 
+    def _not_hidden_from(self, user: dict[str, Any]) -> Any:
+        return or_(~in_conflict_hiding(), Mandate.created_by == user["id"])
+
     def visible(self, user: dict[str, Any], query: Select[Any]) -> Select[Any]:
         """Narrows any query over Mandate to the deals this user may read."""
         conditions = []
         if has_permission(user, Permission.DEALS_READ_STAFFED):
             staffed = select(DealTeamMember.mandate_id).where(DealTeamMember.user_id == user["id"], self._active())
-            conditions.append(Mandate.id.in_(staffed))
+            conditions.append(and_(Mandate.id.in_(staffed), self._not_hidden_from(user)))
         if has_permission(user, Permission.DEALS_READ_SUMMARY):
             conditions.append(self._compliance_window())
+        if is_compliance(user):
+            conditions.append(in_conflict_hiding())
         if not conditions:
             return query.where(Mandate.id.is_(None))
         return query.where(or_(*conditions))
@@ -104,21 +136,35 @@ class DealPolicy:
             await db.execute(
                 select(Mandate, DealTeamMember)
                 .join(DealTeamMember, DealTeamMember.mandate_id == Mandate.id)
-                .where(Mandate.id == mandate_id, DealTeamMember.user_id == user["id"], self._active())
+                .where(
+                    Mandate.id == mandate_id,
+                    DealTeamMember.user_id == user["id"],
+                    self._active(),
+                    self._not_hidden_from(user),
+                )
             )
         ).first()
+        if action in (DealAction.COMPLIANCE, DealAction.COMPLIANCE_READ) and is_compliance(user):
+            mandate = await db.get(Mandate, mandate_id)
+            if mandate is None:
+                raise DealNotFoundError(f"Deal {mandate_id} not found")
+            return DealGrant(mandate=mandate, membership=row[1] if row else None, user=user)
         if row is not None and has_permission(user, Permission.DEALS_READ_STAFFED):
             grant = DealGrant(mandate=row[0], membership=row[1], user=user)
         else:
             grant = await self._compliance_grant(db, user, mandate_id)
-        if action == DealAction.READ:
+        if action in (DealAction.READ, DealAction.COMPLIANCE_READ):
             return grant
+        if action == DealAction.COMPLIANCE:
+            raise DealForbiddenError("Only compliance does this")
         if grant.membership is None:
             raise DealForbiddenError("Compliance reads a closed deal, never edits it")
         if action == DealAction.REOPEN:
             if not grant.is_closer:
                 raise DealForbiddenError("Only a partner on the deal reopens it")
             return grant
+        if grant.is_frozen:
+            raise DealFrozenError("The deal is frozen")
         if grant.is_closed:
             raise DealClosedError("The deal is closed")
         if action == DealAction.MANAGE_TEAM:
@@ -129,10 +175,13 @@ class DealPolicy:
         return grant
 
     async def _compliance_grant(self, db: AsyncSession, user: dict[str, Any], mandate_id: int) -> DealGrant:
+        windows = []
         if has_permission(user, Permission.DEALS_READ_SUMMARY):
-            mandate = (
-                await db.execute(select(Mandate).where(Mandate.id == mandate_id, self._compliance_window()))
-            ).scalar_one_or_none()
+            windows.append(self._compliance_window())
+        if is_compliance(user):
+            windows.append(in_conflict_hiding())
+        if windows:
+            mandate = (await db.execute(select(Mandate).where(Mandate.id == mandate_id, or_(*windows)))).scalar_one_or_none()
             if mandate is not None:
                 return DealGrant(mandate=mandate, membership=None, user=user)
         raise DealNotFoundError(f"Deal {mandate_id} not visible")
@@ -198,3 +247,5 @@ ReadGrant = Annotated[DealGrant, deal_access(DealAction.READ)]
 EditGrant = Annotated[DealGrant, deal_access(DealAction.EDIT)]
 TeamGrant = Annotated[DealGrant, deal_access(DealAction.MANAGE_TEAM)]
 ReopenGrant = Annotated[DealGrant, deal_access(DealAction.REOPEN)]
+ComplianceGrant = Annotated[DealGrant, deal_access(DealAction.COMPLIANCE)]
+ComplianceReadGrant = Annotated[DealGrant, deal_access(DealAction.COMPLIANCE_READ)]

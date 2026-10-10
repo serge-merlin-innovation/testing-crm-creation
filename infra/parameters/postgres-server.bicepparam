@@ -43,4 +43,7 @@ param customMaintenanceWindow = 'Disabled'
 param maintenanceDayOfWeek = 0
 param maintenanceStartHour = 0
 param maintenanceStartMinute = 0
-param serverConfigurations = []
+// The conflict check (AUTHZ-05) runs fuzzy name matching; the backend migration creates both extensions.
+param serverConfigurations = [
+  { name: 'azure.extensions', value: 'PG_TRGM,UNACCENT' }
+]

@@ -13,6 +13,7 @@ from .exceptions import (
     ContactNotFoundError,
     DealClosedError,
     DealForbiddenError,
+    DealFrozenError,
     DealLinkNotFoundError,
     DealNotFoundError,
     DomainError,
@@ -62,6 +63,9 @@ EXCEPTION_MAPPING: dict[type[DomainError], Callable[[str], HTTPException]] = {
     CompanyNotFoundError: lambda message: NotFoundException(detail="Company not found."),
     ContactNotFoundError: lambda message: NotFoundException(detail="Contact not found."),
     DealNotFoundError: lambda message: NotFoundException(detail="Not found."),
+    DealFrozenError: lambda message: ForbiddenException(
+        detail="This deal is frozen after a sanctions hit: only compliance can unfreeze it."
+    ),
     DealClosedError: lambda message: ForbiddenException(
         detail="This deal is closed and read-only: a partner must reopen it first."
     ),

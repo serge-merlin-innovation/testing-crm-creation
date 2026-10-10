@@ -22,6 +22,7 @@ from ..user.models import User
 from .models import DealLink, DealTeamMember, Mandate, Milestone, StageCriterion
 from .policy import DealGrant
 from .schemas import (
+    ConflictStatus,
     CriterionKind,
     MandateClose,
     MandateReopen,
@@ -219,6 +220,8 @@ class PipelineService:
             for label in (await db.execute(select(DealLink.label).where(DealLink.mandate_id == mandate.id))).scalars()
         }
         reasons: list[str] = []
+        if mandate.conflict_status == ConflictStatus.REVIEW.value:
+            reasons.append("Compliance must clear the conflict check.")
         for criterion in criteria:
             if criterion.kind == CriterionKind.FIELD:
                 if getattr(mandate, criterion.value or "", None) is None:

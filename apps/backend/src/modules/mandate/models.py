@@ -35,6 +35,14 @@ class Mandate(Base):
     closing_date: Mapped[date | None] = mapped_column(Date, default=None)
     tombstone_allowed: Mapped[bool | None] = mapped_column(Boolean, default=None)
     abort_reason: Mapped[str | None] = mapped_column(String(1000), default=None)
+    # The conflict check (AUTHZ-05) sets these; `review` and `rejected` hide the deal from all but its
+    # creator and compliance (DEAL-01 c4).
+    created_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("user.id", ondelete="SET NULL"), index=True, default=None
+    )
+    conflict_status: Mapped[str] = mapped_column(String(16), nullable=False, default="clear", server_default="clear")
+    # Set by a sanctions hit (ORI-05 c4): every write is refused until compliance unfreezes.
+    frozen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
 
 class DealTeamMember(Base):
