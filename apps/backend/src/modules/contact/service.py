@@ -18,6 +18,7 @@ CONTACT_FIELDS = (
     "language",
     "salutation",
     "do_not_contact",
+    "marketing_opt_out",
     "legal_basis",
     "source",
 )
@@ -168,7 +169,9 @@ class ContactService:
         old = {key: getattr(contact, key) for key in changes if key in CONTACT_FIELDS}
 
         for key, value in changes.items():
-            if key in CONTACT_FIELDS and not (value is None and key in ("first_name", "last_name", "source")):
+            if key in CONTACT_FIELDS and not (
+                value is None and key in ("first_name", "last_name", "source", "marketing_opt_out")
+            ):
                 setattr(contact, key, value)
 
         if "company_id" in changes or "function" in changes:

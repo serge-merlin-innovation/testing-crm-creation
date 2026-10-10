@@ -19,6 +19,8 @@ class Contact(Base, TimestampMixin):
     language: Mapped[str] = mapped_column(String(2), nullable=False, default="en")
     salutation: Mapped[str | None] = mapped_column(String(32), default=None)
     do_not_contact: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # GDPR-01 c2: excluded from every mailing, process letters included.
+    marketing_opt_out: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     legal_basis: Mapped[str] = mapped_column(String(32), nullable=False, default="legitimate_interest")
     source: Mapped[str] = mapped_column(String(200), nullable=False, default="")
     owner_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("user.id", ondelete="RESTRICT"), index=True, default=None)
