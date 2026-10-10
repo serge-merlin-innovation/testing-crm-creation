@@ -16,6 +16,7 @@ from ..interfaces.api.openapi import build_openapi
 from ..interfaces.api.versions import version_for
 from ..modules.api_access.dependencies import resolve_bearer
 from ..modules.picklist.service import seed_default_picklists
+from ..modules.privacy.jobs import register_jobs as register_privacy_jobs
 from ..modules.role.authorization import require_permission
 from ..modules.role.permissions import Permission
 from ..modules.role.service import seed_default_roles
@@ -23,6 +24,7 @@ from ..modules.task.jobs import register_jobs as register_task_jobs
 
 settings = get_settings()
 register_task_jobs()
+register_privacy_jobs()
 set_bearer_resolver(resolve_bearer)
 
 

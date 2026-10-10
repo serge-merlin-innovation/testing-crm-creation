@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import Boolean, Date, ForeignKey, String
+from sqlalchemy import Boolean, Date, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ...infrastructure.database.models import TimestampMixin
@@ -21,6 +21,7 @@ class Contact(Base, TimestampMixin):
     do_not_contact: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     legal_basis: Mapped[str] = mapped_column(String(32), nullable=False, default="legitimate_interest")
     source: Mapped[str] = mapped_column(String(200), nullable=False, default="")
+    owner_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("user.id", ondelete="RESTRICT"), index=True, default=None)
 
 
 class Employment(Base):

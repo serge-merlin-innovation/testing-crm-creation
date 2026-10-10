@@ -17,6 +17,8 @@ class EventKind(StrEnum):
     DEAL_TEAM_ADDED = "deal_team.added"
     TASK_ASSIGNED = "task.assigned"
     TASK_OVERDUE_DIGEST = "task.overdue_digest"
+    RETENTION_REVIEW = "retention.review"
+    EXPORT_APPROVAL = "export.approval"
 
 
 DEFAULT_CHANNEL = Channel.BOTH

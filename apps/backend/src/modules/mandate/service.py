@@ -24,6 +24,7 @@ from ..picklist.schemas import PicklistKind
 from ..picklist.service import PicklistService
 from ..role.permissions import RoleName
 from ..user.models import User
+from ..user.service import display_name
 from .models import DealLink, DealTeamMember, Mandate, WallCrossing
 from .policy import DealGrant, DealPolicy
 from .schemas import (
@@ -316,15 +317,20 @@ class MandateService:
     async def history(self, db: AsyncSession, mandate_id: int) -> list[dict[str, Any]]:
         rows = (
             await db.execute(
-                select(AuditEntry, User.name)
+                select(AuditEntry, User.name, User.is_deleted)
                 .outerjoin(User, User.id == AuditEntry.user_id)
                 .where(AuditEntry.record_type == "mandate", AuditEntry.record_id == str(mandate_id))
                 .order_by(AuditEntry.created_at.desc(), AuditEntry.id.desc())
             )
         ).all()
         entries: list[dict[str, Any]] = []
-        for entry, user_name in rows:
-            base = {"action": entry.action, "at": entry.created_at, "user_id": entry.user_id, "user_name": user_name}
+        for entry, user_name, inactive in rows:
+            base = {
+                "action": entry.action,
+                "at": entry.created_at,
+                "user_id": entry.user_id,
+                "user_name": display_name(user_name, inactive),
+            }
             if entry.action == "mandate.updated":
                 old, new = entry.old_values or {}, entry.new_values or {}
                 for field in sorted(set(old) | set(new)):
@@ -465,7 +471,7 @@ class MandateService:
         subject, actor = aliased(User), aliased(User)
         rows = (
             await db.execute(
-                select(WallCrossing, subject.name, actor.name)
+                select(WallCrossing, subject.name, subject.is_deleted, actor.name, actor.is_deleted)
                 .join(subject, subject.id == WallCrossing.user_id)
                 .join(actor, actor.id == WallCrossing.by_user_id)
                 .where(WallCrossing.mandate_id == mandate_id)
@@ -476,14 +482,14 @@ class MandateService:
             WallCrossingRead(
                 action=row.action,
                 user_id=row.user_id,
-                user_name=user_name,
+                user_name=display_name(user_name, user_gone) or "",
                 by_user_id=row.by_user_id,
-                by_user_name=by_name,
+                by_user_name=display_name(by_name, by_gone) or "",
                 role=row.role,
                 at=row.at,
                 expires_at=row.expires_at,
             ).model_dump(mode="json")
-            for row, user_name, by_name in rows
+            for row, user_name, user_gone, by_name, by_gone in rows
         ]
 
     async def links(self, db: AsyncSession, mandate_id: int) -> list[DealLink]:

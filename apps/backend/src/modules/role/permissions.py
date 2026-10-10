@@ -20,6 +20,8 @@ class Permission(StrEnum):
     KYC_MANAGE = "kyc.manage"
     DASHBOARD_FIRM = "dashboard.firm"
     DASHBOARD_AGGREGATED = "dashboard.aggregated"
+    PRIVACY_MANAGE = "privacy.manage"
+    EXPORTS_APPROVE = "exports.approve"
 
 
 class RoleName(StrEnum):
@@ -51,6 +53,7 @@ DEFAULT_ROLES: dict[RoleName, tuple[str, frozenset[Permission]]] = {
                 Permission.DASHBOARD_AGGREGATED,
                 Permission.DEALS_READ_STAFFED,
                 Permission.DEALS_EDIT_STAFFED,
+                Permission.EXPORTS_APPROVE,
             }
         ),
     ),
@@ -79,6 +82,7 @@ DEFAULT_ROLES: dict[RoleName, tuple[str, frozenset[Permission]]] = {
                 Permission.INVOICES_MANAGE,
                 Permission.DEALS_READ_SUMMARY,
                 Permission.AUDIT_READ,
+                Permission.PRIVACY_MANAGE,
             }
         ),
     ),
