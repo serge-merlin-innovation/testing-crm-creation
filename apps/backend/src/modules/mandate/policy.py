@@ -126,16 +126,14 @@ class DealPolicy:
     def visible(self, user: dict[str, Any], query: Select[Any]) -> Select[Any]:
         """Narrows any query over Mandate to the deals this user may read."""
         conditions = []
-        if has_permission(user, Permission.DEALS_READ_STAFFED):
-            staffed = select(DealTeamMember.mandate_id).where(DealTeamMember.user_id == user["id"], self._active())
-            conditions.append(and_(Mandate.id.in_(staffed), self._not_hidden_from(user)))
+        # An active membership grants read whatever the role (ROLE-01 c2 "unless staffed", AUTHZ-02 c8).
+        staffed = select(DealTeamMember.mandate_id).where(DealTeamMember.user_id == user["id"], self._active())
+        conditions.append(and_(Mandate.id.in_(staffed), self._not_hidden_from(user)))
         if has_permission(user, Permission.DEALS_READ_SUMMARY):
             conditions.append(self._compliance_window())
         if is_compliance(user):
             conditions.append(in_conflict_hiding())
         conditions.append(Mandate.id.in_(self._emergency(user)))
-        if not conditions:
-            return query.where(Mandate.id.is_(None))
         return query.where(or_(*conditions))
 
     async def visible_mandate_ids(self, db: AsyncSession, user: dict[str, Any]) -> list[int]:
@@ -159,7 +157,7 @@ class DealPolicy:
             if mandate is None:
                 raise DealNotFoundError(f"Deal {mandate_id} not found")
             return DealGrant(mandate=mandate, membership=row[1] if row else None, user=user)
-        if row is not None and has_permission(user, Permission.DEALS_READ_STAFFED):
+        if row is not None:
             grant = DealGrant(mandate=row[0], membership=row[1], user=user)
         elif (emergency := await self._emergency_grant(db, user, mandate_id)) is not None:
             if action != DealAction.READ:

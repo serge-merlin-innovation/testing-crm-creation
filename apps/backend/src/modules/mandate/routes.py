@@ -106,7 +106,10 @@ async def create_mandate(
 
 
 @router.get("/{mandate_id}", response_model=MandateRead, summary="One deal", responses=HIDDEN)
-async def get_mandate(grant: ReadGrant, db: AsyncSessionDep, service: MandateServiceDep) -> dict[str, Any]:
+async def get_mandate(
+    grant: ReadGrant, db: AsyncSessionDep, service: MandateServiceDep, context: AuditContextDep
+) -> dict[str, Any]:
+    await service.record_view(db, grant, context)
     return await service.read(db, grant.mandate, grant)
 
 
@@ -117,7 +120,10 @@ async def get_mandate(grant: ReadGrant, db: AsyncSessionDep, service: MandateSer
     description="Compliance / back-office read it on deals they are not staffed on (ROLE-01). Never editable here.",
     responses=HIDDEN,
 )
-async def get_mandate_summary(grant: SummaryGrant, db: AsyncSessionDep, service: MandateServiceDep) -> dict[str, Any]:
+async def get_mandate_summary(
+    grant: SummaryGrant, db: AsyncSessionDep, service: MandateServiceDep, context: AuditContextDep
+) -> dict[str, Any]:
+    await service.record_view(db, grant, context)
     return await service.read(db, grant.mandate, grant)
 
 

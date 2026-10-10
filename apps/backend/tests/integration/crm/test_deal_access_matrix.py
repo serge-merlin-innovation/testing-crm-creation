@@ -7,16 +7,19 @@ fails the build when a new one is added without a row, so no deal endpoint ships
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
 from fastapi import APIRouter, FastAPI
 
+from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
 from src.interfaces.main import app
 from src.modules.mandate.policy import ReadGrant
 from src.modules.mandate.policy import served_routes as served_routes_of
 from src.modules.role.permissions import RoleName
 from tests.integration.crm.deal_helpers import build_world, create_mandate, seed_buyers
+from tests.integration.foundation.helpers import step_up
 
 pytestmark = pytest.mark.asyncio
 
@@ -35,6 +38,14 @@ PERSONAS = {
     "read_only": RoleName.READ_ONLY,
 }
 UNSTAFFED = ("other_partner", "director", "admin", "compliance", "read_only")
+CLOSED_WON = {
+    "outcome": "closed_won",
+    "final_ev": "31000",
+    "buyer": "Northwind Capital",
+    "ev_ebitda": "8.5",
+    "closing_date": "2026-10-09",
+    "tombstone_allowed": True,
+}
 
 
 @dataclass(frozen=True)
@@ -301,9 +312,8 @@ async def world(client, seeded_db):
     await built.close()
 
 
-@pytest.mark.parametrize("endpoint", ENDPOINTS, ids=lambda e: f"{e.method} {e.path}")
-@pytest.mark.parametrize("persona", list(PERSONAS))
-async def test_deal_access_matrix(world, endpoint: Endpoint, persona: str):
+async def seed_matrix_deal(world) -> tuple[int, Callable[[Endpoint], str], dict]:
+    """The matrix deal: staffed member and victim, a link, a milestone, an invoice and an approved buyer."""
     lead = world.people["lead"]
     mandate = await create_mandate(world, lead, world.client_id)
     mandate_id = mandate["id"]
@@ -339,22 +349,36 @@ async def test_deal_access_matrix(world, endpoint: Endpoint, persona: str):
     version = await current_version()
     buyers = await seed_buyers(world, lead, mandate_id)
     context = {"version": lambda: version, "spare_user_id": spare.id, "company_id": world.client_id, **buyers}
-    path = endpoint.path.format(
-        mandate_id=mandate_id,
-        user_id=victim.id,
-        link_id=link.json()["id"],
-        milestone_id=milestone.json()["id"],
-        buyer_id=buyers["buyer_id"],
-        invoice_id=invoice.json()["id"],
-        document_id=999999,
-    )
-    caller = world.people[persona]
-    response = await caller.client.request(
+
+    def path_of(endpoint: Endpoint) -> str:
+        return endpoint.path.format(
+            mandate_id=mandate_id,
+            user_id=victim.id,
+            link_id=link.json()["id"],
+            milestone_id=milestone.json()["id"],
+            buyer_id=buyers["buyer_id"],
+            invoice_id=invoice.json()["id"],
+            document_id=999999,
+        )
+
+    return mandate_id, path_of, context
+
+
+async def call_endpoint(caller, endpoint: Endpoint, path: str, context: dict):
+    return await caller.client.request(
         endpoint.method,
         path,
         json=endpoint.body(context) if endpoint.body else None,
         headers=caller.headers,
     )
+
+
+@pytest.mark.parametrize("endpoint", ENDPOINTS, ids=lambda e: f"{e.method} {e.path}")
+@pytest.mark.parametrize("persona", list(PERSONAS))
+async def test_deal_access_matrix(world, endpoint: Endpoint, persona: str):
+    _, path_of, context = await seed_matrix_deal(world)
+    caller = world.people[persona]
+    response = await call_endpoint(caller, endpoint, path_of(endpoint), context)
 
     expected = endpoint.expected[persona]
     if expected == OK:
@@ -366,3 +390,181 @@ async def test_deal_access_matrix(world, endpoint: Endpoint, persona: str):
         assert response.status_code == expected, response.text
         assert "Falcon" not in response.text
         assert "Acme" not in response.text
+
+
+# Wall exceptions (AUTHZ-02 c8, AUTHZ-08 c3): break-glass and compliance on a deal closed 12+ months ago
+# only read. Every write and every export, PDF or document is refused, whatever the route.
+EXCEPTION_PERSONAS = ("break_glass", "compliance_closed")
+TAKES_DATA_OUT = ("export", ".pdf", "/documents/{document_id}", "/status-report")
+# Compliance's own duties stay open on any deal (REP-07 invoicing, AUTHZ-05 conflicts, KYC): they are
+# refused below only on their merits (422), never by the wall.
+COMPLIANCE_DUTIES = ("/invoices", "/invoices/{invoice_id}", "/conflicts/decision", "/kyc", "/unfreeze")
+ON_THE_MERITS = ("/conflicts/decision", "/unfreeze")
+
+
+def exception_expected(endpoint: Endpoint, persona: str) -> Any:
+    if endpoint.collection:
+        return OK
+    if persona == "compliance_closed" and endpoint.path.endswith(COMPLIANCE_DUTIES):
+        return 422 if endpoint.path.endswith(ON_THE_MERITS) else OK
+    if endpoint.path.endswith("/team/candidates"):
+        return FORBIDDEN
+    if endpoint.method != "GET" or any(marker in endpoint.path for marker in TAKES_DATA_OUT):
+        return FORBIDDEN
+    if persona == "break_glass" and endpoint.path.endswith(("/fees", "/invoices", "/conflicts", "/kyc")):
+        # Admin holds no fees.read and is not compliance: break-glass does not lift field rules.
+        return FORBIDDEN
+    return OK
+
+
+@pytest.mark.parametrize("endpoint", ENDPOINTS, ids=lambda e: f"{e.method} {e.path}")
+@pytest.mark.parametrize("persona", EXCEPTION_PERSONAS)
+async def test_deal_access_matrix_wall_exceptions(world, endpoint: Endpoint, persona: str):
+    mandate_id, path_of, context = await seed_matrix_deal(world)
+    lead = world.people["lead"]
+    if persona == "break_glass":
+        caller = world.people["admin"]
+        glass = await caller.client.post(
+            "/api/v1/break-glass/",
+            json={"code_name": "Falcon", "reason": "Fix corrupted EV"},
+            headers=step_up(caller.email, caller.headers),
+        )
+        assert glass.status_code == 201, glass.text
+    else:
+        caller = world.people["compliance"]
+        closed = await lead.client.post(
+            f"/api/v1/mandates/{mandate_id}/close",
+            json={"version": context["version"](), **CLOSED_WON},
+            headers=lead.headers,
+        )
+        assert closed.status_code == 200, closed.text
+        context["version"] = lambda: closed.json()["version"]
+        set_clock(FrozenClock(datetime.now(UTC) + timedelta(days=400)))
+    try:
+        response = await call_endpoint(caller, endpoint, path_of(endpoint), context)
+    finally:
+        set_clock(SystemClock())
+
+    expected = exception_expected(endpoint, persona)
+    if expected == OK and endpoint.collection:
+        assert 200 <= response.status_code < 300, response.text
+    elif expected == OK:
+        assert response.status_code in (200, 201, 204) or (
+            endpoint.path.endswith("/documents/{document_id}") and response.status_code == 404
+        ), response.text
+    else:
+        assert response.status_code == expected, response.text
+
+
+@dataclass(frozen=True)
+class Collection:
+    path: str
+    # Personas allowed to see the deal here by design (back-office reads every deal's fees, compliance the audit log).
+    sees_the_deal: tuple[str, ...] = ()
+    # Companies and contacts are shared records: where a route lists them by name, only the code name and
+    # the deal list prove a leak.
+    secrets: tuple[str, ...] = ("Falcon", "Acme", "Widget")
+
+
+# Lists, reports and exports that return deal data without a {mandate_id} (AUTHZ-02 c6, review S8): the
+# unstaffed get a 2xx or a role refusal, never the code name, the client or the target.
+COLLECTIONS: list[Collection] = [
+    Collection("/api/v1/search/?q=Falcon", secrets=()),
+    Collection("/api/v1/search/?q=Acme", secrets=("Falcon",)),
+    Collection("/api/v1/search/?q=Widget", secrets=("Falcon",)),
+    Collection("/api/v1/calendar-feed/ics/{feed_token}.ics"),
+    Collection("/api/v1/reports/home"),
+    Collection("/api/v1/reports/dashboard"),
+    Collection("/api/v1/reports/fee-forecast", sees_the_deal=("compliance",)),
+    Collection("/api/v1/reports/fee-forecast/export", sees_the_deal=("compliance",)),
+    Collection("/api/v1/reports/win-loss?from=2026-01-01&to=2027-12-31"),
+    Collection("/api/v1/fees/", sees_the_deal=("compliance",)),
+    Collection("/api/v1/fees/export", sees_the_deal=("compliance",)),
+    Collection("/api/v1/tasks/mine"),
+    Collection("/api/v1/timeline/company/{client_id}"),
+    Collection("/api/v1/timeline/company/{target_id}"),
+    Collection("/api/v1/timeline/contact/{contact_id}"),
+    Collection("/api/v1/contacts/{contact_id}/buyer-roles"),
+    Collection("/api/v1/contacts/{contact_id}/interactions"),
+    Collection("/api/v1/companies/{buyer_company_id}/investor-profile"),
+    Collection("/api/v1/merges/"),
+    Collection("/api/v1/audit/?items_per_page=500", sees_the_deal=("compliance",), secrets=("Falcon",)),
+    Collection("/api/v1/notifications/"),
+]
+
+
+@pytest.mark.parametrize("collection", COLLECTIONS, ids=lambda c: c.path)
+async def test_collections_never_name_a_hidden_deal(world, collection: Collection):
+    lead = world.people["lead"]
+    target_id = await world.company("Widget Works")
+    mandate_id, _, context = await seed_matrix_deal(world)
+    version = context["version"]()
+    patched = await lead.client.patch(
+        f"/api/v1/mandates/{mandate_id}", json={"version": version, "target_id": target_id}, headers=lead.headers
+    )
+    assert patched.status_code == 200, patched.text
+    contact = await lead.client.post(
+        "/api/v1/contacts/",
+        json={"first_name": "Jan", "last_name": "Peeters", "email": "jan@widget.be", "source": "Forum"},
+        headers=lead.headers,
+    )
+    contact_id = contact.json()["id"]
+    buyer_id = context["buyer_id"]
+    assert (
+        await lead.client.patch(
+            f"/api/v1/mandates/{mandate_id}/buyers/{buyer_id}", json={"contact_id": contact_id}, headers=lead.headers
+        )
+    ).status_code == 200
+    activity = await lead.client.post(
+        "/api/v1/activities/",
+        json={
+            "type": "meeting",
+            "occurred_at": "2026-10-13T09:00:00Z",
+            "note": "Falcon kick-off with Acme",
+            "links": [
+                {"record_type": "mandate", "record_id": mandate_id},
+                {"record_type": "contact", "record_id": contact_id},
+                {"record_type": "company", "record_id": world.client_id},
+            ],
+        },
+        headers=lead.headers,
+    )
+    assert activity.status_code == 201, activity.text
+    await lead.client.post(
+        "/api/v1/tasks/",
+        json={
+            "title": "Call Acme",
+            "assignee_id": world.people["member"].id,
+            "due_date": "2026-10-16",
+            "record_type": "mandate",
+            "record_id": mandate_id,
+        },
+        headers=lead.headers,
+    )
+    listed_buyer = (await lead.client.get(f"/api/v1/mandates/{mandate_id}/buyers", headers=lead.headers)).json()
+    buyer_company_id = listed_buyer["buyers"][0]["company_id"]
+
+    for persona in UNSTAFFED:
+        if persona in collection.sees_the_deal:
+            continue
+        caller = world.people[persona]
+        feed_token = ""
+        if "{feed_token}" in collection.path:
+            feed = await caller.client.get("/api/v1/calendar-feed/", headers=caller.headers)
+            if feed.status_code == 403:
+                continue
+            feed_token = feed.json()["url"].rsplit("/", 1)[-1].removesuffix(".ics")
+        path = collection.path.format(
+            client_id=world.client_id,
+            target_id=target_id,
+            contact_id=contact_id,
+            buyer_company_id=buyer_company_id,
+            feed_token=feed_token,
+        )
+        response = await caller.client.get(path, headers=caller.headers)
+        assert response.status_code < 300 or response.status_code in (FORBIDDEN, HIDDEN), (persona, response.text)
+        body = response.content.decode("utf-8", errors="ignore")
+        if path.startswith("/api/v1/search/") and response.status_code == 200:
+            assert response.json()["deals"] == [], (persona, path, body)
+        for secret in collection.secrets:
+            assert secret not in body, (persona, path, secret, body[:500])

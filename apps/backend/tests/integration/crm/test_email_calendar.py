@@ -8,7 +8,8 @@ from sqlalchemy import select
 
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
 from src.infrastructure.config.settings import settings
-from src.modules.email_logging.models import LoggedEmail, UnmatchedEmail
+from src.modules.email_logging.models import LoggedEmail, LoggingAddress, UnmatchedEmail
+from src.modules.mandate.models import Mandate
 from src.modules.role.permissions import RoleName
 from tests.integration.crm.deal_helpers import build_world, create_mandate
 
@@ -376,3 +377,71 @@ async def test_regenerating_the_feed_url_kills_the_old_one(world):
 
 async def test_a_guessed_feed_token_is_not_found(world):
     assert (await world.anon.get("/api/v1/calendar-feed/ics/not-a-token.ics")).status_code == 404
+
+
+# Review S3 (ROLE-01 c3): Read-only gets no logging address or feed, and a stale address logs nothing.
+async def test_read_only_cannot_log_email_or_hold_a_feed(world):
+    viewer = await world.actor("rita", RoleName.READ_ONLY)
+    for method, path in (
+        ("GET", "/api/v1/email-logging/address"),
+        ("GET", "/api/v1/email-logging/unmatched"),
+        ("DELETE", "/api/v1/email-logging/unmatched/1"),
+        ("POST", "/api/v1/email-logging/unmatched/1/link"),
+        ("GET", "/api/v1/calendar-feed/"),
+        ("POST", "/api/v1/calendar-feed/regenerate"),
+    ):
+        response = await viewer.client.request(method, path, json={"links": []}, headers=viewer.headers)
+        assert response.status_code == 403, (path, response.text)
+
+    world.db.add(LoggingAddress(user_id=viewer.id, token="log-stale", created_at=NOW))
+    await world.db.commit()
+    stale = f"log-stale@{settings.INBOUND_EMAIL_DOMAIN}"
+    response = await inbound(world, sender=viewer.email, to=["jan@acme.be"], bcc=[stale])
+    assert response.status_code == 403, response.text
+    assert await timeline(world.partner, "contact", world.contact_id) == []
+
+
+# Review S15 (DEAL-01 c4): a deal sent back to conflict review or rejected leaves the team's feed entirely.
+async def test_feed_drops_a_deal_hidden_by_conflict_review(world):
+    await world.partner.client.post(
+        f"/api/v1/mandates/{world.mandate['id']}/team",
+        json={"user_id": world.analyst.id, "role": "analyst"},
+        headers=world.partner.headers,
+    )
+    await world.partner.client.post(
+        f"/api/v1/mandates/{world.mandate['id']}/milestones",
+        json={"name": "Site visit", "planned_date": "2026-10-21"},
+        headers=world.partner.headers,
+    )
+    await world.analyst.client.post(
+        "/api/v1/activities/",
+        json={
+            "type": "meeting",
+            "occurred_at": "2026-10-13T09:00:00Z",
+            "note": "Kick-off",
+            "links": [{"record_type": "mandate", "record_id": world.mandate["id"]}],
+        },
+        headers=world.analyst.headers,
+    )
+    url = (await world.analyst.client.get("/api/v1/calendar-feed/", headers=world.analyst.headers)).json()["url"]
+    path = url.removeprefix(settings.APP_URL)
+    assert (await world.anon.get(path)).text.count("Falcon") == 2
+
+    mandate = await world.db.get(Mandate, world.mandate["id"])
+    mandate.conflict_status = "rejected"
+    await world.db.commit()
+
+    hidden = (await world.anon.get(path)).text
+    assert "Falcon" not in hidden
+    assert "BEGIN:VEVENT" not in hidden
+
+
+# The webhook is authenticated by its secret alone: a caller that happens to carry a session cookie
+# (no CSRF header) is still accepted.
+async def test_inbound_webhook_ignores_a_session_cookie(world):
+    address = await address_of(world.partner)
+    payload = {"subject": "Hello", "text": "Body", "to": ["jan@acme.be"], "cc": [], "bcc": [address], "attachments": []}
+    response = await world.partner.client.post(
+        "/api/v1/email-logging/inbound", json={"sender": world.partner.email, **payload}, headers={"X-Inbound-Secret": SECRET}
+    )
+    assert response.status_code == 202, response.text

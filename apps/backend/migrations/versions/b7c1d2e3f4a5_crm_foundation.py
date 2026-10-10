@@ -20,8 +20,8 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     op.add_column("roles", sa.Column("permissions", sa.JSON(), nullable=False, server_default="[]"))
 
-    # The superuser flag is retired: whoever held it becomes an Admin. Startup seeding fills in the
-    # Admin role's permissions and the other five roles.
+    # Users with is_superuser get the Admin role. Startup seeding fills in the Admin role's
+    # permissions and the other five roles.
     op.execute(
         "INSERT INTO roles (name, description, permissions, created_at, updated_at, is_deleted) "
         "SELECT 'Admin', 'IT / ops configuration', "

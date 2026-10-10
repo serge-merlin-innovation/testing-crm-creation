@@ -5,6 +5,7 @@ from fastapi import APIRouter, Response
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep, SystemAuditContextDep
+from ..role.authorization import RequireRecordAccess
 from .dependencies import EmailLoggingServiceDep, InboundSecretDep
 from .schemas import InboundEmail, InboundResult, InteractionRead, LoggingAddressRead, UnmatchedLink, UnmatchedRead
 from .service import interactions
@@ -14,6 +15,7 @@ router = APIRouter(tags=["Email logging"])
 
 @router.get(
     "/address",
+    dependencies=[RequireRecordAccess],
     response_model=LoggingAddressRead,
     summary="My personal CRM logging address",
     description="BCC or forward an email to it to log the email on the matching contacts.",
@@ -44,16 +46,22 @@ async def inbound(
     _: InboundSecretDep,
     context: SystemAuditContextDep,
 ) -> InboundResult:
-    return await service.receive(db, email, context)
+    return await service.receive(db, email, context.clock.now(), context)
 
 
-@router.get("/unmatched", response_model=list[UnmatchedRead], summary="My Unmatched inbox, newest first")
+@router.get(
+    "/unmatched",
+    dependencies=[RequireRecordAccess],
+    response_model=list[UnmatchedRead],
+    summary="My Unmatched inbox, newest first",
+)
 async def list_unmatched(db: AsyncSessionDep, service: EmailLoggingServiceDep, user: CurrentUserDep) -> Any:
     return await service.unmatched(db, user)
 
 
 @router.post(
     "/unmatched/{unmatched_id}/link",
+    dependencies=[RequireRecordAccess],
     status_code=201,
     summary="Log an unmatched email on the records I pick",
     description="Linking a deal needs edit access to it. Returns the new activity id.",
@@ -64,14 +72,21 @@ async def link_unmatched(
     db: AsyncSessionDep,
     service: EmailLoggingServiceDep,
     user: CurrentUserDep,
+    clock: ClockDep,
     context: AuditContextDep,
 ) -> dict[str, Any]:
-    return await service.link(db, user, unmatched_id, values, context)
+    return await service.link(db, user, unmatched_id, values, clock.now(), context)
 
 
-@router.delete("/unmatched/{unmatched_id}", status_code=204, summary="Discard an unmatched email")
+@router.delete(
+    "/unmatched/{unmatched_id}", dependencies=[RequireRecordAccess], status_code=204, summary="Discard an unmatched email"
+)
 async def discard_unmatched(
-    unmatched_id: int, db: AsyncSessionDep, service: EmailLoggingServiceDep, user: CurrentUserDep, context: AuditContextDep
+    unmatched_id: int,
+    db: AsyncSessionDep,
+    service: EmailLoggingServiceDep,
+    user: CurrentUserDep,
+    context: AuditContextDep,
 ) -> Response:
     await service.discard(db, user, unmatched_id, context)
     return Response(status_code=204)

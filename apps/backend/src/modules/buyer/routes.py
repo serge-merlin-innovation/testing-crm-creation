@@ -5,7 +5,7 @@ from fastapi import APIRouter, Response
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
-from ..mandate.policy import EditGrant, ReadGrant
+from ..mandate.policy import EditGrant, ExportGrant, ReadGrant
 from .dependencies import BuyerServiceDep, InvestorProfileServiceDep
 from .schemas import (
     BuyerGrid,
@@ -83,8 +83,9 @@ async def link_portfolio(
 
 @companies_router.get("/{company_id}/exclusions", response_model=list[ExclusionRead], summary="The client's exclusion list")
 async def get_exclusions(
-    company_id: int, db: AsyncSessionDep, service: InvestorProfileServiceDep, _: CurrentUserDep
+    company_id: int, db: AsyncSessionDep, service: InvestorProfileServiceDep, user: CurrentUserDep, clock: ClockDep
 ) -> list[dict[str, Any]]:
+    await service.client_grants(db, user, company_id, clock.now())
     return await service.exclusions(db, company_id)
 
 
@@ -99,9 +100,10 @@ async def add_exclusion(
     values: CompanyRef,
     db: AsyncSessionDep,
     service: InvestorProfileServiceDep,
-    _: CurrentUserDep,
+    user: CurrentUserDep,
     context: AuditContextDep,
 ) -> dict[str, Any]:
+    await service.require_exclusion_manager(db, user, company_id, context.clock.now())
     return await service.add_exclusion(db, company_id, values.company_id, context)
 
 
@@ -111,9 +113,10 @@ async def remove_exclusion(
     excluded_id: int,
     db: AsyncSessionDep,
     service: InvestorProfileServiceDep,
-    _: CurrentUserDep,
+    user: CurrentUserDep,
     context: AuditContextDep,
 ) -> Response:
+    await service.require_exclusion_manager(db, user, company_id, context.clock.now())
     await service.remove_exclusion(db, company_id, excluded_id, context)
     return Response(status_code=204)
 
@@ -166,7 +169,9 @@ async def add_buyers(
     description="Buyer, type, rationale and contact. Internal notes are never exported.",
     responses={**HIDDEN, 200: {"content": {XLSX: {}}}},
 )
-async def export_buyers(grant: ReadGrant, db: AsyncSessionDep, service: BuyerServiceDep, context: AuditContextDep) -> Response:
+async def export_buyers(
+    grant: ExportGrant, db: AsyncSessionDep, service: BuyerServiceDep, context: AuditContextDep
+) -> Response:
     content = await service.export(db, grant, context)
     return Response(
         content,

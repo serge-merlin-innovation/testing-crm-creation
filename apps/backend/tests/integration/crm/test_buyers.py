@@ -219,9 +219,9 @@ async def test_buy01_c3_conflict_or_exclusion_list_shows_a_warning(world):
     excluded = await company(world, "Rival Industries", "strategic_buyer")
     conflicted = await company(world, "Other Side Capital")
     await create_mandate(world, world.partner, conflicted, code_name="Heron")
+    mandate_id = await deal(world)
     response = await send(world.partner, "POST", f"/api/v1/companies/{world.client_id}/exclusions", {"company_id": excluded})
     assert response.status_code == 201, response.text
-    mandate_id = await deal(world)
 
     warned = await add(world, mandate_id, [excluded, conflicted])
     confirmed = await add(world, mandate_id, [excluded, conflicted], confirm=True)

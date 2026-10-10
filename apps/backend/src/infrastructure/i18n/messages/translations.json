@@ -643,6 +643,10 @@
   "fr": "Seul l'associé ou le directeur du dossier enregistre l'approbation du client",
   "nl": "Enkel de partner of director van de deal registreert de goedkeuring van de klant"
  },
+ "Only the deal partner, director or a buyers.manage member edits the exclusion list": {
+  "fr": "Seuls le partner du dossier, le directeur ou un membre avec buyers.manage modifient la liste d'exclusion",
+  "nl": "Alleen de partner van de deal, de director of een lid met buyers.manage wijzigt de uitsluitingslijst"
+ },
  "Only the deal team exports a deal": {
   "fr": "Seule l'équipe du dossier peut l'exporter",
   "nl": "Enkel het dealteam exporteert een deal"
@@ -703,6 +707,10 @@
   "fr": "Fiche liée à un dossier inaccessible",
   "nl": "Record op een deal zonder toegang"
  },
+ "Record on an opportunity the caller cannot access": {
+  "fr": "Enregistrement lié à une opportunité à laquelle vous n'avez pas accès",
+  "nl": "Record gekoppeld aan een opportuniteit waartoe u geen toegang hebt"
+ },
  "Reset your CRM password": {
   "fr": "Réinitialisez votre mot de passe CRM",
   "nl": "Stel uw CRM-wachtwoord opnieuw in"
@@ -754,6 +762,10 @@
  "Sender not authenticated by SPF and DKIM": {
   "fr": "Expéditeur non authentifié par SPF et DKIM",
   "nl": "Afzender niet geauthenticeerd door SPF en DKIM"
+ },
+ "Sender's role does not log records": {
+  "fr": "Le rôle de l'expéditeur n'enregistre pas de fiches",
+  "nl": "De rol van de afzender legt geen records vast"
  },
  "Set both dates or neither": {
   "fr": "Indiquez les deux dates ou aucune",

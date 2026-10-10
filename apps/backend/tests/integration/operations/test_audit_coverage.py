@@ -136,7 +136,7 @@ async def test_saved_filters_and_preferences_are_audited(world):
     filter_id = created.json()["id"]
     await analyst.client.put(f"/api/v1/saved-filters/{filter_id}/shared", json={"shared": True}, headers=analyst.headers)
     await analyst.client.delete(f"/api/v1/saved-filters/{filter_id}", headers=analyst.headers)
-    assert await actions(world.db, "saved_filter") == ["saved_filter.created", "saved_filter.updated", "saved_filter.deleted"]
+    assert await actions(world.db, "saved_filter") == ["saved_filter.created", "saved_filter.shared", "saved_filter.deleted"]
 
     response = await analyst.client.put(
         "/api/v1/notifications/preferences", json={"preferences": {"task.assigned": "email"}}, headers=analyst.headers
@@ -151,7 +151,15 @@ async def test_the_inbound_mail_webhook_needs_no_session_and_is_audited_as_the_s
     response = await client.post(
         "/api/v1/email-logging/inbound",
         headers={"X-Inbound-Secret": "hook-secret"},
-        json={"sender": world.partner.email, "to": ["nobody@example.org"], "bcc": [address], "subject": "Hi", "text": "Hello"},
+        json={
+            "sender": world.partner.email,
+            "to": ["nobody@example.org"],
+            "bcc": [address],
+            "subject": "Hi",
+            "text": "Hello",
+            "spf": "pass",
+            "dkim": "pass",
+        },
     )
     assert response.status_code == 202, response.text
     rows = await world.db.execute(select(AuditEntry.user_id).where(AuditEntry.action == "email.unmatched"))

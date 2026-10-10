@@ -13,6 +13,8 @@ from src.interfaces.main import app
 from src.modules.audit.models import AuditEntry
 from src.modules.role.models import Role
 from src.modules.role.permissions import DEFAULT_ROLES, Permission, RoleName
+from tests.integration.crm.deal_helpers import build_world, create_mandate
+from tests.integration.foundation import helpers as shared_helpers
 
 from .helpers import login, make_user, role_id, step_up
 
@@ -47,7 +49,6 @@ async def test_seeding_twice_keeps_admin_edits(fresh_db: AsyncSession, startup_a
     assert partner.permissions == ["dashboard.firm"]
 
 
-# Login is by email; there is no username field anywhere.
 async def test_login_is_by_email(client: AsyncClient, seeded_db: AsyncSession):
     await make_user(seeded_db, "ana@firm.be", RoleName.ANALYST)
 
@@ -316,6 +317,39 @@ async def test_audit_entry_records_the_forwarded_client_ip(client: AsyncClient, 
     entries = (await client.get("/api/v1/audit/", params={"action": "login"})).json()["data"]
 
     assert entries[0]["ip_address"] == "127.0.0.1"
+
+
+# AUD-01 criterion 1 (review S6): viewing a deal is logged with user, IP and record, break-glass reads too.
+async def test_viewing_a_deal_is_audited(client: AsyncClient, seeded_db: AsyncSession):
+    world = await build_world(seeded_db)
+    partner = await world.actor("paula", RoleName.PARTNER)
+    admin = await world.actor("adam", RoleName.ADMIN)
+    client_id = await world.company("Acme Holding")
+    mandate = await create_mandate(world, partner, client_id)
+    url = f"/api/v1/mandates/{mandate['id']}"
+    assert (await partner.client.get(url, headers=partner.headers)).status_code == 200
+    assert (await partner.client.get(f"{url}/summary", headers=partner.headers)).status_code == 200
+    glass = await admin.client.post(
+        "/api/v1/break-glass/",
+        json={"code_name": "Falcon", "reason": "Fix corrupted EV"},
+        headers=shared_helpers.step_up(admin.email, admin.headers),
+    )
+    assert glass.status_code == 201, glass.text
+    assert (await admin.client.get(url, headers=admin.headers)).status_code == 200
+    await world.close()
+
+    views = (
+        (await seeded_db.execute(select(AuditEntry).where(AuditEntry.action == "mandate.viewed").order_by(AuditEntry.id)))
+        .scalars()
+        .all()
+    )
+    assert [(view.user_id, view.record_type, view.record_id) for view in views] == [
+        (partner.id, "mandate", str(mandate["id"])),
+        (partner.id, "mandate", str(mandate["id"])),
+        (admin.id, "mandate", str(mandate["id"])),
+    ]
+    assert all(view.ip_address for view in views)
+    assert views[2].new_values == {"break_glass": True}
 
 
 # AUD-01 criterion 2: append-only, retained 10 years.

@@ -11,6 +11,7 @@ from ..audit.models import AuditEntry
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import ContactNotFoundError, PermissionDeniedError, ResourceNotFoundError
 from ..contact.models import Contact, Employment
+from ..mandate.models import Mandate
 from ..notification.schemas import EventKind
 from ..notification.service import Message, NotificationService
 from ..role.authorization import has_permission
@@ -33,6 +34,19 @@ def _jsonable(value: Any) -> Any:
 
 def _row(model: Any) -> dict[str, Any]:
     return {column.key: _jsonable(getattr(model, column.key)) for column in model.__table__.columns}
+
+
+def _link_row(link: ActivityLink, code_names: dict[int, str]) -> dict[str, Any]:
+    if link.record_type == "mandate":
+        return {"record_type": "mandate", "code_name": code_names.get(link.record_id)}
+    return _row(link)
+
+
+def _note_row(note: Note, code_names: dict[int, str]) -> dict[str, Any]:
+    row = _row(note)
+    mandate_id = row.pop("mandate_id", None)
+    row["mandate"] = None if mandate_id is None else code_names.get(mandate_id)
+    return row
 
 
 def _redact(text: str, identifiers: list[str]) -> str:
@@ -66,7 +80,9 @@ class PrivacyService:
         return list((await db.execute(query)).scalars())
 
     async def export_person(self, db: AsyncSession, contact_id: int, context: AuditContext) -> tuple[str, str]:
-        """Everything the CRM holds about one person, as a JSON file (GDPR access request)."""
+        """Everything the CRM holds about one person, as a JSON file (GDPR access request).
+
+        Decision 70: other users' private notes stay out, and a deal appears by code name only."""
         contact = await self._contact(db, contact_id)
         employments = (
             (await db.execute(select(Employment).where(Employment.contact_id == contact_id).order_by(Employment.id)))
@@ -79,7 +95,16 @@ class PrivacyService:
             .scalars()
             .all()
         )
-        notes = await self._notes(db, contact_id)
+        notes = [
+            note
+            for note in await self._notes(db, contact_id)
+            if note.visibility != "private" or note.author_id == context.user_id
+        ]
+        mandate_ids = {link.record_id for link in links if link.record_type == "mandate"}
+        mandate_ids |= {note.mandate_id for note in notes if note.mandate_id is not None}
+        code_names: dict[int, str] = dict(
+            (await db.execute(select(Mandate.id, Mandate.code_name).where(Mandate.id.in_(mandate_ids)))).tuples().all()
+        )
         holds = (await db.execute(select(LegalHold).where(LegalHold.contact_id == contact_id))).scalars().all()
         changes = (
             (
@@ -97,9 +122,10 @@ class PrivacyService:
             "contact": _row(contact),
             "employments": [_row(e) for e in employments],
             "activities": [
-                {**_row(a), "links": [_row(link) for link in links if link.activity_id == a.id]} for a in activities
+                {**_row(a), "links": [_link_row(link, code_names) for link in links if link.activity_id == a.id]}
+                for a in activities
             ],
-            "notes": [_row(n) for n in notes],
+            "notes": [_note_row(n, code_names) for n in notes],
             "legal_holds": [_row(h) for h in holds],
             "history": [
                 {"action": e.action, "at": _jsonable(e.created_at), "old": e.old_values, "new": e.new_values} for e in changes

@@ -13,8 +13,11 @@ from ..activity.schemas import ActivityType, RecordType
 from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import ResourceNotFoundError
 from ..mandate.models import DealTeamMember, Mandate, Milestone
+from ..mandate.policy import DealPolicy, in_conflict_hiding
 from ..task.models import Task
+from ..user.crud import crud_users
 from ..user.models import User
+from ..user.schemas import UserRead
 from .models import CalendarFeed
 
 FEED_PATH = "/api/v1/calendar-feed/ics/"
@@ -77,15 +80,11 @@ class CalendarFeedService:
             await db.commit()
         return feed
 
-    async def regenerate(
-        self, db: AsyncSession, user: dict[str, Any], now: datetime, context: AuditContext | None = None
-    ) -> CalendarFeed:
+    async def regenerate(self, db: AsyncSession, user: dict[str, Any], now: datetime, context: AuditContext) -> CalendarFeed:
         feed = await self.get_or_create(db, user, now)
         feed.token = secrets.token_urlsafe(32)
         feed.created_at = now
-        if context is not None:
-            # The token is the credential: the log records that it changed, never its value.
-            AuditService().record(db, context, "calendar_feed.regenerated", record_type="calendar_feed", record_id=feed.id)
+        AuditService().record(db, context, "calendar_feed.regenerated", record_type="calendar_feed", record_id=feed.id)
         await db.commit()
         return feed
 
@@ -98,13 +97,20 @@ class CalendarFeedService:
             raise CalendarFeedNotFoundError("Unknown calendar feed")
         lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CRM//Calendar feed//EN", "CALSCALE:GREGORIAN"]
         lines += ["X-WR-CALNAME:CRM", "METHOD:PUBLISH"]
-        for item in await self._events(db, feed.user_id, now):
+        reader = await crud_users.get(db=db, id=owner.id, schema_to_select=UserRead)
+        assert reader is not None
+        for item in await self._events(db, reader, now):
             lines += item
         lines.append("END:VCALENDAR")
         return "".join(part + "\r\n" for line in lines for part in fold(line))
 
-    async def _events(self, db: AsyncSession, user_id: int, now: datetime) -> list[list[str]]:
+    async def _events(self, db: AsyncSession, reader: dict[str, Any], now: datetime) -> list[list[str]]:
+        user_id = reader["id"]
         since = now - HISTORY
+        policy = DealPolicy(now)
+        visible = policy.visible(reader, select(Mandate.id))
+        # DEAL-01 c4: a deal in conflict hiding leaves the feed entirely, even a code name on my own meeting.
+        hidden = set((await db.execute(select(Mandate.id).where(in_conflict_hiding(), Mandate.id.not_in(visible)))).scalars())
         meetings = list(
             (
                 await db.execute(
@@ -120,6 +126,7 @@ class CalendarFeedService:
             ).scalars()
         )
         meeting_deals: dict[int, int] = {}
+        on_hidden: set[int] = set()
         if meetings:
             rows = await db.execute(
                 select(ActivityLink.activity_id, ActivityLink.record_id).where(
@@ -129,6 +136,9 @@ class CalendarFeedService:
             )
             for activity_id, mandate_id in rows.tuples():
                 meeting_deals.setdefault(activity_id, mandate_id)
+                if mandate_id in hidden:
+                    on_hidden.add(activity_id)
+            meetings = [m for m in meetings if m.id not in on_hidden]
         tasks = list(
             (
                 await db.execute(
@@ -138,6 +148,7 @@ class CalendarFeedService:
                 )
             ).scalars()
         )
+        tasks = [t for t in tasks if t.mandate_id not in hidden]
         active = (DealTeamMember.expires_at.is_(None)) | (DealTeamMember.expires_at > now)
         staffed = select(DealTeamMember.mandate_id).where(DealTeamMember.user_id == user_id, active)
         milestones = list(
@@ -147,6 +158,7 @@ class CalendarFeedService:
                     .join(Mandate, Mandate.id == Milestone.mandate_id)
                     .where(
                         Milestone.mandate_id.in_(staffed),
+                        Milestone.mandate_id.in_(visible),
                         Mandate.closed_at.is_(None),
                         Milestone.planned_date >= since.date(),
                     )

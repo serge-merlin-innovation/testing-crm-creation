@@ -3,11 +3,13 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Query
 from fastcrud import PaginatedListResponse, compute_offset, paginated_response
 
+from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
 from .dependencies import AuditServiceDep
 from .schemas import AuditEntryRead
+from .scope import readable_rows
 
 router = APIRouter(tags=["Audit log"])
 
@@ -22,7 +24,8 @@ router = APIRouter(tags=["Audit log"])
 async def search_audit_log(
     db: AsyncSessionDep,
     audit_service: AuditServiceDep,
-    _: Annotated[dict, require_permission(Permission.AUDIT_READ)],
+    reader: Annotated[dict, require_permission(Permission.AUDIT_READ)],
+    clock: ClockDep,
     user_id: int | None = None,
     record_type: str | None = None,
     record_id: str | None = None,
@@ -36,6 +39,7 @@ async def search_audit_log(
         record_type=record_type,
         record_id=record_id,
         action=action,
+        scope=await readable_rows(db, reader, clock.now()),
         offset=compute_offset(page, items_per_page),
         limit=items_per_page,
     )

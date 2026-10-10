@@ -451,3 +451,43 @@ async def test_large_import_runs_in_background_and_notifies(world, monkeypatch):
 
 async def test_threshold_is_fifty_thousand_rows():
     assert import_service.BACKGROUND_THRESHOLD == 50_000
+
+
+async def hidden_deal_with_parties(world):
+    """A deal the outsider cannot see, with a buyer company, a buyer contact and a counterparty on it."""
+    client_id = await world.company("Acme Holding")
+    mandate = await create_mandate(world, world.partner, client_id)
+    buyer_id = await world.company("Bidco Capital", "financial_investor")
+    counterparty_id = await world.company("Rival Industries")
+    buyer_contact = await contact(world, world.partner, "Bea", "Bidder")
+    url = f"/api/v1/mandates/{mandate['id']}"
+    added = await world.partner.client.post(
+        f"{url}/buyers",
+        json={"items": [{"company_id": buyer_id, "owner_id": world.partner.id, "rationale": "Fit"}]},
+        headers=world.partner.headers,
+    )
+    assert added.status_code == 200, added.text
+    patched = await world.partner.client.patch(
+        f"{url}/buyers/{added.json()['added'][0]}", json={"contact_id": buyer_contact}, headers=world.partner.headers
+    )
+    assert patched.status_code == 200, patched.text
+    counterparty = await world.partner.client.post(
+        f"{url}/counterparties", json={"company_id": counterparty_id}, headers=world.partner.headers
+    )
+    assert counterparty.status_code == 201, counterparty.text
+    return {"buyer": buyer_id, "contact": buyer_contact, "counterparty": counterparty_id}
+
+
+# CON-04 c3 (review B2): a buyer or counterparty on a hidden deal blocks the merge, and nothing moves.
+@pytest.mark.parametrize("party", ["buyer", "contact", "counterparty"])
+async def test_merge_blocked_for_a_party_on_a_hidden_deal(world, party):
+    parties = await hidden_deal_with_parties(world)
+    if party == "contact":
+        other = await contact(world, world.outsider, "Bea", "Bidder")
+        record_type = "contact"
+    else:
+        other = await duplicate_company(world, "Unrelated Duplicate")
+        record_type = "company"
+    blocked = await merge(world.outsider, record_type=record_type, survivor_id=other, duplicate_id=parties[party])
+    assert blocked.status_code == 403, blocked.text
+    assert "deal_buyers" not in blocked.text

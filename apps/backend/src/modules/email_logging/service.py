@@ -17,6 +17,7 @@ from ..common.exceptions import ContactNotFoundError, DomainError, PermissionDen
 from ..contact.models import Contact
 from ..mandate.models import Mandate
 from ..mandate.policy import DealAction, DealPolicy
+from ..role.authorization import has_record_access
 from ..user.crud import crud_users
 from ..user.models import User
 from ..user.schemas import UserRead
@@ -54,8 +55,8 @@ def note_for(subject: str, body: str, attachment_names: list[str]) -> str:
 
 class EmailLoggingService:
     def __init__(self, activities: ActivityService | None = None, audit: AuditService | None = None) -> None:
-        self.audit = audit or AuditService()
         self.activities = activities or ActivityService()
+        self.audit = audit or AuditService()
 
     @staticmethod
     def address(token: str) -> str:
@@ -83,6 +84,8 @@ class EmailLoggingService:
             user = await crud_users.get(db=db, id=raw, schema_to_select=UserRead) if raw is not None else None
         if user is None:
             raise UnknownSenderError("Sender is not a CRM user")
+        if not has_record_access(user):
+            raise UnknownSenderError("Sender's role does not log records")
         recipients = addresses(email.to + email.cc + email.bcc)
         domain = "@" + settings.INBOUND_EMAIL_DOMAIN.lower()
         tokens = [address.removesuffix(domain) for address in recipients if address.endswith(domain)]
@@ -113,8 +116,7 @@ class EmailLoggingService:
             return mandate_id
         return None
 
-    async def receive(self, db: AsyncSession, email: InboundEmail, context: AuditContext) -> InboundResult:
-        now = context.clock.now()
+    async def receive(self, db: AsyncSession, email: InboundEmail, now: datetime, context: AuditContext) -> InboundResult:
         user = await self._sender(db, email)
         # The webhook carries no session: the change is the sender's, so the log names them.
         context = replace(context, user_id=user["id"])
@@ -233,9 +235,14 @@ class EmailLoggingService:
         return item
 
     async def link(
-        self, db: AsyncSession, user: dict[str, Any], unmatched_id: int, values: UnmatchedLink, context: AuditContext
+        self,
+        db: AsyncSession,
+        user: dict[str, Any],
+        unmatched_id: int,
+        values: UnmatchedLink,
+        now: datetime,
+        context: AuditContext,
     ) -> dict[str, Any]:
-        now = context.clock.now()
         item = await self._own(db, user, unmatched_id)
         links = list(values.links)
         if item.mandate_id is not None:
@@ -254,20 +261,21 @@ class EmailLoggingService:
                 received_at=item.received_at,
             )
         )
+        self.audit.record(
+            db,
+            context,
+            "unmatched_email.linked",
+            record_type="unmatched_email",
+            record_id=item.id,
+            new_values={"activity_id": activity_id},
+        )
         await db.delete(item)
         await db.commit()
         return {"id": activity_id}
 
     async def discard(self, db: AsyncSession, user: dict[str, Any], unmatched_id: int, context: AuditContext) -> None:
         item = await self._own(db, user, unmatched_id)
-        self.audit.record(
-            db,
-            context,
-            "email.discarded",
-            record_type="unmatched_email",
-            record_id=item.id,
-            old_values={"subject": item.subject},
-        )
+        self.audit.record(db, context, "unmatched_email.discarded", record_type="unmatched_email", record_id=item.id)
         await db.delete(item)
         await db.commit()
 
