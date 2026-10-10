@@ -35,7 +35,6 @@ test.describe("an analyst", () => {
     await expect(page.getByRole("cell", { name: `Ines Maes${RUN}` })).toBeVisible();
   });
 
-  // Decision 49 follow-up: language and marketing opt-out are set from the forms, not only the API.
   test("records a contact's language and opt-out and a company's language", async ({ page }) => {
     await page.goto("/contacts");
     await page.getByLabel("First name").fill("Odile");
