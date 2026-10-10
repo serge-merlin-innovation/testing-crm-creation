@@ -168,3 +168,9 @@ class TestReleaseGates:
         seed = text(INFRA.parent / "apps" / "backend" / "scripts" / "load_dataset.py")
         assert "contacts: int = 200_000" in seed
         assert "users: int = 50" in seed
+
+
+def test_the_recovery_runbook_states_rpo_rto_and_how_drills_are_logged():
+    runbook = text(INFRA.parent / "docs" / "operations" / "availability-and-recovery.md")
+    for needle in ("24 h", "8 h", "99.5%", "/api/v1/operations/recovery-drills", "48 h", "30 days", "35 days"):
+        assert needle in runbook, needle
