@@ -25,7 +25,7 @@ def _row(user: User, role_name: str | None, last_login: datetime | None, now: da
         "title": user.title,
         "role_id": user.role_id,
         "role_name": role_name,
-        "status": user.status,
+        "status": "inactive" if user.is_deleted else user.status,
         "invited_at": user.invited_at,
         "last_login_at": last_login,
         "dormant": user.status == "active" and last_login is not None and now - last_login > DORMANT_AFTER,
@@ -41,11 +41,14 @@ async def list_users(
         select(User, Role.name, UserSecurity.last_login_at)
         .outerjoin(Role, Role.id == User.role_id)
         .outerjoin(UserSecurity, UserSecurity.user_id == User.id)
-        .where(User.is_deleted.is_(False))
     )
+    if status == "inactive":
+        query = query.where(User.is_deleted.is_(True), User.role_id.is_not(None))
+    else:
+        query = query.where(User.is_deleted.is_(False))
     if role_id is not None:
         query = query.where(User.role_id == role_id)
-    if status is not None:
+    if status in ("invited", "active"):
         query = query.where(User.status == status)
     total = (await db.execute(select(func.count()).select_from(query.subquery()))).scalar_one()
     query = query.order_by(User.id).offset(offset)

@@ -18,11 +18,14 @@ from .exceptions import (
     DealNotFoundError,
     DomainError,
     GroupLoopError,
+    ImportNotFoundError,
     InsufficientCreditsError,
     InvoiceNotFoundError,
     LastAdminError,
     LastLeadPartnerError,
     MandateExistsError,
+    MergeBlockedError,
+    MergeNotFoundError,
     MilestoneNotFoundError,
     OneRolePerUserError,
     OpportunityNotFoundError,
@@ -39,6 +42,7 @@ from .exceptions import (
     TaskNotFoundError,
     TeamMemberExistsError,
     TeamMemberNotFoundError,
+    UndoWindowClosedError,
     UserExistsError,
     UserNotFoundError,
     ValidationError,
@@ -86,6 +90,14 @@ EXCEPTION_MAPPING: dict[type[DomainError], Callable[[str], HTTPException]] = {
     DealLinkNotFoundError: lambda message: NotFoundException(detail="Link not found."),
     ActivityNotFoundError: lambda message: NotFoundException(detail="Activity not found."),
     TaskNotFoundError: lambda message: NotFoundException(detail="Task not found."),
+    MergeBlockedError: lambda message: ForbiddenException(
+        detail="One of these records is on a deal you cannot access. Ask Compliance to merge them."
+    ),
+    MergeNotFoundError: lambda message: NotFoundException(detail="Merge not found."),
+    UndoWindowClosedError: lambda message: HTTPException(
+        status_code=409, detail="This merge was done more than 30 days ago, or was already undone."
+    ),
+    ImportNotFoundError: lambda message: NotFoundException(detail="Import not found."),
     OpportunityNotFoundError: lambda message: NotFoundException(detail="Opportunity not found."),
     InvoiceNotFoundError: lambda message: NotFoundException(detail="Invoice not found."),
     RestoreWindowClosedError: lambda message: HTTPException(

@@ -12,8 +12,10 @@ from ..mandate.models import Mandate
 from ..mandate.policy import DealAction, DealPolicy
 from ..role.authorization import has_permission
 from ..role.permissions import Permission
+from ..user.models import User
+from ..user.service import display_name
 from .models import Activity, ActivityLink, Note
-from .schemas import ActivityCreate, ActivityUpdate, NoteCreate, NoteVisibility, RecordRef, RecordType
+from .schemas import ActivityCreate, ActivityUpdate, NoteCreate, NoteRead, NoteVisibility, RecordRef, RecordType
 
 # An edit within this window of logging is a correction, not shown as an edit.
 EDIT_GRACE = timedelta(days=7)
@@ -202,8 +204,18 @@ async def timeline(db: AsyncSession, user: dict[str, Any], ref: RecordRef, now: 
             .order_by(Mandate.code_name)
         )
         deals = [{"id": mid, "code_name": name} for mid, name in (await db.execute(query)).tuples()]
-    return {
-        "activities": await ActivityService().for_record(db, ref, visible),
-        "notes": await NoteService().for_record(db, user, ref, visible),
-        "deals": deals,
+    activities = await ActivityService().for_record(db, ref, visible)
+    notes = [
+        {**NoteRead.model_validate(note, from_attributes=True).model_dump()}
+        for note in await NoteService().for_record(db, user, ref, visible)
+    ]
+    author_ids = {item["author_id"] for item in (*activities, *notes)}
+    authors = {
+        uid: display_name(name, gone)
+        for uid, name, gone in (
+            await db.execute(select(User.id, User.name, User.is_deleted).where(User.id.in_(author_ids)))
+        ).tuples()
     }
+    for item in (*activities, *notes):
+        item["author_name"] = authors.get(item["author_id"])
+    return {"activities": activities, "notes": notes, "deals": deals}

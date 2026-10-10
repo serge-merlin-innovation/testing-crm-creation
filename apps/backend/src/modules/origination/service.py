@@ -36,6 +36,7 @@ from ..role.authorization import has_permission
 from ..role.permissions import Permission, RoleName
 from ..task.models import Task
 from ..user.models import User
+from ..user.service import display_name
 from .models import Opportunity, OpportunityCredential, OpportunityLink, OpportunityMember, OriginationSettings
 from .schemas import (
     CLOSED_STAGES,
@@ -59,7 +60,7 @@ TEAM_ROLE_OF = {
 
 def _user_name(user: User) -> str:
     full = " ".join(part for part in (user.first_name, user.last_name) if part) or user.name
-    return f"{full} (inactive)" if user.is_deleted else full
+    return display_name(full, user.is_deleted) or full
 
 
 def can_see_opportunities(user: dict[str, Any]) -> bool:

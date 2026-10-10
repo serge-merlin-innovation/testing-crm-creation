@@ -1,7 +1,7 @@
 """fees invoices
 
 Revision ID: b3f5916e42d1
-Revises: 4969f590271f
+Revises: f140753b1423
 Create Date: 2026-10-10 09:32:54.332038
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "b3f5916e42d1"
-down_revision: str | Sequence[str] | None = "4969f590271f"
+down_revision: str | Sequence[str] | None = "f140753b1423"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

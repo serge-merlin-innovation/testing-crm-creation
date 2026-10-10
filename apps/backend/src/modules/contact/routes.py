@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
 from ..audit.dependencies import AuditContextDep
 from .dependencies import ContactServiceDep
-from .schemas import ContactCreate, ContactRead, ContactUpdate
+from .schemas import ContactCreate, ContactRead, ContactUpdate, HolderSet
 
 router = APIRouter(tags=["Contacts"])
 
@@ -51,3 +51,29 @@ async def update_contact(
     _: CurrentUserDep,
 ) -> dict[str, Any]:
     return await service.update(db, contact_id, values, context)
+
+
+@router.put(
+    "/{contact_id}/relationship-holders/me",
+    response_model=ContactRead,
+    summary="Add or update myself as a relationship holder",
+    description="Strength 1 acquainted, 2 good, 3 close. Shown on the contact and in search results.",
+)
+async def set_my_relationship(
+    contact_id: int,
+    values: HolderSet,
+    db: AsyncSessionDep,
+    service: ContactServiceDep,
+    context: AuditContextDep,
+    user: CurrentUserDep,
+) -> dict[str, Any]:
+    return await service.set_holder(db, contact_id, user["id"], values.strength, context)
+
+
+@router.delete(
+    "/{contact_id}/relationship-holders/me", response_model=ContactRead, summary="Remove myself as a relationship holder"
+)
+async def remove_my_relationship(
+    contact_id: int, db: AsyncSessionDep, service: ContactServiceDep, context: AuditContextDep, user: CurrentUserDep
+) -> dict[str, Any]:
+    return await service.remove_holder(db, contact_id, user["id"], context)

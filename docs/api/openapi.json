@@ -53,6 +53,17 @@
             "title": "Author Id",
             "type": "integer"
           },
+          "author_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Name"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -414,6 +425,149 @@
         "title": "ApiTokenRead",
         "type": "object"
       },
+      "ApprovalDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "approve": {
+            "title": "Approve",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "approve"
+        ],
+        "title": "ApprovalDecision",
+        "type": "object"
+      },
+      "ApprovalRead": {
+        "properties": {
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/ContactFilter"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "requested_by": {
+            "title": "Requested By",
+            "type": "integer"
+          },
+          "requested_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By Name"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ApprovalStatus"
+          },
+          "used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used At"
+          }
+        },
+        "required": [
+          "id",
+          "requested_by",
+          "requested_by_name",
+          "kind",
+          "filter",
+          "row_count",
+          "reason",
+          "requested_at",
+          "status",
+          "decided_by",
+          "decided_at",
+          "used_at"
+        ],
+        "title": "ApprovalRead",
+        "type": "object"
+      },
+      "ApprovalRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "filter": {
+            "$ref": "#/components/schemas/ContactFilter",
+            "default": {}
+          },
+          "reason": {
+            "examples": [
+              "Mailing for the Benelux PE event"
+            ],
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "ApprovalRequest",
+        "type": "object"
+      },
+      "ApprovalStatus": {
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ],
+        "title": "ApprovalStatus",
+        "type": "string"
+      },
       "AuditEntryRead": {
         "properties": {
           "action": {
@@ -586,6 +740,44 @@
           "client_secret"
         ],
         "title": "Body_oauth_token_api_v1_oauth_token_post",
+        "type": "object"
+      },
+      "Body_upload_import_api_v1_imports__post": {
+        "properties": {
+          "entity": {
+            "$ref": "#/components/schemas/ImportEntity"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "description": "An .xlsx workbook; the first sheet's first row is the header",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entity",
+          "file"
+        ],
+        "title": "Body_upload_import_api_v1_imports__post",
+        "type": "object"
+      },
+      "CalendarFeedRead": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "created_at"
+        ],
+        "title": "CalendarFeedRead",
         "type": "object"
       },
       "ChangePassword": {
@@ -880,6 +1072,33 @@
           "group"
         ],
         "title": "CompanyDetail",
+        "type": "object"
+      },
+      "CompanyHit": {
+        "properties": {
+          "country_id": {
+            "title": "Country Id",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/CompanyType"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "country_id"
+        ],
+        "title": "CompanyHit",
         "type": "object"
       },
       "CompanyRead": {
@@ -1399,6 +1618,80 @@
         "title": "ContactCreate",
         "type": "object"
       },
+      "ContactFilter": {
+        "additionalProperties": false,
+        "properties": {
+          "q": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          }
+        },
+        "title": "ContactFilter",
+        "type": "object"
+      },
+      "ContactHit": {
+        "properties": {
+          "company_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "relationship_holders": {
+            "items": {
+              "$ref": "#/components/schemas/HolderRead"
+            },
+            "title": "Relationship Holders",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "company_id",
+          "relationship_holders"
+        ],
+        "title": "ContactHit",
+        "type": "object"
+      },
       "ContactLanguage": {
         "enum": [
           "en",
@@ -1477,6 +1770,13 @@
               }
             ],
             "title": "Phone"
+          },
+          "relationship_holders": {
+            "items": {
+              "$ref": "#/components/schemas/HolderRead"
+            },
+            "title": "Relationship Holders",
+            "type": "array"
           },
           "salutation": {
             "anyOf": [
@@ -1771,6 +2071,47 @@
         "title": "CriterionKind",
         "type": "string"
       },
+      "DeactivateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "new_owner_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Owner Id"
+          }
+        },
+        "title": "DeactivateRequest",
+        "type": "object"
+      },
+      "DealHit": {
+        "properties": {
+          "code_name": {
+            "title": "Code Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code_name",
+          "stage"
+        ],
+        "title": "DealHit",
+        "type": "object"
+      },
       "DealLinkCreate": {
         "properties": {
           "label": {
@@ -1932,18 +2273,67 @@
         "title": "EnterpriseNumberLookup",
         "type": "object"
       },
+      "ErasureResult": {
+        "properties": {
+          "activities_cleaned": {
+            "title": "Activities Cleaned",
+            "type": "integer"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "integer"
+          },
+          "notes_cleaned": {
+            "title": "Notes Cleaned",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "contact_id",
+          "activities_cleaned",
+          "notes_cleaned"
+        ],
+        "title": "ErasureResult",
+        "type": "object"
+      },
       "EventKind": {
         "description": "Every event a user can tune. A new notifying feature adds its kind here.",
         "enum": [
           "deal_team.added",
           "task.assigned",
           "task.overdue_digest",
+          "data_import.completed",
+          "retention.review",
+          "export.approval",
           "milestone.due",
           "conflict.review_overdue",
           "opportunity.invited"
         ],
         "title": "EventKind",
         "type": "string"
+      },
+      "ExportPreview": {
+        "properties": {
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "needs_approval": {
+            "title": "Needs Approval",
+            "type": "boolean"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "row_count",
+          "needs_approval",
+          "limit"
+        ],
+        "title": "ExportPreview",
+        "type": "object"
       },
       "FeeTermsRead": {
         "properties": {
@@ -2501,6 +2891,139 @@
         "title": "HistoryEntry",
         "type": "object"
       },
+      "HolderRead": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "strength": {
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Strength",
+            "type": "integer"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "strength"
+        ],
+        "title": "HolderRead",
+        "type": "object"
+      },
+      "HolderSet": {
+        "properties": {
+          "strength": {
+            "description": "1 acquainted, 2 good, 3 close",
+            "maximum": 3.0,
+            "minimum": 1.0,
+            "title": "Strength",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "strength"
+        ],
+        "title": "HolderSet",
+        "type": "object"
+      },
+      "ImportEntity": {
+        "enum": [
+          "contact",
+          "company"
+        ],
+        "title": "ImportEntity",
+        "type": "string"
+      },
+      "ImportRead": {
+        "properties": {
+          "background": {
+            "title": "Background",
+            "type": "boolean"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "counts": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "propertyNames": {
+                  "$ref": "#/components/schemas/RowStatus"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Counts"
+          },
+          "created": {
+            "title": "Created",
+            "type": "integer"
+          },
+          "entity": {
+            "$ref": "#/components/schemas/ImportEntity"
+          },
+          "error_file_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error File Url"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ImportStatus"
+          }
+        },
+        "required": [
+          "id",
+          "entity",
+          "filename",
+          "status",
+          "row_count",
+          "background",
+          "counts",
+          "created",
+          "error_file_url",
+          "completed_at"
+        ],
+        "title": "ImportRead",
+        "type": "object"
+      },
       "ImportResult": {
         "properties": {
           "rows": {
@@ -2575,6 +3098,214 @@
           "status"
         ],
         "title": "ImportRow",
+        "type": "object"
+      },
+      "ImportStatus": {
+        "enum": [
+          "uploaded",
+          "queued",
+          "completed"
+        ],
+        "title": "ImportStatus",
+        "type": "string"
+      },
+      "InboundAttachment": {
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "content_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Type"
+          },
+          "filename": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Filename",
+            "type": "string"
+          }
+        },
+        "required": [
+          "filename"
+        ],
+        "title": "InboundAttachment",
+        "type": "object"
+      },
+      "InboundEmail": {
+        "description": "The inbound-parse port: what a mail provider's webhook adapter hands the CRM, normalized.",
+        "properties": {
+          "attachments": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/InboundAttachment"
+            },
+            "maxItems": 100,
+            "title": "Attachments",
+            "type": "array"
+          },
+          "bcc": {
+            "default": [],
+            "items": {
+              "maxLength": 500,
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Bcc",
+            "type": "array"
+          },
+          "cc": {
+            "default": [],
+            "items": {
+              "maxLength": 500,
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Cc",
+            "type": "array"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message Id"
+          },
+          "sender": {
+            "maxLength": 500,
+            "title": "Sender",
+            "type": "string"
+          },
+          "subject": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Subject",
+            "type": "string"
+          },
+          "text": {
+            "default": "",
+            "maxLength": 1000000,
+            "title": "Text",
+            "type": "string"
+          },
+          "to": {
+            "default": [],
+            "items": {
+              "maxLength": 500,
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "To",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sender"
+        ],
+        "title": "InboundEmail",
+        "type": "object"
+      },
+      "InboundResult": {
+        "properties": {
+          "activity_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity Id"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InboundStatus"
+          },
+          "unmatched_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unmatched Id"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "InboundResult",
+        "type": "object"
+      },
+      "InboundStatus": {
+        "enum": [
+          "logged",
+          "unmatched"
+        ],
+        "title": "InboundStatus",
+        "type": "string"
+      },
+      "InteractionRead": {
+        "description": "CON-02 c2: how well one colleague knows a contact, from logged emails and meetings.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "last_interaction_at": {
+            "format": "date-time",
+            "title": "Last Interaction At",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "count",
+          "last_interaction_at"
+        ],
+        "title": "InteractionRead",
         "type": "object"
       },
       "InvitationRead": {
@@ -2878,6 +3609,92 @@
         "title": "LegalBasis",
         "type": "string"
       },
+      "LegalHoldCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "examples": [
+              "AML 10-year retention"
+            ],
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Reason",
+            "type": "string"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "LegalHoldCreate",
+        "type": "object"
+      },
+      "LegalHoldRead": {
+        "properties": {
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "released_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Released At"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          }
+        },
+        "required": [
+          "id",
+          "contact_id",
+          "reason",
+          "created_at",
+          "until",
+          "released_at"
+        ],
+        "title": "LegalHoldRead",
+        "type": "object"
+      },
       "LehmanTier-Input": {
         "properties": {
           "percent": {
@@ -3004,6 +3821,19 @@
           "added_at"
         ],
         "title": "LinkRead",
+        "type": "object"
+      },
+      "LoggingAddressRead": {
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          }
+        },
+        "required": [
+          "address"
+        ],
+        "title": "LoggingAddressRead",
         "type": "object"
       },
       "LoginCompleted": {
@@ -3592,6 +4422,29 @@
         "title": "MandateUpdate",
         "type": "object"
       },
+      "MappingRequest": {
+        "properties": {
+          "mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "examples": [
+              {
+                "email": "E-mail",
+                "first_name": "First name",
+                "last_name": "Surname"
+              }
+            ],
+            "title": "Mapping",
+            "type": "object"
+          }
+        },
+        "required": [
+          "mapping"
+        ],
+        "title": "MappingRequest",
+        "type": "object"
+      },
       "MatrixColumn": {
         "properties": {
           "id": {
@@ -3673,6 +4526,107 @@
         ],
         "title": "MemberRead",
         "type": "object"
+      },
+      "MergeRead": {
+        "properties": {
+          "duplicate_id": {
+            "title": "Duplicate Id",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "merged_at": {
+            "format": "date-time",
+            "title": "Merged At",
+            "type": "string"
+          },
+          "merged_by": {
+            "title": "Merged By",
+            "type": "integer"
+          },
+          "moved": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Moved",
+            "type": "object"
+          },
+          "record_type": {
+            "$ref": "#/components/schemas/MergeableType"
+          },
+          "survivor_id": {
+            "title": "Survivor Id",
+            "type": "integer"
+          },
+          "undone_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Undone At"
+          }
+        },
+        "required": [
+          "id",
+          "record_type",
+          "survivor_id",
+          "duplicate_id",
+          "merged_by",
+          "merged_at",
+          "moved",
+          "undone_at"
+        ],
+        "title": "MergeRead",
+        "type": "object"
+      },
+      "MergeRequest": {
+        "properties": {
+          "duplicate_id": {
+            "title": "Duplicate Id",
+            "type": "integer"
+          },
+          "fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Pick"
+            },
+            "examples": [
+              {
+                "email": "duplicate"
+              }
+            ],
+            "title": "Fields",
+            "type": "object"
+          },
+          "record_type": {
+            "$ref": "#/components/schemas/MergeableType"
+          },
+          "survivor_id": {
+            "title": "Survivor Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "record_type",
+          "survivor_id",
+          "duplicate_id"
+        ],
+        "title": "MergeRequest",
+        "type": "object"
+      },
+      "MergeableType": {
+        "enum": [
+          "contact",
+          "company"
+        ],
+        "title": "MergeableType",
+        "type": "string"
       },
       "Metric": {
         "enum": [
@@ -3892,6 +4846,17 @@
             "title": "Author Id",
             "type": "integer"
           },
+          "author_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Name"
+          },
           "body": {
             "title": "Body",
             "type": "string"
@@ -4053,6 +5018,134 @@
           "expires_in"
         ],
         "title": "OAuthToken",
+        "type": "object"
+      },
+      "OffboardingConfirmation": {
+        "properties": {
+          "api_clients_revoked": {
+            "title": "Api Clients Revoked",
+            "type": "integer"
+          },
+          "api_tokens_revoked": {
+            "title": "Api Tokens Revoked",
+            "type": "integer"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "deal_memberships_removed": {
+            "title": "Deal Memberships Removed",
+            "type": "integer"
+          },
+          "new_owner_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Owner Id"
+          },
+          "new_owner_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "New Owner Name"
+          },
+          "reassigned": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedRecord"
+            },
+            "title": "Reassigned",
+            "type": "array"
+          },
+          "sessions_ended": {
+            "title": "Sessions Ended",
+            "type": "integer"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "at",
+          "sessions_ended",
+          "api_tokens_revoked",
+          "api_clients_revoked",
+          "deal_memberships_removed",
+          "new_owner_id",
+          "new_owner_name",
+          "reassigned"
+        ],
+        "title": "OffboardingConfirmation",
+        "type": "object"
+      },
+      "OffboardingPreview": {
+        "properties": {
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedRecord"
+            },
+            "title": "Contacts",
+            "type": "array"
+          },
+          "deal_memberships": {
+            "title": "Deal Memberships",
+            "type": "integer"
+          },
+          "deals": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedRecord"
+            },
+            "title": "Deals",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "needs_new_owner": {
+            "title": "Needs New Owner",
+            "type": "boolean"
+          },
+          "new_owner_must_be_partner": {
+            "title": "New Owner Must Be Partner",
+            "type": "boolean"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/OwnedRecord"
+            },
+            "title": "Tasks",
+            "type": "array"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "contacts",
+          "tasks",
+          "deals",
+          "deal_memberships",
+          "needs_new_owner",
+          "new_owner_must_be_partner"
+        ],
+        "title": "OffboardingPreview",
         "type": "object"
       },
       "OpportunityCreate": {
@@ -4545,6 +5638,29 @@
         "title": "OutcomeRead",
         "type": "object"
       },
+      "OwnedRecord": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "label"
+        ],
+        "title": "OwnedRecord",
+        "type": "object"
+      },
       "PaginatedListResponse_AuditEntryRead_": {
         "properties": {
           "data": {
@@ -4667,6 +5783,14 @@
         ],
         "title": "PermissionMatrix",
         "type": "object"
+      },
+      "Pick": {
+        "enum": [
+          "survivor",
+          "duplicate"
+        ],
+        "title": "Pick",
+        "type": "string"
       },
       "PicklistKind": {
         "enum": [
@@ -4889,6 +6013,72 @@
         "title": "PreferencesUpdate",
         "type": "object"
       },
+      "PreviewRead": {
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/RowStatus"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/RowResult"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ImportStatus"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "counts",
+          "rows"
+        ],
+        "title": "PreviewRead",
+        "type": "object"
+      },
+      "Reactivated": {
+        "properties": {
+          "deal_memberships": {
+            "title": "Deal Memberships",
+            "type": "integer"
+          },
+          "role_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role Name"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "role_name",
+          "deal_memberships"
+        ],
+        "title": "Reactivated",
+        "type": "object"
+      },
       "RecordRef": {
         "properties": {
           "record_id": {
@@ -4987,6 +6177,114 @@
         "title": "RegisterPrefill",
         "type": "object"
       },
+      "RetentionPolicyValues": {
+        "additionalProperties": false,
+        "properties": {
+          "inactive_years": {
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Inactive Years",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "inactive_years"
+        ],
+        "title": "RetentionPolicyValues",
+        "type": "object"
+      },
+      "RetentionReviewRead": {
+        "properties": {
+          "asked_at": {
+            "format": "date-time",
+            "title": "Asked At",
+            "type": "string"
+          },
+          "contact_id": {
+            "title": "Contact Id",
+            "type": "integer"
+          },
+          "contact_name": {
+            "title": "Contact Name",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReviewDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_interaction_at": {
+            "format": "date-time",
+            "title": "Last Interaction At",
+            "type": "string"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          }
+        },
+        "required": [
+          "id",
+          "contact_id",
+          "contact_name",
+          "owner_id",
+          "asked_at",
+          "last_interaction_at",
+          "decision",
+          "decided_at"
+        ],
+        "title": "RetentionReviewRead",
+        "type": "object"
+      },
+      "ReviewDecide": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/ReviewDecision"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "ReviewDecide",
+        "type": "object"
+      },
+      "ReviewDecision": {
+        "enum": [
+          "keep",
+          "anonymise"
+        ],
+        "title": "ReviewDecision",
+        "type": "string"
+      },
       "RolePermissionsUpdate": {
         "properties": {
           "permissions": {
@@ -5054,6 +6352,297 @@
           "created_at"
         ],
         "title": "RoleRead",
+        "type": "object"
+      },
+      "RowResult": {
+        "properties": {
+          "duplicate_of": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Of"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "row": {
+            "title": "Row",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/RowStatus"
+          },
+          "values": {
+            "additionalProperties": true,
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "row",
+          "status",
+          "values"
+        ],
+        "title": "RowResult",
+        "type": "object"
+      },
+      "RowStatus": {
+        "enum": [
+          "new",
+          "duplicate",
+          "error"
+        ],
+        "title": "RowStatus",
+        "type": "string"
+      },
+      "SavedFilterCreate": {
+        "properties": {
+          "criteria": {
+            "$ref": "#/components/schemas/SearchCriteria-Input"
+          },
+          "name": {
+            "examples": [
+              "PE funds Benelux, EV 10-50m"
+            ],
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "shared": {
+            "default": false,
+            "title": "Shared",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "criteria"
+        ],
+        "title": "SavedFilterCreate",
+        "type": "object"
+      },
+      "SavedFilterRead": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "criteria": {
+            "$ref": "#/components/schemas/SearchCriteria-Output"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_id": {
+            "title": "Owner Id",
+            "type": "integer"
+          },
+          "owner_name": {
+            "title": "Owner Name",
+            "type": "string"
+          },
+          "shared": {
+            "title": "Shared",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "owner_id",
+          "owner_name",
+          "name",
+          "criteria",
+          "shared",
+          "created_at"
+        ],
+        "title": "SavedFilterRead",
+        "type": "object"
+      },
+      "SearchCriteria-Input": {
+        "description": "What a saved filter stores. Company criteria narrow companies (and contacts through their\ncurrent company); EV bounds narrow deals, in EUR thousands.",
+        "properties": {
+          "company_types": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyType"
+            },
+            "title": "Company Types",
+            "type": "array"
+          },
+          "country_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Country Ids",
+            "type": "array"
+          },
+          "ev_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Max"
+          },
+          "ev_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Min"
+          },
+          "q": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          },
+          "sector_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Sector Ids",
+            "type": "array"
+          }
+        },
+        "title": "SearchCriteria",
+        "type": "object"
+      },
+      "SearchCriteria-Output": {
+        "description": "What a saved filter stores. Company criteria narrow companies (and contacts through their\ncurrent company); EV bounds narrow deals, in EUR thousands.",
+        "properties": {
+          "company_types": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyType"
+            },
+            "title": "Company Types",
+            "type": "array"
+          },
+          "country_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Country Ids",
+            "type": "array"
+          },
+          "ev_max": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Max"
+          },
+          "ev_min": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ev Min"
+          },
+          "q": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          },
+          "sector_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Sector Ids",
+            "type": "array"
+          }
+        },
+        "title": "SearchCriteria",
+        "type": "object"
+      },
+      "SearchResults": {
+        "properties": {
+          "companies": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyHit"
+            },
+            "title": "Companies",
+            "type": "array"
+          },
+          "contacts": {
+            "items": {
+              "$ref": "#/components/schemas/ContactHit"
+            },
+            "title": "Contacts",
+            "type": "array"
+          },
+          "deals": {
+            "items": {
+              "$ref": "#/components/schemas/DealHit"
+            },
+            "title": "Deals",
+            "type": "array"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "companies",
+          "contacts",
+          "deals"
+        ],
+        "title": "SearchResults",
         "type": "object"
       },
       "SecondFactorRequired": {
@@ -5385,6 +6974,19 @@
           "password"
         ],
         "title": "SetPassword",
+        "type": "object"
+      },
+      "ShareUpdate": {
+        "properties": {
+          "shared": {
+            "title": "Shared",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "shared"
+        ],
+        "title": "ShareUpdate",
         "type": "object"
       },
       "StageChange": {
@@ -5893,6 +7495,161 @@
           }
         },
         "title": "Unfreeze",
+        "type": "object"
+      },
+      "UnmatchedLink": {
+        "properties": {
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/RecordRef"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Links",
+            "type": "array"
+          }
+        },
+        "required": [
+          "links"
+        ],
+        "title": "UnmatchedLink",
+        "type": "object"
+      },
+      "UnmatchedRead": {
+        "properties": {
+          "attachment_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Attachment Names",
+            "type": "array"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "correspondents": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Correspondents",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mandate_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mandate Id"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "received_at": {
+            "format": "date-time",
+            "title": "Received At",
+            "type": "string"
+          },
+          "sender": {
+            "title": "Sender",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sender",
+          "subject",
+          "body",
+          "correspondents",
+          "attachment_names",
+          "occurred_at",
+          "received_at",
+          "mandate_id"
+        ],
+        "title": "UnmatchedRead",
+        "type": "object"
+      },
+      "UploadRead": {
+        "properties": {
+          "entity": {
+            "$ref": "#/components/schemas/ImportEntity"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "headers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Headers",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "required_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Fields",
+            "type": "array"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ImportStatus"
+          },
+          "suggested_mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Suggested Mapping",
+            "type": "object"
+          },
+          "uploaded_at": {
+            "format": "date-time",
+            "title": "Uploaded At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "entity",
+          "filename",
+          "status",
+          "headers",
+          "row_count",
+          "fields",
+          "required_fields",
+          "suggested_mapping",
+          "uploaded_at"
+        ],
+        "title": "UploadRead",
         "type": "object"
       },
       "UserCreate": {
@@ -6552,6 +8309,7 @@
               "application/json": {
                 "example": {
                   "author_id": 1,
+                  "author_name": "text",
                   "created_at": "2026-10-10T09:00:00Z",
                   "deleted_at": "2026-10-10T09:00:00Z",
                   "edited_at": "2026-10-10T09:00:00Z",
@@ -6691,6 +8449,7 @@
               "application/json": {
                 "example": {
                   "author_id": 1,
+                  "author_name": "text",
                   "created_at": "2026-10-10T09:00:00Z",
                   "deleted_at": "2026-10-10T09:00:00Z",
                   "edited_at": "2026-10-10T09:00:00Z",
@@ -7664,6 +9423,99 @@
         ]
       }
     },
+    "/api/v1/calendar-feed/": {
+      "get": {
+        "description": "Subscribe to it in any calendar app: my meetings, open tasks and my deals' milestones.",
+        "operationId": "my_feed_api_v1_calendar_feed__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "url": "url"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarFeedRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My private iCal feed URL",
+        "tags": [
+          "Calendar feed"
+        ]
+      }
+    },
+    "/api/v1/calendar-feed/ics/{token}.ics": {
+      "get": {
+        "description": "Deal events show the deal code name only. An unknown or replaced token is 404.",
+        "operationId": "feed_ics_api_v1_calendar_feed_ics__token__ics_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/calendar": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Unknown feed"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The iCal feed itself (the URL is the credential)",
+        "tags": [
+          "Calendar feed"
+        ]
+      }
+    },
+    "/api/v1/calendar-feed/regenerate": {
+      "post": {
+        "operationId": "regenerate_feed_api_v1_calendar_feed_regenerate_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "url": "url"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarFeedRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Replace my feed URL; the old one stops working at once",
+        "tags": [
+          "Calendar feed"
+        ]
+      }
+    },
     "/api/v1/companies/": {
       "get": {
         "operationId": "list_companies_api_v1_companies__get",
@@ -8339,6 +10191,13 @@
                     "last_name": "last_name",
                     "legal_basis": "legitimate_interest",
                     "phone": "text",
+                    "relationship_holders": [
+                      {
+                        "name": "name",
+                        "strength": 1,
+                        "user_id": 1
+                      }
+                    ],
                     "salutation": "text",
                     "source": "source",
                     "warnings": [
@@ -8429,6 +10288,13 @@
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
                   "phone": "text",
+                  "relationship_holders": [
+                    {
+                      "name": "name",
+                      "strength": 1,
+                      "user_id": 1
+                    }
+                  ],
                   "salutation": "text",
                   "source": "source",
                   "warnings": [
@@ -8503,6 +10369,13 @@
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
                   "phone": "text",
+                  "relationship_holders": [
+                    {
+                      "name": "name",
+                      "strength": 1,
+                      "user_id": 1
+                    }
+                  ],
                   "salutation": "text",
                   "source": "source",
                   "warnings": [
@@ -8598,6 +10471,13 @@
                   "last_name": "last_name",
                   "legal_basis": "legitimate_interest",
                   "phone": "text",
+                  "relationship_holders": [
+                    {
+                      "name": "name",
+                      "strength": 1,
+                      "user_id": 1
+                    }
+                  ],
                   "salutation": "text",
                   "source": "source",
                   "warnings": [
@@ -8625,6 +10505,963 @@
         "summary": "Update a contact; a new company keeps the old role as history",
         "tags": [
           "Contacts"
+        ]
+      }
+    },
+    "/api/v1/contacts/{contact_id}/erase": {
+      "post": {
+        "operationId": "erase_contact_api_v1_contacts__contact_id__erase_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "activities_cleaned": 1,
+                  "contact_id": 1,
+                  "notes_cleaned": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErasureResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Blocked by a legal hold; the detail gives the reason"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Erase (anonymise) a contact unless a legal hold applies (Compliance)",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
+    "/api/v1/contacts/{contact_id}/export": {
+      "get": {
+        "operationId": "export_person_api_v1_contacts__contact_id__export_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export person: everything held about one contact as a JSON file (Compliance)",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
+    "/api/v1/contacts/{contact_id}/interactions": {
+      "get": {
+        "description": "Count and last interaction date per colleague, most recent first. Deal activities the reader is not staffed on do not count.",
+        "operationId": "contact_interactions_api_v1_contacts__contact_id__interactions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "count": 1,
+                    "last_interaction_at": "2026-10-10T09:00:00Z",
+                    "name": "name",
+                    "user_id": 1
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InteractionRead"
+                  },
+                  "title": "Response Contact Interactions Api V1 Contacts  Contact Id  Interactions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Who in the firm knows this contact: emails and meetings per colleague",
+        "tags": [
+          "Contacts"
+        ]
+      }
+    },
+    "/api/v1/contacts/{contact_id}/legal-holds": {
+      "get": {
+        "operationId": "list_holds_api_v1_contacts__contact_id__legal_holds_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "contact_id": 1,
+                    "created_at": "2026-10-10T09:00:00Z",
+                    "id": 1,
+                    "reason": "reason",
+                    "released_at": "2026-10-10T09:00:00Z",
+                    "until": "2026-10-10T09:00:00Z"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LegalHoldRead"
+                  },
+                  "title": "Response List Holds Api V1 Contacts  Contact Id  Legal Holds Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Legal holds on a contact",
+        "tags": [
+          "Privacy"
+        ]
+      },
+      "post": {
+        "operationId": "add_hold_api_v1_contacts__contact_id__legal_holds_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "reason": "AML 10-year retention",
+                "until": "2026-10-10T09:00:00Z"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/LegalHoldCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "contact_id": 1,
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "id": 1,
+                  "reason": "reason",
+                  "released_at": "2026-10-10T09:00:00Z",
+                  "until": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/LegalHoldRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put a contact under legal hold, e.g. AML 10-year retention (Compliance)",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
+    "/api/v1/contacts/{contact_id}/relationship-holders/me": {
+      "delete": {
+        "operationId": "remove_my_relationship_api_v1_contacts__contact_id__relationship_holders_me_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_role": {
+                    "company_id": 1,
+                    "end_date": "2026-10-10",
+                    "function": "text",
+                    "start_date": "2026-10-10"
+                  },
+                  "do_not_contact": true,
+                  "duplicate_contact_ids": [
+                    1
+                  ],
+                  "email": "text",
+                  "first_name": "first_name",
+                  "history": [
+                    {
+                      "company_id": 1,
+                      "end_date": "2026-10-10",
+                      "function": "text",
+                      "start_date": "2026-10-10"
+                    }
+                  ],
+                  "id": 1,
+                  "language": "en",
+                  "last_name": "last_name",
+                  "legal_basis": "legitimate_interest",
+                  "phone": "text",
+                  "relationship_holders": [
+                    {
+                      "name": "name",
+                      "strength": 1,
+                      "user_id": 1
+                    }
+                  ],
+                  "salutation": "text",
+                  "source": "source",
+                  "warnings": [
+                    "text"
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ContactRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove myself as a relationship holder",
+        "tags": [
+          "Contacts"
+        ]
+      },
+      "put": {
+        "description": "Strength 1 acquainted, 2 good, 3 close. Shown on the contact and in search results.",
+        "operationId": "set_my_relationship_api_v1_contacts__contact_id__relationship_holders_me_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "contact_id",
+            "required": true,
+            "schema": {
+              "title": "Contact Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "strength": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/HolderSet"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_role": {
+                    "company_id": 1,
+                    "end_date": "2026-10-10",
+                    "function": "text",
+                    "start_date": "2026-10-10"
+                  },
+                  "do_not_contact": true,
+                  "duplicate_contact_ids": [
+                    1
+                  ],
+                  "email": "text",
+                  "first_name": "first_name",
+                  "history": [
+                    {
+                      "company_id": 1,
+                      "end_date": "2026-10-10",
+                      "function": "text",
+                      "start_date": "2026-10-10"
+                    }
+                  ],
+                  "id": 1,
+                  "language": "en",
+                  "last_name": "last_name",
+                  "legal_basis": "legitimate_interest",
+                  "phone": "text",
+                  "relationship_holders": [
+                    {
+                      "name": "name",
+                      "strength": 1,
+                      "user_id": 1
+                    }
+                  ],
+                  "salutation": "text",
+                  "source": "source",
+                  "warnings": [
+                    "text"
+                  ]
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ContactRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add or update myself as a relationship holder",
+        "tags": [
+          "Contacts"
+        ]
+      }
+    },
+    "/api/v1/email-logging/address": {
+      "get": {
+        "description": "BCC or forward an email to it to log the email on the matching contacts.",
+        "operationId": "my_address_api_v1_email_logging_address_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "address": "address"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/LoggingAddressRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My personal CRM logging address",
+        "tags": [
+          "Email logging"
+        ]
+      }
+    },
+    "/api/v1/email-logging/inbound": {
+      "post": {
+        "description": "Called by the inbound-parse adapter with `X-Inbound-Secret`. The sender must be a CRM user writing to their own logging address (403 otherwise). Matched contacts get the email on their timeline; no match puts it in the sender's Unmatched inbox. A `[CodeName]` subject links the deal only for its team. Attachment files are dropped: only names are kept.",
+        "operationId": "inbound_api_v1_email_logging_inbound_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-inbound-secret",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "X-Inbound-Secret",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "attachments": [],
+                "bcc": [],
+                "cc": [],
+                "date": "2026-10-10T09:00:00Z",
+                "message_id": "text",
+                "sender": "sender",
+                "subject": "",
+                "text": "",
+                "to": []
+              },
+              "schema": {
+                "$ref": "#/components/schemas/InboundEmail"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "activity_id": 1,
+                  "status": "logged",
+                  "unmatched_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/InboundResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Bad webhook secret"
+          },
+          "403": {
+            "description": "Sender is not a CRM user"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mail provider webhook: an email sent to a CRM logging address",
+        "tags": [
+          "Email logging"
+        ]
+      }
+    },
+    "/api/v1/email-logging/unmatched": {
+      "get": {
+        "operationId": "list_unmatched_api_v1_email_logging_unmatched_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "attachment_names": [
+                      "text"
+                    ],
+                    "body": "body",
+                    "correspondents": [
+                      "text"
+                    ],
+                    "id": 1,
+                    "mandate_id": 1,
+                    "occurred_at": "2026-10-10T09:00:00Z",
+                    "received_at": "2026-10-10T09:00:00Z",
+                    "sender": "sender",
+                    "subject": "subject"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UnmatchedRead"
+                  },
+                  "title": "Response List Unmatched Api V1 Email Logging Unmatched Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My Unmatched inbox, newest first",
+        "tags": [
+          "Email logging"
+        ]
+      }
+    },
+    "/api/v1/email-logging/unmatched/{unmatched_id}": {
+      "delete": {
+        "operationId": "discard_unmatched_api_v1_email_logging_unmatched__unmatched_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unmatched_id",
+            "required": true,
+            "schema": {
+              "title": "Unmatched Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discard an unmatched email",
+        "tags": [
+          "Email logging"
+        ]
+      }
+    },
+    "/api/v1/email-logging/unmatched/{unmatched_id}/link": {
+      "post": {
+        "description": "Linking a deal needs edit access to it. Returns the new activity id.",
+        "operationId": "link_unmatched_api_v1_email_logging_unmatched__unmatched_id__link_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unmatched_id",
+            "required": true,
+            "schema": {
+              "title": "Unmatched Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "links": [
+                  {
+                    "record_id": 1,
+                    "record_type": "contact"
+                  }
+                ]
+              },
+              "schema": {
+                "$ref": "#/components/schemas/UnmatchedLink"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {},
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Link Unmatched Api V1 Email Logging Unmatched  Unmatched Id  Link Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Log an unmatched email on the records I pick",
+        "tags": [
+          "Email logging"
+        ]
+      }
+    },
+    "/api/v1/exports/approvals": {
+      "get": {
+        "operationId": "list_export_approvals_api_v1_exports_approvals_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "decided_at": "2026-10-10T09:00:00Z",
+                    "decided_by": 1,
+                    "filter": {
+                      "q": "text"
+                    },
+                    "id": 1,
+                    "kind": "kind",
+                    "reason": "reason",
+                    "requested_at": "2026-10-10T09:00:00Z",
+                    "requested_by": 1,
+                    "requested_by_name": "text",
+                    "row_count": 1,
+                    "status": "pending",
+                    "used_at": "2026-10-10T09:00:00Z"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApprovalRead"
+                  },
+                  "title": "Response List Export Approvals Api V1 Exports Approvals Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Export requests: mine, or all for approvers",
+        "tags": [
+          "Exports"
+        ]
+      },
+      "post": {
+        "operationId": "request_export_approval_api_v1_exports_approvals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "filter": {
+                  "q": "text"
+                },
+                "reason": "Mailing for the Benelux PE event"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "decided_at": "2026-10-10T09:00:00Z",
+                  "decided_by": 1,
+                  "filter": {
+                    "q": "text"
+                  },
+                  "id": 1,
+                  "kind": "kind",
+                  "reason": "reason",
+                  "requested_at": "2026-10-10T09:00:00Z",
+                  "requested_by": 1,
+                  "requested_by_name": "text",
+                  "row_count": 1,
+                  "status": "pending",
+                  "used_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask a partner to approve an export",
+        "tags": [
+          "Exports"
+        ]
+      }
+    },
+    "/api/v1/exports/approvals/{approval_id}": {
+      "post": {
+        "operationId": "decide_export_approval_api_v1_exports_approvals__approval_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "approval_id",
+            "required": true,
+            "schema": {
+              "title": "Approval Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "approve": true
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ApprovalDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "decided_at": "2026-10-10T09:00:00Z",
+                  "decided_by": 1,
+                  "filter": {
+                    "q": "text"
+                  },
+                  "id": 1,
+                  "kind": "kind",
+                  "reason": "reason",
+                  "requested_at": "2026-10-10T09:00:00Z",
+                  "requested_by": 1,
+                  "requested_by_name": "text",
+                  "row_count": 1,
+                  "status": "pending",
+                  "used_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ApprovalRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve or reject an export (Partner)",
+        "tags": [
+          "Exports"
+        ]
+      }
+    },
+    "/api/v1/exports/contacts": {
+      "get": {
+        "description": "An Analyst exporting more than 500 contacts needs an approved request for the same filter.",
+        "operationId": "export_contacts_api_v1_exports_contacts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/csv": {}
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Partner approval required"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export contacts as CSV; logged with user, time, filter and row count",
+        "tags": [
+          "Exports"
+        ]
+      }
+    },
+    "/api/v1/exports/contacts/preview": {
+      "get": {
+        "operationId": "preview_contacts_export_api_v1_exports_contacts_preview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "limit": 1,
+                  "needs_approval": true,
+                  "row_count": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ExportPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "How many rows, and whether approval is needed",
+        "tags": [
+          "Exports"
         ]
       }
     },
@@ -8752,6 +11589,336 @@
         "summary": "Export fee terms as CSV (fees.read); the export is audited",
         "tags": [
           "Fees"
+        ]
+      }
+    },
+    "/api/v1/imports/": {
+      "post": {
+        "description": "Returns the file's columns, the fields to map them to, and a suggested mapping.",
+        "operationId": "upload_import_api_v1_imports__post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "example": {
+                "entity": "contact",
+                "file": "file"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_import_api_v1_imports__post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "entity": "contact",
+                  "fields": [
+                    "text"
+                  ],
+                  "filename": "filename",
+                  "headers": [
+                    "text"
+                  ],
+                  "id": 1,
+                  "required_fields": [
+                    "text"
+                  ],
+                  "row_count": 1,
+                  "status": "uploaded",
+                  "suggested_mapping": {
+                    "key": "text"
+                  },
+                  "uploaded_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/UploadRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: upload an Excel file of contacts or companies",
+        "tags": [
+          "Import"
+        ]
+      }
+    },
+    "/api/v1/imports/{import_id}": {
+      "get": {
+        "operationId": "get_import_api_v1_imports__import_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "background": true,
+                  "completed_at": "2026-10-10T09:00:00Z",
+                  "counts": {
+                    "key": 1
+                  },
+                  "created": 1,
+                  "entity": "contact",
+                  "error_file_url": "text",
+                  "filename": "filename",
+                  "id": 1,
+                  "row_count": 1,
+                  "status": "uploaded"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: an import's status and counts",
+        "tags": [
+          "Import"
+        ]
+      }
+    },
+    "/api/v1/imports/{import_id}/confirm": {
+      "post": {
+        "description": "Up to 50,000 rows run now. Larger files are queued, run in the background, and notify the uploader.",
+        "operationId": "confirm_import_api_v1_imports__import_id__confirm_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "background": true,
+                  "completed_at": "2026-10-10T09:00:00Z",
+                  "counts": {
+                    "key": 1
+                  },
+                  "created": 1,
+                  "entity": "contact",
+                  "error_file_url": "text",
+                  "filename": "filename",
+                  "id": 1,
+                  "row_count": 1,
+                  "status": "uploaded"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ImportRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: run the previewed import",
+        "tags": [
+          "Import"
+        ]
+      }
+    },
+    "/api/v1/imports/{import_id}/errors.xlsx": {
+      "get": {
+        "operationId": "download_import_errors_api_v1_imports__import_id__errors_xlsx_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: download the rows that failed, with the reason per row",
+        "tags": [
+          "Import"
+        ]
+      }
+    },
+    "/api/v1/imports/{import_id}/preview": {
+      "post": {
+        "description": "Nothing is written until the import is confirmed. Shows up to 200 rows, errors and duplicates first.",
+        "operationId": "preview_import_api_v1_imports__import_id__preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "import_id",
+            "required": true,
+            "schema": {
+              "title": "Import Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "mapping": {
+                  "email": "E-mail",
+                  "first_name": "First name",
+                  "last_name": "Surname"
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MappingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "counts": {
+                    "key": 1
+                  },
+                  "id": 1,
+                  "rows": [
+                    {
+                      "duplicate_of": 1,
+                      "errors": [
+                        "text"
+                      ],
+                      "row": 1,
+                      "status": "new",
+                      "values": {}
+                    }
+                  ],
+                  "status": "uploaded"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: map columns and preview new, duplicate and error rows",
+        "tags": [
+          "Import"
+        ]
+      }
+    },
+    "/api/v1/legal-holds/{hold_id}": {
+      "delete": {
+        "operationId": "release_hold_api_v1_legal_holds__hold_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "hold_id",
+            "required": true,
+            "schema": {
+              "title": "Hold Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Release a legal hold (Compliance)",
+        "tags": [
+          "Privacy"
         ]
       }
     },
@@ -11185,6 +14352,165 @@
         ]
       }
     },
+    "/api/v1/merges/": {
+      "get": {
+        "operationId": "list_merges_api_v1_merges__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "duplicate_id": 1,
+                    "id": 1,
+                    "merged_at": "2026-10-10T09:00:00Z",
+                    "merged_by": 1,
+                    "moved": {
+                      "key": 1
+                    },
+                    "record_type": "contact",
+                    "survivor_id": 1,
+                    "undone_at": "2026-10-10T09:00:00Z"
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MergeRead"
+                  },
+                  "title": "Response List Merges Api V1 Merges  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Admin: merges of the last 30 days, undoable",
+        "tags": [
+          "Merge"
+        ]
+      },
+      "post": {
+        "description": "`fields` picks, per field, whose value the survivor keeps. Activities, notes, tasks, deals, roles, relationship holders and links move to the survivor; the duplicate is deleted. Audited. 403 when either record is on a deal the caller cannot access: Compliance must merge those.",
+        "operationId": "merge_records_api_v1_merges__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "duplicate_id": 1,
+                "fields": {
+                  "email": "duplicate"
+                },
+                "record_type": "contact",
+                "survivor_id": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/MergeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "duplicate_id": 1,
+                  "id": 1,
+                  "merged_at": "2026-10-10T09:00:00Z",
+                  "merged_by": 1,
+                  "moved": {
+                    "key": 1
+                  },
+                  "record_type": "contact",
+                  "survivor_id": 1,
+                  "undone_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MergeRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "A record is on a deal the caller cannot access"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Merge a duplicate contact or company into the survivor",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
+    "/api/v1/merges/{merge_id}/undo": {
+      "post": {
+        "operationId": "undo_merge_api_v1_merges__merge_id__undo_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "merge_id",
+            "required": true,
+            "schema": {
+              "title": "Merge Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "duplicate_id": 1,
+                  "id": 1,
+                  "merged_at": "2026-10-10T09:00:00Z",
+                  "merged_by": 1,
+                  "moved": {
+                    "key": 1
+                  },
+                  "record_type": "contact",
+                  "survivor_id": 1,
+                  "undone_at": "2026-10-10T09:00:00Z"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/MergeRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Older than 30 days, or already undone"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin: undo a merge done in the last 30 days",
+        "tags": [
+          "Merge"
+        ]
+      }
+    },
     "/api/v1/notes/": {
       "post": {
         "description": "Private: only the author, admins included. Deal-confidential: only the deal team of `mandate_id`.",
@@ -11212,6 +14538,7 @@
               "application/json": {
                 "example": {
                   "author_id": 1,
+                  "author_name": "text",
                   "body": "body",
                   "created_at": "2026-10-10T09:00:00Z",
                   "id": 1,
@@ -12898,6 +16225,163 @@
         ]
       }
     },
+    "/api/v1/privacy/retention-policy": {
+      "get": {
+        "operationId": "get_retention_policy_api_v1_privacy_retention_policy_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "inactive_years": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionPolicyValues"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Years without interaction",
+        "tags": [
+          "Privacy"
+        ]
+      },
+      "put": {
+        "operationId": "put_retention_policy_api_v1_privacy_retention_policy_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "inactive_years": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/RetentionPolicyValues"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "inactive_years": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionPolicyValues"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change the retention period",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
+    "/api/v1/privacy/retention-reviews": {
+      "get": {
+        "operationId": "list_reviews_api_v1_privacy_retention_reviews_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "asked_at": "2026-10-10T09:00:00Z",
+                    "contact_id": 1,
+                    "contact_name": "contact_name",
+                    "decided_at": "2026-10-10T09:00:00Z",
+                    "decision": "keep",
+                    "id": 1,
+                    "last_interaction_at": "2026-10-10T09:00:00Z",
+                    "owner_id": 1
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RetentionReviewRead"
+                  },
+                  "title": "Response List Reviews Api V1 Privacy Retention Reviews Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Open keep-or-anonymise questions: mine, or all for compliance",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
+    "/api/v1/privacy/retention-reviews/{review_id}": {
+      "post": {
+        "operationId": "decide_review_api_v1_privacy_retention_reviews__review_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "title": "Review Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "decision": "keep"
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDecide"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Anonymising is blocked by a legal hold"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Keep or anonymise an inactive contact",
+        "tags": [
+          "Privacy"
+        ]
+      }
+    },
     "/api/v1/roles/": {
       "get": {
         "operationId": "get_roles_api_v1_roles__get",
@@ -13056,6 +16540,452 @@
         "summary": "Replace a role's permissions (Admin)",
         "tags": [
           "Roles"
+        ]
+      }
+    },
+    "/api/v1/saved-filters/": {
+      "get": {
+        "operationId": "list_saved_filters_api_v1_saved_filters__get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "created_at": "2026-10-10T09:00:00Z",
+                    "criteria": {
+                      "company_types": [
+                        null
+                      ],
+                      "country_ids": [
+                        1
+                      ],
+                      "ev_max": "text",
+                      "ev_min": "text",
+                      "q": "text",
+                      "sector_ids": [
+                        1
+                      ]
+                    },
+                    "id": 1,
+                    "name": "name",
+                    "owner_id": 1,
+                    "owner_name": "owner_name",
+                    "shared": true
+                  }
+                ],
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SavedFilterRead"
+                  },
+                  "title": "Response List Saved Filters Api V1 Saved Filters  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My saved filters and those shared with everyone",
+        "tags": [
+          "Search"
+        ]
+      },
+      "post": {
+        "operationId": "create_saved_filter_api_v1_saved_filters__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "criteria": {
+                  "company_types": [
+                    "target"
+                  ],
+                  "country_ids": [
+                    1
+                  ],
+                  "ev_max": 25000.0,
+                  "ev_min": 25000.0,
+                  "q": "text",
+                  "sector_ids": [
+                    1
+                  ]
+                },
+                "name": "PE funds Benelux, EV 10-50m",
+                "shared": false
+              },
+              "schema": {
+                "$ref": "#/components/schemas/SavedFilterCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "criteria": {
+                    "company_types": [
+                      "target"
+                    ],
+                    "country_ids": [
+                      1
+                    ],
+                    "ev_max": "text",
+                    "ev_min": "text",
+                    "q": "text",
+                    "sector_ids": [
+                      1
+                    ]
+                  },
+                  "id": 1,
+                  "name": "name",
+                  "owner_id": 1,
+                  "owner_name": "owner_name",
+                  "shared": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SavedFilterRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save a search filter",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/v1/saved-filters/{filter_id}": {
+      "delete": {
+        "operationId": "delete_saved_filter_api_v1_saved_filters__filter_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "filter_id",
+            "required": true,
+            "schema": {
+              "title": "Filter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete my saved filter",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/v1/saved-filters/{filter_id}/shared": {
+      "put": {
+        "operationId": "share_saved_filter_api_v1_saved_filters__filter_id__shared_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "filter_id",
+            "required": true,
+            "schema": {
+              "title": "Filter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "shared": true
+              },
+              "schema": {
+                "$ref": "#/components/schemas/ShareUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "created_at": "2026-10-10T09:00:00Z",
+                  "criteria": {
+                    "company_types": [
+                      "target"
+                    ],
+                    "country_ids": [
+                      1
+                    ],
+                    "ev_max": "text",
+                    "ev_min": "text",
+                    "q": "text",
+                    "sector_ids": [
+                      1
+                    ]
+                  },
+                  "id": 1,
+                  "name": "name",
+                  "owner_id": 1,
+                  "owner_name": "owner_name",
+                  "shared": true
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SavedFilterRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Share or unshare my saved filter",
+        "tags": [
+          "Search"
+        ]
+      }
+    },
+    "/api/v1/search/": {
+      "get": {
+        "description": "At least 3 characters (or a criterion). Accent-, case- and typo-tolerant. Deals match on code name only and only deals the caller is staffed on appear. `filter_id` applies a saved filter; query parameters add to it.",
+        "operationId": "global_search_api_v1_search__get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filter Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "company_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/CompanyType"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Company Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "country_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Country Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sector_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sector Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ev_min",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ev Min"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ev_max",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ev Max"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "companies": [
+                    {
+                      "country_id": 1,
+                      "id": 1,
+                      "name": "name",
+                      "type": "target"
+                    }
+                  ],
+                  "contacts": [
+                    {
+                      "company_id": 1,
+                      "email": "text",
+                      "first_name": "first_name",
+                      "id": 1,
+                      "last_name": "last_name",
+                      "relationship_holders": [
+                        null
+                      ]
+                    }
+                  ],
+                  "deals": [
+                    {
+                      "code_name": "code_name",
+                      "id": 1,
+                      "stage": "stage"
+                    }
+                  ],
+                  "query": "query"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Global search across companies, contacts and deals, grouped by type",
+        "tags": [
+          "Search"
         ]
       }
     },
@@ -13772,6 +17702,7 @@
                   "activities": [
                     {
                       "author_id": 1,
+                      "author_name": "text",
                       "created_at": "2026-10-10T09:00:00Z",
                       "deleted_at": "2026-10-10T09:00:00Z",
                       "edited_at": "2026-10-10T09:00:00Z",
@@ -13796,6 +17727,7 @@
                   "notes": [
                     {
                       "author_id": 1,
+                      "author_name": "text",
                       "body": "body",
                       "created_at": "2026-10-10T09:00:00Z",
                       "id": 1,
@@ -13857,7 +17789,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "pattern": "^(invited|active)$",
+                  "pattern": "^(invited|active|inactive)$",
                   "type": "string"
                 },
                 {
@@ -14039,7 +17971,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "pattern": "^(invited|active)$",
+                  "pattern": "^(invited|active|inactive)$",
                   "type": "string"
                 },
                 {
@@ -14227,6 +18159,7 @@
     },
     "/api/v1/users/{user_id}": {
       "delete": {
+        "description": "Same as POST /users/{user_id}/deactivate, with the new owner as a query parameter.",
         "operationId": "delete_user_api_v1_users__user_id__delete",
         "parameters": [
           {
@@ -14237,6 +18170,22 @@
               "title": "User Id",
               "type": "integer"
             }
+          },
+          {
+            "in": "query",
+            "name": "new_owner_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "New Owner Id"
+            }
           }
         ],
         "responses": {
@@ -14244,14 +18193,24 @@
             "content": {
               "application/json": {
                 "example": {
-                  "key": "text"
+                  "api_clients_revoked": 1,
+                  "api_tokens_revoked": 1,
+                  "at": "2026-10-10T09:00:00Z",
+                  "deal_memberships_removed": 1,
+                  "new_owner_id": 1,
+                  "new_owner_name": "text",
+                  "reassigned": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "sessions_ended": 1,
+                  "user_id": 1
                 },
                 "schema": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "title": "Response Delete User Api V1 Users  User Id  Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/OffboardingConfirmation"
                 }
               }
             },
@@ -14418,6 +18377,75 @@
         ]
       }
     },
+    "/api/v1/users/{user_id}/deactivate": {
+      "post": {
+        "description": "Ends every session, revokes API tokens and clients, removes deal team memberships and moves owned contacts, open tasks and led deals to `new_owner_id`, which is required when there is anything to move.",
+        "operationId": "deactivate_user_api_v1_users__user_id__deactivate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "new_owner_id": 1
+              },
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "api_clients_revoked": 1,
+                  "api_tokens_revoked": 1,
+                  "at": "2026-10-10T09:00:00Z",
+                  "deal_memberships_removed": 1,
+                  "new_owner_id": 1,
+                  "new_owner_name": "text",
+                  "reassigned": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "sessions_ended": 1,
+                  "user_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OffboardingConfirmation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Last Admin"
+          },
+          "422": {
+            "description": "A new owner is required, or is not allowed"
+          }
+        },
+        "summary": "Deactivate a leaver and hand over their records (Admin)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
     "/api/v1/users/{user_id}/invitation": {
       "post": {
         "operationId": "resend_invitation_api_v1_users__user_id__invitation_post",
@@ -14448,6 +18476,135 @@
           }
         },
         "summary": "Resend the invitation (Admin)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{user_id}/offboarding": {
+      "get": {
+        "operationId": "preview_offboarding_api_v1_users__user_id__offboarding_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "contacts": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "deal_memberships": 1,
+                  "deals": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "name": "name",
+                  "needs_new_owner": true,
+                  "new_owner_must_be_partner": true,
+                  "tasks": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "user_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OffboardingPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "What a deactivation would hand over (Admin)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{user_id}/offboarding/confirmation": {
+      "get": {
+        "operationId": "offboarding_confirmation_api_v1_users__user_id__offboarding_confirmation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "api_clients_revoked": 1,
+                  "api_tokens_revoked": 1,
+                  "at": "2026-10-10T09:00:00Z",
+                  "deal_memberships_removed": 1,
+                  "new_owner_id": 1,
+                  "new_owner_name": "text",
+                  "reassigned": [
+                    {
+                      "id": 1,
+                      "label": "label",
+                      "type": "type"
+                    }
+                  ],
+                  "sessions_ended": 1,
+                  "user_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/OffboardingConfirmation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The confirmation of the last deactivation (Admin)",
         "tags": [
           "Users"
         ]
@@ -14500,6 +18657,53 @@
           }
         },
         "summary": "Anonymise a user's personal data (Admin)",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/users/{user_id}/reactivate": {
+      "post": {
+        "operationId": "reactivate_user_api_v1_users__user_id__reactivate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "deal_memberships": 1,
+                  "role_name": "text",
+                  "user_id": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Reactivated"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reactivate a user: role back, no deal team memberships (Admin)",
         "tags": [
           "Users"
         ]
