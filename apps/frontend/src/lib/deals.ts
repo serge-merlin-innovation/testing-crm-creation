@@ -34,8 +34,20 @@ export type Mandate = {
   lead_partner_name: string;
   stages: string[];
   version: number;
+  stage_changed_at: string | null;
+  closed_at: string | null;
+  outcome: {
+    final_ev: string | null;
+    buyer: string | null;
+    ev_ebitda: string | null;
+    closing_date: string | null;
+    tombstone_allowed: boolean | null;
+    abort_reason: string | null;
+  };
   can_edit: boolean;
   can_manage_team: boolean;
+  can_close: boolean;
+  can_reopen: boolean;
 };
 
 export type HistoryEntry = {

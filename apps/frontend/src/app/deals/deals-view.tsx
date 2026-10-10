@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -9,13 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fieldErrors, MANDATE_TYPES, readDetail } from "@/lib/deals";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { sendJson, useApiData } from "@/lib/use-api";
+import { Pipeline } from "./pipeline";
 
 type Messages = Record<MessageKey, string>;
-type Summary = { id: number; code_name: string; type: string; stage: string };
 type Option = { id: number; name?: string; label?: string };
 
 const NO_TARGET = "none";
@@ -62,7 +60,6 @@ export function DealsView({ messages }: { messages: Messages }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
-  const deals = useApiData<Summary[]>(`/api/v1/mandates/?q=${encodeURIComponent(search)}`);
   const partners = useApiData<Option[]>("/api/v1/mandates/lead-partners");
   const companies = useApiData<Option[]>("/api/v1/companies/?limit=200");
   const sectors = useApiData<Option[]>("/api/v1/picklists/?kind=sector");
@@ -127,31 +124,7 @@ export function DealsView({ messages }: { messages: Messages }) {
               {messages["common.search"]}
             </Button>
           </form>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{messages["deals.codeName"]}</TableHead>
-                  <TableHead>{messages["deals.type"]}</TableHead>
-                  <TableHead>{messages["deals.stage"]}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {(deals.data ?? []).map((deal) => (
-                  <TableRow key={deal.id}>
-                    <TableCell>
-                      <Button asChild variant="link">
-                        <Link href={`/deals/${deal.id}`}>{deal.code_name}</Link>
-                      </Button>
-                    </TableCell>
-                    <TableCell>{deal.type}</TableCell>
-                    <TableCell>{deal.stage}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          {deals.data?.length === 0 ? <p>{messages["deals.empty"]}</p> : null}
+          <Pipeline messages={messages} search={search} />
         </CardContent>
       </Card>
 

@@ -28,12 +28,15 @@ from ..user.service import display_name
 from .models import DealLink, DealTeamMember, Mandate, WallCrossing
 from .policy import DealGrant, DealPolicy
 from .schemas import (
+    DealFilters,
     DealLinkCreate,
     HistoryEntry,
     MandateCreate,
+    MandateListItem,
     MandateRead,
     MandateType,
     MandateUpdate,
+    OutcomeRead,
     TeamMemberCreate,
     TeamMemberRead,
     TeamRole,
@@ -140,8 +143,20 @@ class MandateService:
             version=mandate.version,
             created_at=mandate.created_at,
             updated_at=mandate.updated_at,
-            can_edit=grant is None or "deals.edit_staffed" in (grant.user.get("permissions") or []),
+            stage_changed_at=mandate.stage_changed_at,
+            closed_at=mandate.closed_at,
+            outcome=OutcomeRead(
+                final_ev=mandate.final_ev,
+                buyer=mandate.buyer,
+                ev_ebitda=mandate.ev_ebitda,
+                closing_date=mandate.closing_date,
+                tombstone_allowed=mandate.tombstone_allowed,
+                abort_reason=mandate.abort_reason,
+            ),
+            can_edit=grant is None or grant.can_edit,
             can_manage_team=grant is None or grant.can_manage_team,
+            can_close=grant is None or (grant.is_closer and not grant.is_closed),
+            can_reopen=grant is not None and grant.is_closer and grant.is_closed,
         ).model_dump(mode="json")
 
     def _deal_message(self, mandate: Mandate, user: User, kind: str, title: str, body: str) -> Message:
@@ -175,6 +190,7 @@ class MandateService:
             lead_partner_id=values.lead_partner_id,
             estimated_ev=values.estimated_ev,
             stage=stages_for(values.type.value)[0].value,
+            stage_changed_at=now,
             created_at=now,
             updated_at=now,
             target_id=values.target_id,
@@ -250,19 +266,43 @@ class MandateService:
                 now,
             )
 
-    async def list_visible(self, db: AsyncSession, user: dict[str, Any], now: datetime, q: str | None) -> list[dict[str, Any]]:
-        query = DealPolicy(now).visible(user, select(Mandate)).order_by(Mandate.code_name)
+    async def list_visible(
+        self, db: AsyncSession, user: dict[str, Any], now: datetime, q: str | None, filters: DealFilters | None = None
+    ) -> list[dict[str, Any]]:
+        query = (
+            DealPolicy(now)
+            .visible(user, select(Mandate, User.name).join(User, User.id == Mandate.lead_partner_id))
+            .order_by(Mandate.code_name)
+        )
         if q:
             query = query.where(Mandate.code_name_key.contains(q.strip().lower(), autoescape=True))
+        if filters is not None:
+            if filters.partner_id is not None:
+                partnered = select(DealTeamMember.mandate_id).where(
+                    DealTeamMember.user_id == filters.partner_id,
+                    DealTeamMember.role.in_([TeamRole.LEAD_PARTNER.value, TeamRole.PARTNER.value]),
+                )
+                query = query.where(Mandate.id.in_(partnered))
+            if filters.type is not None:
+                query = query.where(Mandate.type == filters.type.value)
+            if filters.sector_id is not None:
+                query = query.where(Mandate.sector_id == filters.sector_id)
+            if filters.stage is not None:
+                query = query.where(Mandate.stage == filters.stage.value)
         return [
-            {
-                "id": mandate.id,
-                "code_name": mandate.code_name,
-                "type": mandate.type,
-                "stage": mandate.stage,
-                "lead_partner_id": mandate.lead_partner_id,
-            }
-            for mandate in (await db.execute(query)).scalars()
+            MandateListItem(
+                id=mandate.id,
+                code_name=mandate.code_name,
+                type=MandateType(mandate.type),
+                stage=DealStage(mandate.stage),
+                lead_partner_id=mandate.lead_partner_id,
+                lead_partner_name=lead_name,
+                sector_id=mandate.sector_id,
+                estimated_ev=mandate.estimated_ev,
+                stage_changed_at=mandate.stage_changed_at,
+                closed_at=mandate.closed_at,
+            ).model_dump(mode="json")
+            for mandate, lead_name in (await db.execute(query)).all()
         ]
 
     async def update(self, db: AsyncSession, grant: DealGrant, values: MandateUpdate, context: AuditContext) -> dict[str, Any]:

@@ -11,6 +11,7 @@ from .exceptions import (
     ActivityNotFoundError,
     CompanyNotFoundError,
     ContactNotFoundError,
+    DealClosedError,
     DealForbiddenError,
     DealLinkNotFoundError,
     DealNotFoundError,
@@ -20,6 +21,7 @@ from .exceptions import (
     LastAdminError,
     LastLeadPartnerError,
     MandateExistsError,
+    MilestoneNotFoundError,
     OneRolePerUserError,
     PermissionDeniedError,
     PicklistValueExistsError,
@@ -29,6 +31,8 @@ from .exceptions import (
     ResourceNotFoundError,
     RestoreWindowClosedError,
     RoleNotFoundError,
+    StageCriterionExistsError,
+    StageCriterionNotFoundError,
     TaskNotFoundError,
     TeamMemberExistsError,
     TeamMemberNotFoundError,
@@ -58,6 +62,14 @@ EXCEPTION_MAPPING: dict[type[DomainError], Callable[[str], HTTPException]] = {
     CompanyNotFoundError: lambda message: NotFoundException(detail="Company not found."),
     ContactNotFoundError: lambda message: NotFoundException(detail="Contact not found."),
     DealNotFoundError: lambda message: NotFoundException(detail="Not found."),
+    DealClosedError: lambda message: ForbiddenException(
+        detail="This deal is closed and read-only: a partner must reopen it first."
+    ),
+    StageCriterionExistsError: lambda message: HTTPException(
+        status_code=409, detail="This stage already has that exit criterion."
+    ),
+    StageCriterionNotFoundError: lambda message: NotFoundException(detail="Exit criterion not found."),
+    MilestoneNotFoundError: lambda message: NotFoundException(detail="Milestone not found."),
     DealForbiddenError: lambda message: ForbiddenException(detail="You don't have permission for this action on this deal."),
     MandateExistsError: lambda message: HTTPException(status_code=409, detail="This code name is already in use."),
     LastLeadPartnerError: lambda message: HTTPException(

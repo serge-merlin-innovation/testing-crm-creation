@@ -22,7 +22,9 @@ import {
   type Mandate,
 } from "@/lib/deals";
 import type { MessageKey } from "@/lib/i18n/messages";
+import { stageLabel } from "@/lib/pipeline";
 import { sendJson, useApiData } from "@/lib/use-api";
+import { ClosingTab, MilestonesTab } from "./pipeline-tabs";
 
 type Messages = Record<MessageKey, string>;
 type Member = {
@@ -97,7 +99,7 @@ function Summary({ mandate, onSaved, messages }: { mandate: Mandate; onSaved: (m
           <TableRow>
             <TableHead>{messages["deals.stage"]}</TableHead>
             <TableCell>
-              <Badge variant="secondary">{mandate.stage}</Badge>
+              <Badge variant="secondary">{stageLabel(mandate.stage)}</Badge>
             </TableCell>
           </TableRow>
           <TableRow>
@@ -432,6 +434,8 @@ export function DealView({ initial, messages }: { initial: Mandate; messages: Me
             <TabsTrigger value="summary">{messages["deals.summary"]}</TabsTrigger>
             <TabsTrigger value="team">{messages["deals.team"]}</TabsTrigger>
             <TabsTrigger value="links">{messages["deals.links"]}</TabsTrigger>
+            <TabsTrigger value="milestones">{messages["milestones.title"]}</TabsTrigger>
+            <TabsTrigger value="closing">{messages["closing.title"]}</TabsTrigger>
             <TabsTrigger value="history">{messages["deals.history"]}</TabsTrigger>
           </TabsList>
           <TabsContent value="summary">
@@ -442,6 +446,12 @@ export function DealView({ initial, messages }: { initial: Mandate; messages: Me
           </TabsContent>
           <TabsContent value="links">
             <LinksTab mandateId={mandate.id} canEdit={mandate.can_edit} messages={messages} />
+          </TabsContent>
+          <TabsContent value="milestones">
+            <MilestonesTab key={mandate.version} mandate={mandate} messages={messages} />
+          </TabsContent>
+          <TabsContent value="closing">
+            <ClosingTab key={mandate.version} mandate={mandate} onSaved={setMandate} messages={messages} />
           </TabsContent>
           <TabsContent value="history">
             <HistoryTab mandateId={mandate.id} version={mandate.version} messages={messages} />

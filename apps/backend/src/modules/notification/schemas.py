@@ -19,6 +19,7 @@ class EventKind(StrEnum):
     TASK_OVERDUE_DIGEST = "task.overdue_digest"
     RETENTION_REVIEW = "retention.review"
     EXPORT_APPROVAL = "export.approval"
+    MILESTONE_DUE = "milestone.due"
 
 
 DEFAULT_CHANNEL = Channel.BOTH

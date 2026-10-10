@@ -7,18 +7,18 @@ URL does not confirm a deal exists) and 403 when they see it but the action is n
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Annotated, Any
 
 from fastapi import Depends
 from fastapi.routing import APIRoute
-from sqlalchemy import Select, or_, select
+from sqlalchemy import Select, and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...infrastructure.clock import Clock, get_clock
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
-from ..common.exceptions import DealForbiddenError, DealNotFoundError
+from ..common.exceptions import DealClosedError, DealForbiddenError, DealNotFoundError
 from ..role.authorization import has_permission
 from ..role.permissions import Permission
 from .models import DealTeamMember, Mandate
@@ -28,6 +28,7 @@ class DealAction(StrEnum):
     READ = "read"
     EDIT = "edit"
     MANAGE_TEAM = "manage_team"
+    REOPEN = "reopen"
 
 
 ACTION_PERMISSION = {
@@ -37,17 +38,40 @@ ACTION_PERMISSION = {
 
 # Deal-team roles that may staff the deal, on top of the deal_team.assign permission.
 TEAM_MANAGER_ROLES = frozenset({"lead_partner", "partner", "director"})
+# Deal-team roles that may close and reopen the deal (DEAL-06).
+CLOSER_ROLES = frozenset({"lead_partner", "partner"})
+# A deal closed this long ago opens to compliance, read-only (AUTHZ-02 c8).
+COMPLIANCE_AFTER_CLOSE = timedelta(days=365)
 
 
 @dataclass(frozen=True)
 class DealGrant:
     mandate: Mandate
-    membership: DealTeamMember
+    # None for compliance reading a long-closed deal they were never staffed on.
+    membership: DealTeamMember | None
     user: dict[str, Any]
 
     @property
+    def is_closed(self) -> bool:
+        return self.mandate.closed_at is not None
+
+    @property
+    def can_edit(self) -> bool:
+        return self.membership is not None and not self.is_closed and has_permission(self.user, Permission.DEALS_EDIT_STAFFED)
+
+    @property
     def can_manage_team(self) -> bool:
+        if self.membership is None or self.is_closed:
+            return False
         return self.membership.role in TEAM_MANAGER_ROLES or has_permission(self.user, Permission.DEAL_TEAM_ASSIGN)
+
+    @property
+    def is_closer(self) -> bool:
+        return (
+            self.membership is not None
+            and self.membership.role in CLOSER_ROLES
+            and has_permission(self.user, Permission.DEALS_EDIT_STAFFED)
+        )
 
 
 class DealPolicy:
@@ -57,12 +81,20 @@ class DealPolicy:
     def _active(self) -> Any:
         return or_(DealTeamMember.expires_at.is_(None), DealTeamMember.expires_at > self.now)
 
+    def _compliance_window(self) -> Any:
+        return and_(Mandate.closed_at.is_not(None), Mandate.closed_at <= self.now - COMPLIANCE_AFTER_CLOSE)
+
     def visible(self, user: dict[str, Any], query: Select[Any]) -> Select[Any]:
         """Narrows any query over Mandate to the deals this user may read."""
-        if not has_permission(user, Permission.DEALS_READ_STAFFED):
+        conditions = []
+        if has_permission(user, Permission.DEALS_READ_STAFFED):
+            staffed = select(DealTeamMember.mandate_id).where(DealTeamMember.user_id == user["id"], self._active())
+            conditions.append(Mandate.id.in_(staffed))
+        if has_permission(user, Permission.DEALS_READ_SUMMARY):
+            conditions.append(self._compliance_window())
+        if not conditions:
             return query.where(Mandate.id.is_(None))
-        staffed = select(DealTeamMember.mandate_id).where(DealTeamMember.user_id == user["id"], self._active())
-        return query.where(Mandate.id.in_(staffed))
+        return query.where(or_(*conditions))
 
     async def visible_mandate_ids(self, db: AsyncSession, user: dict[str, Any]) -> list[int]:
         return list((await db.execute(self.visible(user, select(Mandate.id)))).scalars())
@@ -75,15 +107,35 @@ class DealPolicy:
                 .where(Mandate.id == mandate_id, DealTeamMember.user_id == user["id"], self._active())
             )
         ).first()
-        if row is None or not has_permission(user, Permission.DEALS_READ_STAFFED):
-            raise DealNotFoundError(f"Deal {mandate_id} not visible")
-        grant = DealGrant(mandate=row[0], membership=row[1], user=user)
+        if row is not None and has_permission(user, Permission.DEALS_READ_STAFFED):
+            grant = DealGrant(mandate=row[0], membership=row[1], user=user)
+        else:
+            grant = await self._compliance_grant(db, user, mandate_id)
+        if action == DealAction.READ:
+            return grant
+        if grant.membership is None:
+            raise DealForbiddenError("Compliance reads a closed deal, never edits it")
+        if action == DealAction.REOPEN:
+            if not grant.is_closer:
+                raise DealForbiddenError("Only a partner on the deal reopens it")
+            return grant
+        if grant.is_closed:
+            raise DealClosedError("The deal is closed")
         if action == DealAction.MANAGE_TEAM:
             if not grant.can_manage_team:
                 raise DealForbiddenError("Only the deal partner or director manages the team")
         elif action in ACTION_PERMISSION and not has_permission(user, ACTION_PERMISSION[action]):
             raise DealForbiddenError(f"Missing {ACTION_PERMISSION[action].value}")
         return grant
+
+    async def _compliance_grant(self, db: AsyncSession, user: dict[str, Any], mandate_id: int) -> DealGrant:
+        if has_permission(user, Permission.DEALS_READ_SUMMARY):
+            mandate = (
+                await db.execute(select(Mandate).where(Mandate.id == mandate_id, self._compliance_window()))
+            ).scalar_one_or_none()
+            if mandate is not None:
+                return DealGrant(mandate=mandate, membership=None, user=user)
+        raise DealNotFoundError(f"Deal {mandate_id} not visible")
 
 
 def deal_access(action: DealAction) -> Any:
@@ -145,3 +197,4 @@ def served_routes(routes: Iterable[Any]) -> list[ServedRoute]:
 ReadGrant = Annotated[DealGrant, deal_access(DealAction.READ)]
 EditGrant = Annotated[DealGrant, deal_access(DealAction.EDIT)]
 TeamGrant = Annotated[DealGrant, deal_access(DealAction.MANAGE_TEAM)]
+ReopenGrant = Annotated[DealGrant, deal_access(DealAction.REOPEN)]

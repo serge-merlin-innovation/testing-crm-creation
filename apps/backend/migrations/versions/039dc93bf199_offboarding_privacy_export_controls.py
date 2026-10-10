@@ -1,7 +1,7 @@
 """Offboarding, GDPR privacy (legal holds, retention reviews) and export approvals
 
 Revision ID: 039dc93bf199
-Revises: 9b7a7a2263d1
+Revises: 8e8925d25945
 Create Date: 2026-10-10 08:58:11.273783
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "039dc93bf199"
-down_revision: str | Sequence[str] | None = "9b7a7a2263d1"
+down_revision: str | Sequence[str] | None = "8e8925d25945"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

@@ -15,6 +15,7 @@ from ....modules.audit.routes import router as audit_router
 from ....modules.company.routes import router as companies_router
 from ....modules.contact.routes import router as contacts_router
 from ....modules.data_export.routes import router as data_export_router
+from ....modules.mandate.routes import criteria_router
 from ....modules.mandate.routes import router as mandates_router
 from ....modules.notification.routes import router as notifications_router
 from ....modules.offboarding.routes import router as offboarding_router
@@ -36,6 +37,7 @@ router.include_router(companies_router, prefix="/companies")
 router.include_router(contacts_router, prefix="/contacts")
 router.include_router(picklists_router, prefix="/picklists")
 router.include_router(mandates_router, prefix="/mandates")
+router.include_router(criteria_router, prefix="/stage-criteria")
 router.include_router(notifications_router, prefix="/notifications")
 router.include_router(activities_router, prefix="/activities")
 router.include_router(notes_router, prefix="/notes")

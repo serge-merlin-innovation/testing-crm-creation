@@ -206,10 +206,17 @@ async def test_deal_access_matrix_holds_over_api_tokens(world, endpoint):
         json={"label": "VDR", "url": "https://vdr.example.com/falcon"},
         headers=world.partner.headers,
     )
+    milestone = await world.partner.client.post(
+        f"/api/v1/mandates/{mandate['id']}/milestones",
+        json={"name": "Teaser", "planned_date": "2026-11-01"},
+        headers=world.partner.headers,
+    )
     version = (await world.partner.client.get(f"/api/v1/mandates/{mandate['id']}", headers=world.partner.headers)).json()[
         "version"
     ]
-    path = endpoint.path.format(mandate_id=mandate["id"], user_id=world.analyst.id, link_id=link.json()["id"])
+    path = endpoint.path.format(
+        mandate_id=mandate["id"], user_id=world.analyst.id, link_id=link.json()["id"], milestone_id=milestone.json()["id"]
+    )
     context = {"version": lambda: version, "spare_user_id": spare.id}
 
     for persona, actor in (("other_partner", world.outsider), ("member", world.analyst)):
