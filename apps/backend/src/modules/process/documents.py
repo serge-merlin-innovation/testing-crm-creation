@@ -5,6 +5,7 @@ from collections.abc import Iterable, Mapping
 from decimal import ROUND_HALF_UP, Decimal
 
 from fpdf import FPDF
+from fpdf.enums import XPos, YPos
 
 FIELD = re.compile(r"\{\{\s*([a-z_]+)\s*\}\}")
 # The merge fields a template may use (ADM-07). Report-only fields are filled for reports.
@@ -65,9 +66,9 @@ def pdf(title: str, body: str) -> bytes:
     document.set_title(_latin1(title))
     document.add_page()
     document.set_font("Helvetica", "B", 16)
-    document.multi_cell(0, 10, _latin1(title))
+    document.multi_cell(0, 10, _latin1(title), new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     document.ln(4)
     document.set_font("Helvetica", size=11)
     for line in body.splitlines() or [""]:
-        document.multi_cell(0, 6, _latin1(line) or " ")
+        document.multi_cell(0, 6, _latin1(line) or " ", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     return bytes(document.output())

@@ -8,7 +8,7 @@ from ..audit.dependencies import AuditContextDep
 from ..mandate.policy import EditGrant, ExportGrant, ReadGrant
 from ..role.authorization import require_permission
 from ..role.permissions import Permission
-from ..task.schemas import TaskRead
+from ..task.schemas import DealTaskRead
 from .dependencies import OfferServiceDep, ProcessServiceDep, TemplateServiceDep
 from .schemas import (
     BidDeadlines,
@@ -137,7 +137,7 @@ async def document_pdf(document_id: int, grant: ExportGrant, db: AsyncSessionDep
     return _pdf(content, f"{grant.mandate.code_name}-{document.kind}-{document.id}.pdf")
 
 
-@router.get("/{mandate_id}/tasks", response_model=list[TaskRead], summary="The deal's tasks, open first", responses=HIDDEN)
+@router.get("/{mandate_id}/tasks", response_model=list[DealTaskRead], summary="The deal's tasks, open first", responses=HIDDEN)
 async def deal_tasks(
     grant: ReadGrant, db: AsyncSessionDep, service: ProcessServiceDep, clock: ClockDep
 ) -> list[dict[str, Any]]:
