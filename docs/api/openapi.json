@@ -4698,6 +4698,18 @@
             ],
             "title": "Date"
           },
+          "dkim": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dkim"
+          },
           "message_id": {
             "anyOf": [
               {
@@ -4714,6 +4726,18 @@
             "maxLength": 500,
             "title": "Sender",
             "type": "string"
+          },
+          "spf": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Spf"
           },
           "subject": {
             "default": "",
@@ -15128,8 +15152,10 @@
                 "bcc": [],
                 "cc": [],
                 "date": "2026-10-10T09:00:00Z",
+                "dkim": "text",
                 "message_id": "text",
                 "sender": "sender",
+                "spf": "text",
                 "subject": "",
                 "text": "",
                 "to": []

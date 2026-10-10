@@ -9,7 +9,7 @@ async function deliver(baseURL: string, email: Record<string, unknown>) {
   const provider = await playwrightRequest.newContext({ baseURL });
   const response = await provider.post("/api/v1/email-logging/inbound", {
     headers: { "X-Inbound-Secret": INBOUND_SECRET },
-    data: email,
+    data: { spf: "pass", dkim: "pass", ...email },
   });
   const status = response.status();
   const body = await response.text();

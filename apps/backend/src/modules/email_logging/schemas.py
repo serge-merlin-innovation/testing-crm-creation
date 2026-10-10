@@ -28,6 +28,9 @@ class InboundEmail(BaseModel):
     message_id: Annotated[str, Field(max_length=255)] | None = None
     date: datetime | None = None
     attachments: Annotated[list[InboundAttachment], Field(max_length=100)] = []
+    # The provider's own verdicts on the From domain; anything but "pass" on both is refused.
+    spf: Annotated[str, Field(max_length=32)] | None = None
+    dkim: Annotated[str, Field(max_length=32)] | None = None
 
 
 class InboundStatus(StrEnum):
