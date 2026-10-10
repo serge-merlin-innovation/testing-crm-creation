@@ -117,9 +117,11 @@ test("the home page shows my deals by stage, this week's tasks and key dates", a
   await page.goto("/overview");
   await expect(page.getByRole("link", { name: deal.code_name }).first()).toBeVisible();
   expect(Date.now() - started).toBeLessThan(2000);
-  await expect(page.getByRole("region", { name: "Conflict review" }).or(page.getByRole("region", { name: "Preparation" }))).toBeVisible();
+  const stage = page.getByRole("region").filter({ has: page.getByRole("link", { name: deal.code_name }) });
+  await expect(stage).toHaveCount(1);
+  await expect(stage.getByRole("heading")).toHaveText(/(Conflict review|Preparation)\s*1/);
   await expect(page.getByText(`Call the client ${RUN}`)).toBeVisible();
-  await expect(page.getByText(/Teaser out/)).toBeVisible();
+  await expect(page.getByText(`${deal.code_name}: Teaser out`)).toBeVisible();
 });
 
 // REP-01 c2: a new user gets guidance on how to start.
@@ -135,14 +137,19 @@ test("the firm dashboard counts mandates and weights expected fees by quarter", 
   await page.goto(`/deals/${deal.id}`);
   await page.getByLabel("Probability (%)").fill("50");
   await page.getByLabel("Expected closing date").fill("2027-02-15");
-  await page.getByRole("button", { name: "Save forecast" }).click();
+  await page.getByRole("button", { name: "Update forecast" }).click();
   await expect(page.getByLabel("Probability (%)")).toHaveValue("50");
 
   await page.goto("/analytics");
   await expect(page.getByRole("heading", { name: "Firm pipeline" })).toBeVisible();
   await expect(page.getByText(/Running mandates: \d+/)).toBeVisible();
-  const quarter = page.getByRole("row").filter({ hasText: "2027-Q1" });
-  await expect(quarter).toContainText("250000.00");
+  // The API figure is what the page must show; it includes this deal's 500000 x 50%.
+  const api = (await (await page.request.get("/api/v1/reports/dashboard")).json()) as {
+    weighted_fees_by_quarter: { quarter: string; weighted_fees: string }[];
+  };
+  const q1 = api.weighted_fees_by_quarter.find((row) => row.quarter === "2027-Q1")!;
+  expect(Number(q1.weighted_fees)).toBeGreaterThanOrEqual(250000);
+  await expect(page.getByRole("row").filter({ hasText: "2027-Q1" })).toContainText(q1.weighted_fees);
   await expect(page.getByText(deal.code_name)).toHaveCount(0);
 });
 
