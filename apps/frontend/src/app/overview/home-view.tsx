@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatIsoDate } from "@/lib/i18n/format";
 import { stageLabel } from "@/lib/pipeline";
 import type { Home } from "@/lib/reports";
 import { useApiData } from "@/lib/use-api";
@@ -90,7 +91,7 @@ export function HomeView({ records, messages }: { records: boolean; messages: Me
             {data && data.tasks_due_this_week.length === 0 ? <p>{messages["home.none"]}</p> : null}
             {(data?.tasks_due_this_week ?? []).map((task) => (
               <p key={task.id}>
-                {task.due_date} {task.title} {task.overdue ? <Badge variant="destructive">!</Badge> : null}
+                {formatIsoDate(task.due_date, languageOf(messages))} {task.title} {task.overdue ? <Badge variant="destructive">!</Badge> : null}
               </p>
             ))}
           </CardContent>
@@ -105,7 +106,7 @@ export function HomeView({ records, messages }: { records: boolean; messages: Me
             {data && data.key_dates.length === 0 ? <p>{messages["home.none"]}</p> : null}
             {(data?.key_dates ?? []).map((key) => (
               <p key={`${key.mandate_id}-${key.name}-${key.planned_date}`}>
-                {key.planned_date} <Link href={`/deals/${key.mandate_id}`}>{key.code_name}</Link>: {key.name}
+                {formatIsoDate(key.planned_date, languageOf(messages))} <Link href={`/deals/${key.mandate_id}`}>{key.code_name}</Link>: {key.name}
               </p>
             ))}
           </CardContent>

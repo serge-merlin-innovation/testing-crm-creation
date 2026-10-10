@@ -43,6 +43,8 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     # "invited" until the invitation link is used, then "active". Deactivation is `is_deleted`.
     status: Mapped[str] = mapped_column(String(16), default="active", server_default="active")
     invited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    # NFR-04: labels, emails and errors in this language (en, fr or nl).
+    language: Mapped[str] = mapped_column(String(2), default="en", server_default="en")
 
     role: Mapped["Role | None"] = relationship("Role", back_populates="users", lazy="selectin", init=False)
 

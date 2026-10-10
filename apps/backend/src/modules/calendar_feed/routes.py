@@ -4,6 +4,7 @@ from fastapi import APIRouter, Response
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
+from ..audit.dependencies import AuditContextDep
 from .dependencies import CalendarFeedServiceDep
 from .schemas import CalendarFeedRead
 
@@ -32,9 +33,9 @@ async def my_feed(
     summary="Replace my feed URL; the old one stops working at once",
 )
 async def regenerate_feed(
-    db: AsyncSessionDep, service: CalendarFeedServiceDep, user: CurrentUserDep, clock: ClockDep
+    db: AsyncSessionDep, service: CalendarFeedServiceDep, user: CurrentUserDep, clock: ClockDep, context: AuditContextDep
 ) -> dict[str, Any]:
-    return _read(service, await service.regenerate(db, user, clock.now()))
+    return _read(service, await service.regenerate(db, user, clock.now(), context))
 
 
 @router.get(

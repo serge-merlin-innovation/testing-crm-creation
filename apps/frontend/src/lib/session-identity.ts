@@ -72,6 +72,11 @@ export async function resolveSessionIdentity(
     roleName: readString(payload, "role_name"),
     permissions: readStringArray(payload, "permissions") ?? [],
   };
+  const language = readString(payload, "language");
+
+  if (language) {
+    identity.language = language;
+  }
 
   identities.set(sessionId, {
     identity,

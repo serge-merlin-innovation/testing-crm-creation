@@ -65,7 +65,7 @@ test.describe("an analyst", () => {
     await page.goto(DEFAULT_AUTHENTICATED_PATH);
 
     const hrefs = await page
-      .getByRole("navigation", { name: "Primary" })
+      .getByRole("navigation", { name: "Main menu" })
       .getByRole("link")
       .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
 

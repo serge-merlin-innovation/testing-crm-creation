@@ -48,7 +48,6 @@ from .schemas import (
 DEFAULT_ACCESS = timedelta(days=30)
 BREAK_GLASS_FOR = timedelta(hours=4)
 REVIEW_WINDOW = timedelta(days=14)
-APPROVAL_TASK = "Approve wall-crossing request on {code_name}"
 # Who the requester joins the team as: no team-management rights, no closing rights.
 CROSSING_ROLE = TeamRole.OTHER
 
@@ -191,7 +190,7 @@ class AccessService:
             approvers.setdefault(compliance.id, (None, None))
         approvers.pop(context.user_id, None)
 
-        title = APPROVAL_TASK.format(code_name=mandate.code_name)
+        title = f"Approve wall-crossing request on {mandate.code_name}"
         for user_id, (on_behalf_of, delegation_id) in approvers.items():
             user = await db.get(User, user_id)
             assert user is not None
@@ -381,8 +380,9 @@ class AccessService:
         return sorted(found.values(), key=lambda item: item["code_name"])
 
     async def comment(
-        self, db: AsyncSession, user: dict[str, Any], request_id: int, values: CommentCreate, now: datetime
+        self, db: AsyncSession, user: dict[str, Any], request_id: int, values: CommentCreate, context: AuditContext
     ) -> dict[str, Any]:
+        now = context.clock.now()
         request, approver = await self._visible_request(db, user, request_id, now)
         if request.status != RequestStatus.PENDING.value:
             raise ResourceExistsError("This request is already decided")
@@ -395,6 +395,14 @@ class AccessService:
                 recommendation=values.recommendation.value if values.recommendation else None,
                 on_behalf_of_id=approver.on_behalf_of_id if approver else None,
             )
+        )
+        self.audit.record(
+            db,
+            context,
+            "access_request.commented",
+            record_type="access_request",
+            record_id=request.id,
+            new_values={"recommendation": values.recommendation.value if values.recommendation else None},
         )
         await db.commit()
         return await self.context(db, user, request_id, now)

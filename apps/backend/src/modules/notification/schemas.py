@@ -30,6 +30,8 @@ class EventKind(StrEnum):
     BUYER_IDLE = "buyer.idle"
     NDA_PENDING = "buyer.nda_pending"
     OPPORTUNITY_INVITED = "opportunity.invited"
+    MAINTENANCE_SCHEDULED = "maintenance.scheduled"
+    SECURITY_FINDING_OVERDUE = "security.finding_overdue"
 
 
 DEFAULT_CHANNEL = Channel.BOTH

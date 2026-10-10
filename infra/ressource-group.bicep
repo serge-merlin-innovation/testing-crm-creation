@@ -4,6 +4,14 @@
 targetScope = 'subscription'
 
 param name string
+// NFR-01: client data and its backups stay in EU data centres. Same list in every template.
+@allowed([
+  'westeurope'
+  'northeurope'
+  'francecentral'
+  'germanywestcentral'
+  'swedencentral'
+])
 param location string
 param tags object = {}
 

@@ -125,7 +125,7 @@ test.describe("the deal team", () => {
     await page.getByRole("button", { name: "Save" }).click();
 
     await expect(page.getByText("Someone else saved first")).toBeVisible();
-    await expect(page.getByText(/15500\.00/)).toBeVisible();
+    await expect(page.getByText(/15,500/)).toBeVisible();
     await page.getByRole("button", { name: "Load the newer version" }).click();
     await expect(page.getByLabel("Estimated EV (EUR k)")).toHaveValue("15500.00");
 

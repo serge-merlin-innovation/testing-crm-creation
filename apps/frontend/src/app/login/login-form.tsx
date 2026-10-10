@@ -163,7 +163,7 @@ export function LoginForm({
                   <>
                     <Image
                       src={`data:image/svg+xml;utf8,${encodeURIComponent(step.qrSvg)}`}
-                      alt="QR code"
+                      alt={messages["login.qrAlt"]}
                       width={192}
                       height={192}
                       unoptimized

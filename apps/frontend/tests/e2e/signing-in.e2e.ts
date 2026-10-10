@@ -13,7 +13,7 @@ test("signs in and lands on the default authenticated page", async ({ page }) =>
   await signIn(page, MEMBER);
 
   await expect(page).toHaveURL(DEFAULT_AUTHENTICATED_PATH);
-  await expect(page.getByRole("navigation", { name: "Primary" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Main menu" })).toBeVisible();
 });
 
 test("returns to the page the visitor was headed for", async ({ page }) => {

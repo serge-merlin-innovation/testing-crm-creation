@@ -178,7 +178,7 @@ export function PrivacyView({ messages, isCompliance }: { messages: Messages; is
                             <Input
                               id={`hold-${contact.id}`}
                               value={hold[contact.id] ?? ""}
-                              placeholder="AML 10-year retention"
+                              placeholder={messages["privacy.holdPlaceholder"]}
                               onChange={(event) => setHold({ ...hold, [contact.id]: event.target.value })}
                             />
                             <Button

@@ -20,7 +20,8 @@ import {
   type Kyc,
 } from "@/lib/compliance";
 import { fieldErrors, readDetail, type Mandate } from "@/lib/deals";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatIsoDate } from "@/lib/i18n/format";
 import { stageLabel } from "@/lib/pipeline";
 import { sendJson, useApiData } from "@/lib/use-api";
 
@@ -217,7 +218,7 @@ function KycSection({ mandate, onChanged, messages }: Props) {
       {current.approved_at && current.reviewer_name ? (
         <p>
           {fillTemplate(messages["compliance.approvedBy"], {
-            date: new Date(current.approved_at).toLocaleDateString("en-GB"),
+            date: formatIsoDate(current.approved_at, languageOf(messages)),
             name: current.reviewer_name,
           })}
         </p>

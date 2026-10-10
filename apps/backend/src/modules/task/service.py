@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..activity.schemas import RecordRef, RecordType
 from ..activity.service import require_record
+from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import PermissionDeniedError, TaskNotFoundError, ValidationError
 from ..mandate.models import DealTeamMember, Mandate
 from ..mandate.policy import DealAction, DealPolicy
@@ -62,7 +63,9 @@ class TaskService:
         ).first()
         return member is not None
 
-    async def create(self, db: AsyncSession, user: dict[str, Any], values: TaskCreate, now: datetime) -> dict[str, Any]:
+    async def create(
+        self, db: AsyncSession, user: dict[str, Any], values: TaskCreate, now: datetime, context: AuditContext | None = None
+    ) -> dict[str, Any]:
         if (values.record_type is None) != (values.record_id is None):
             raise ValidationError("Give both the record type and id, or neither", field="record_id")
         mandate_id = None
@@ -90,6 +93,19 @@ class TaskService:
         )
         db.add(task)
         await db.flush()
+        if context is not None:
+            AuditService().record(
+                db,
+                context,
+                "task.created",
+                record_type="task",
+                record_id=task.id,
+                new_values={
+                    "assignee_id": task.assignee_id,
+                    "due_date": task.due_date.isoformat(),
+                    "mandate_id": task.mandate_id,
+                },
+            )
         if assignee.id != user["id"]:
             await self.notifications.add(db, await self._assigned_message(db, task, assignee), now)
         await db.commit()
@@ -125,7 +141,9 @@ class TaskService:
             query = query.where(Task.completed_at.is_(None))
         return [read(task, now.date()) for task in (await db.execute(query)).scalars()]
 
-    async def complete(self, db: AsyncSession, user: dict[str, Any], task_id: int, now: datetime) -> dict[str, Any]:
+    async def complete(
+        self, db: AsyncSession, user: dict[str, Any], task_id: int, now: datetime, context: AuditContext | None = None
+    ) -> dict[str, Any]:
         task = await db.get(Task, task_id)
         visible = await DealPolicy(now).visible_mandate_ids(db, user)
         if task is None or (task.mandate_id is not None and task.mandate_id not in visible):
@@ -149,6 +167,8 @@ class TaskService:
                         mandate_id=task.mandate_id,
                     )
                 )
+            if context is not None:
+                AuditService().record(db, context, "task.completed", record_type="task", record_id=task.id)
             await db.commit()
         return read(task, now.date())
 
@@ -197,7 +217,7 @@ class TaskService:
                     user_id=user_id,
                     email=assignee.email,
                     kind=EventKind.TASK_OVERDUE_DIGEST.value,
-                    title=f"You have {len(tasks)} overdue task{'s' if len(tasks) > 1 else ''}",
+                    title="You have 1 overdue task" if len(tasks) == 1 else f"You have {len(tasks)} overdue tasks",
                     body="\n".join(lines),
                     link="/tasks",
                 ),

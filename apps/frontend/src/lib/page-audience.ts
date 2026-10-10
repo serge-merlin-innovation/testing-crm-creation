@@ -13,6 +13,8 @@ export type PageAudience =
 export type SessionIdentity = {
   roleName: string | null;
   permissions: string[];
+  /** The user's saved language (NFR-04); absent when the backend did not say. */
+  language?: string | null;
 };
 
 export type Viewer = SessionIdentity & {
@@ -24,6 +26,8 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/login": { kind: "public" },
   "/accept-invitation": { kind: "public" },
   "/reset-password": { kind: "public" },
+  // The uptime probe (NFR-03): no session, no data, only whether the app and its backend answer.
+  "/health/ready": { kind: "public" },
   "/overview": { kind: "authenticated" },
   "/profile": { kind: "authenticated" },
   "/settings": { kind: "permission", permission: "settings.manage" },

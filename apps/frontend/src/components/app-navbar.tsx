@@ -81,7 +81,7 @@ export function AppNavbar({
           </Link>
         </Button>
 
-        <nav aria-label="Primary" className="flex flex-wrap items-center gap-1">
+        <nav aria-label={messages["nav.primary"]} className="flex flex-wrap items-center gap-1">
           {navigationItems.map((item) => {
             const isActive = item.label === activeItem;
             return (
@@ -103,7 +103,7 @@ export function AppNavbar({
 
         <Separator orientation="vertical" className="hidden md:ml-auto md:block" />
 
-        <nav aria-label="Account" className="flex items-center gap-1">
+        <nav aria-label={messages["nav.account"]} className="flex items-center gap-1">
           {accountItems.map((item) => (
             <Button key={item.href} asChild variant="ghost">
               <Link href={item.href}>{messages[item.label]}</Link>

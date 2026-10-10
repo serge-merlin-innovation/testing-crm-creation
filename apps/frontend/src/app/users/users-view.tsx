@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatDate } from "@/lib/i18n/format";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatIsoDate } from "@/lib/i18n/format";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
 import { useApiData } from "@/lib/use-api";
 import { UserPanel, type DirectoryUser } from "./user-panel";
 
@@ -49,6 +49,9 @@ export function UsersView({ messages }: { messages: Messages }) {
               <TabsTrigger value="current">{messages["users.all"]}</TabsTrigger>
               <TabsTrigger value="inactive">{messages["users.inactive"]}</TabsTrigger>
             </TabsList>
+            {/* Each tab needs the panel its aria-controls names (WCAG 4.1.2); the table below is shared. */}
+            <TabsContent value="current" />
+            <TabsContent value="inactive" />
           </Tabs>
           {users.failed ? (
             <Alert variant="destructive">
@@ -76,7 +79,7 @@ export function UsersView({ messages }: { messages: Messages }) {
                     <TableCell>
                       <Badge variant={user.status === "active" ? "secondary" : "outline"}>{user.status}</Badge>
                     </TableCell>
-                    <TableCell>{user.last_login_at ? formatDate(new Date(user.last_login_at), "en") : ""}</TableCell>
+                    <TableCell>{formatIsoDate(user.last_login_at, languageOf(messages))}</TableCell>
                     <TableCell>
                       <Button
                         size="sm"

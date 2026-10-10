@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { fieldErrors, readDetail, type Mandate } from "@/lib/deals";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatAmount, formatIsoDate } from "@/lib/i18n/format";
 import type { Milestone } from "@/lib/pipeline";
 import { sendJson, useApiData } from "@/lib/use-api";
 
@@ -57,7 +58,7 @@ export function MilestonesTab({ mandate, messages }: { mandate: Mandate; message
           {(milestones.data ?? []).map((milestone) => (
             <TableRow key={milestone.id} data-late={milestone.late}>
               <TableCell>{milestone.name}</TableCell>
-              <TableCell>{milestone.planned_date}</TableCell>
+              <TableCell>{formatIsoDate(milestone.planned_date, languageOf(messages))}</TableCell>
               <TableCell>
                 {mandate.can_edit ? (
                   <Input
@@ -184,7 +185,7 @@ export function ClosingTab({
               <>
                 <TableRow>
                   <TableHead>{messages["closing.finalEv"]}</TableHead>
-                  <TableCell>{o.final_ev}</TableCell>
+                  <TableCell>{formatAmount(o.final_ev, languageOf(messages))}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableHead>{messages["closing.buyer"]}</TableHead>
@@ -192,11 +193,11 @@ export function ClosingTab({
                 </TableRow>
                 <TableRow>
                   <TableHead>{messages["closing.multiple"]}</TableHead>
-                  <TableCell>{o.ev_ebitda}</TableCell>
+                  <TableCell>{formatAmount(o.ev_ebitda, languageOf(messages), 1)}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableHead>{messages["closing.date"]}</TableHead>
-                  <TableCell>{o.closing_date}</TableCell>
+                  <TableCell>{formatIsoDate(o.closing_date, languageOf(messages))}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableHead>{messages["closing.tombstone"]}</TableHead>

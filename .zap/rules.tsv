@@ -1,0 +1,2 @@
+# ZAP baseline rule overrides (rule id, action, note). Keep empty unless a false positive is justified in docs/DECISION-REPORT.md.
+10049	IGNORE	(Storable and cacheable content: informational only)

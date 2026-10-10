@@ -3,5 +3,9 @@
   "auth.no_role": "Uw account heeft geen rol. Vraag toegang aan een beheerder.",
   "errors.forbidden": "U hebt geen toestemming voor deze actie.",
   "errors.last_admin": "De laatste beheerder kan niet worden verwijderd.",
-  "errors.one_role_per_user": "Een gebruiker kan maar één rol hebben."
+  "errors.one_role_per_user": "Een gebruiker kan maar één rol hebben.",
+  "maintenance.scheduled.body": "De CRM is niet beschikbaar van {start} tot {end}. Reden: {reason}",
+  "maintenance.scheduled.title": "Gepland onderhoud op {start}",
+  "security.finding_overdue.body": "\"{title}\" moest hersteld zijn tegen {due}.",
+  "security.finding_overdue.title": "Een {severity} beveiligingsprobleem is de hersteltermijn van 30 dagen voorbij"
 }

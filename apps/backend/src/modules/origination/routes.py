@@ -277,9 +277,14 @@ async def add_link(
 
 @router.delete("/opportunities/{opportunity_id}/links/{link_id}", status_code=204, summary="Remove a link", responses=HIDDEN)
 async def remove_link(
-    opportunity_id: int, link_id: int, db: AsyncSessionDep, service: OriginationServiceDep, user: CurrentUserDep
+    opportunity_id: int,
+    link_id: int,
+    db: AsyncSessionDep,
+    service: OriginationServiceDep,
+    user: CurrentUserDep,
+    context: AuditContextDep,
 ) -> None:
-    await service.remove_link(db, await service.editable(db, user, opportunity_id), link_id)
+    await service.remove_link(db, await service.editable(db, user, opportunity_id), link_id, context)
 
 
 @router.post(
@@ -307,6 +312,11 @@ async def add_credential(
     responses=HIDDEN,
 )
 async def remove_credential(
-    opportunity_id: int, credential_id: int, db: AsyncSessionDep, service: OriginationServiceDep, user: CurrentUserDep
+    opportunity_id: int,
+    credential_id: int,
+    db: AsyncSessionDep,
+    service: OriginationServiceDep,
+    user: CurrentUserDep,
+    context: AuditContextDep,
 ) -> None:
-    await service.remove_credential(db, await service.editable(db, user, opportunity_id), credential_id)
+    await service.remove_credential(db, await service.editable(db, user, opportunity_id), credential_id, context)

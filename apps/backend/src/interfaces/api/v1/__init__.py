@@ -34,6 +34,7 @@ from ....modules.mandate.routes import router as mandates_router
 from ....modules.merge.routes import router as merges_router
 from ....modules.notification.routes import router as notifications_router
 from ....modules.offboarding.routes import router as offboarding_router
+from ....modules.operations.routes import router as operations_router
 from ....modules.origination.routes import router as origination_router
 from ....modules.picklist.routes import router as picklists_router
 from ....modules.privacy.routes import router as privacy_router
@@ -102,6 +103,7 @@ router.include_router(password_policy_router)
 router.include_router(api_tokens_router, prefix="/api-tokens")
 router.include_router(api_clients_router, prefix="/api-clients")
 router.include_router(oauth_router, prefix="/oauth")
+router.include_router(operations_router, prefix="/operations")
 
 if settings.ENVIRONMENT not in (EnvironmentOption.PRODUCTION, EnvironmentOption.STAGING):
     router.include_router(testing_router, prefix="/test-hooks")

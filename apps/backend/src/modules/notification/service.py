@@ -1,10 +1,12 @@
 from collections.abc import Collection
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ...infrastructure.i18n.localize import localize
+from ..user.models import User
 from .models import Notification, NotificationPreference
 from .ports import EmailSender, SentEmail
 from .schemas import DEFAULT_CHANNEL, Channel, EventKind
@@ -43,6 +45,9 @@ class NotificationService:
 
     async def add(self, db: AsyncSession, message: Message, now: datetime) -> None:
         channel = await self.channel(db, message.user_id, message.kind)
+        # Written in English at the call site; stored and sent in the recipient's language (NFR-04).
+        language = (await db.execute(select(User.language).where(User.id == message.user_id))).scalar_one_or_none()
+        message = replace(message, title=localize(message.title, language), body=localize(message.body, language))
         if channel in (Channel.IN_APP, Channel.BOTH):
             db.add(
                 Notification(

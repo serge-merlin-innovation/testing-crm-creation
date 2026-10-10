@@ -6,6 +6,7 @@ import {
   sanitizeReturnTo,
   SESSION_COOKIE,
 } from "./lib/auth-routing";
+import { LANGUAGE_COOKIE, resolveLanguage } from "./lib/i18n/messages";
 import {
   audienceFor,
   normalizePagePath,
@@ -32,7 +33,24 @@ function allow(request: NextRequest, identity: SessionIdentity | null) {
 
   applyForwardedIdentity(headers, identity);
 
-  return NextResponse.next({ request: { headers } });
+  // A browser without a language cookie (a new device, a cleared browser) takes the account's
+  // saved language, so the choice follows the user. Changing it on Profile rewrites the cookie
+  // itself, which is why an existing cookie is not overwritten from the minute-long identity cache.
+  const saved = identity?.language ? resolveLanguage(identity.language) : null;
+  const stale = saved !== null && !request.cookies.has(LANGUAGE_COOKIE);
+
+  if (stale) {
+    request.cookies.set(LANGUAGE_COOKIE, saved);
+    headers.set("cookie", request.cookies.toString());
+  }
+
+  const response = NextResponse.next({ request: { headers } });
+
+  if (stale) {
+    response.cookies.set(LANGUAGE_COOKIE, saved, { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 365 });
+  }
+
+  return response;
 }
 
 function sendToLogin(request: NextRequest) {
@@ -111,6 +129,6 @@ async function gate(request: NextRequest, audience: ReturnType<typeof audienceFo
  */
 export const config = {
   matcher: [
-    "/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.[^/]+$).*)",
+    "/((?!api(?:/|$)|health/ready$|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.[^/]+$).*)",
   ],
 };

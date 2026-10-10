@@ -2,7 +2,15 @@
 // All server-specific values are passed in as parameters by the caller.
 
 param name string
-param location string = resourceGroup().location
+// NFR-01: client data and its backups stay in EU data centres. Same list in every template.
+@allowed([
+  'westeurope'
+  'northeurope'
+  'francecentral'
+  'germanywestcentral'
+  'swedencentral'
+])
+param location string = any(resourceGroup().location)
 param tags object = {}
 
 param version string = '18'
@@ -136,6 +144,10 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2024-08-01' = {
       passwordAuth: passwordAuthEnabled ? 'Enabled' : 'Disabled'
       activeDirectoryAuth: entraAuthEnabled ? 'Enabled' : 'Disabled'
       tenantId: entraAuthEnabled ? entraTenantId : null
+    }
+    // NFR-01: AES-256 at rest for data and backups with Azure-managed keys.
+    dataEncryption: {
+      type: 'SystemManaged'
     }
     storage: {
       storageSizeGB: storageSizeGB

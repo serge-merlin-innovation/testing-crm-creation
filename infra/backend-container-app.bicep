@@ -3,7 +3,15 @@
 // backend-container-app.bicepparam.
 
 param name string
-param location string = resourceGroup().location
+// NFR-01: client data and its backups stay in EU data centres. Same list in every template.
+@allowed([
+  'westeurope'
+  'northeurope'
+  'francecentral'
+  'germanywestcentral'
+  'swedencentral'
+])
+param location string = any(resourceGroup().location)
 param tags object = {}
 
 param environmentId string
@@ -36,6 +44,10 @@ param registryPassword string
 param targetPort int
 
 param externalIngress bool = true
+// NFR-01: HTTPS only. The managed ingress terminates TLS 1.2+.
+@allowed([
+  false
+])
 param allowInsecure bool = false
 
 @allowed([

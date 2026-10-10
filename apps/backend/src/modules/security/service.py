@@ -13,6 +13,7 @@ from ...infrastructure.auth.setup import auth as crud_auth
 from ...infrastructure.config.settings import settings
 from ...infrastructure.email import EmailMessage, get_email_sender
 from ...infrastructure.geoip import EU_COUNTRIES, get_geoip
+from ...infrastructure.i18n.localize import localize
 from ..audit.service import AuditContext, AuditService
 from ..role.models import Role
 from ..user.models import User
@@ -96,8 +97,12 @@ class SecurityService:
 
     async def notify(self, db: AsyncSession, recipients: list[str], subject: str, body: str) -> None:
         sender = get_email_sender()
-        for address in dict.fromkeys(recipients):
-            await sender.send(EmailMessage(to=address, subject=subject, body=body))
+        addresses = list(dict.fromkeys(recipients))
+        rows = await db.execute(select(User.email, User.language).where(User.email.in_(addresses)))
+        languages: dict[str, str] = {email: language for email, language in rows.tuples()}
+        for address in addresses:
+            language = languages.get(address)
+            await sender.send(EmailMessage(to=address, subject=localize(subject, language), body=localize(body, language)))
 
     def is_locked(self, state: UserSecurity, now: datetime) -> bool:
         return state.locked_until is not None and state.locked_until > now

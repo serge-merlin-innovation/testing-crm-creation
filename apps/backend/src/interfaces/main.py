@@ -3,12 +3,16 @@ from contextlib import asynccontextmanager
 from datetime import timedelta
 
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from ..infrastructure.app_factory import create_application, lifespan_factory
 from ..infrastructure.auth.dependencies import set_bearer_resolver
 from ..infrastructure.clock import get_clock
 from ..infrastructure.config.settings import get_settings
 from ..infrastructure.database import session as database_session
+from ..infrastructure.dependencies import AsyncSessionDep
+from ..infrastructure.i18n.middleware import LocalizeErrorsMiddleware
 from ..infrastructure.jobs import job_runner
 from ..infrastructure.security import validate_production_security
 from ..interfaces.api import router
@@ -23,6 +27,7 @@ from ..modules.data_import.jobs import register_jobs as register_import_jobs
 from ..modules.fee.service import on_closed_won as raise_invoice_task
 from ..modules.mandate.jobs import register_jobs as register_deal_jobs
 from ..modules.mandate.pipeline import on_closed_won
+from ..modules.operations.jobs import register_jobs as register_operations_jobs
 from ..modules.origination.jobs import register_jobs as register_origination_jobs
 from ..modules.picklist.service import seed_default_picklists
 from ..modules.privacy.jobs import register_jobs as register_privacy_jobs
@@ -42,6 +47,7 @@ register_access_jobs()
 register_buyer_jobs()
 install_compliance()
 register_origination_jobs()
+register_operations_jobs()
 set_bearer_resolver(resolve_bearer)
 
 
@@ -102,6 +108,17 @@ async def health_check() -> dict[str, str]:
     return {"status": "healthy"}
 
 
+@app.get("/health/ready", tags=["System"], responses={503: {"description": "The database does not answer"}})
+async def readiness_check(db: AsyncSessionDep) -> JSONResponse:
+    """What the uptime probe calls (NFR-03): the app answers AND its database does."""
+    try:
+        await db.execute(text("SELECT 1"))
+    except Exception:
+        return JSONResponse({"status": "unavailable", "database": "unavailable"}, status_code=503)
+    return JSONResponse({"status": "ready", "database": "ok"})
+
+
+app.add_middleware(LocalizeErrorsMiddleware)
 app.openapi = lambda: build_openapi(app)  # type: ignore[method-assign]
 
 

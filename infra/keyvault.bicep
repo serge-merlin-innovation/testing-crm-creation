@@ -2,7 +2,15 @@
 // All vault-specific values are passed in as parameters by the caller.
 
 param name string
-param location string = resourceGroup().location
+// NFR-01: client data and its backups stay in EU data centres. Same list in every template.
+@allowed([
+  'westeurope'
+  'northeurope'
+  'francecentral'
+  'germanywestcentral'
+  'swedencentral'
+])
+param location string = any(resourceGroup().location)
 param tenantId string = subscription().tenantId
 param skuFamily string = 'A'
 

@@ -21,7 +21,8 @@ import {
   type HistoryEntry,
   type Mandate,
 } from "@/lib/deals";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatAmount, formatDateTime, formatIsoDate } from "@/lib/i18n/format";
 import { stageLabel } from "@/lib/pipeline";
 import { sendJson, useApiData } from "@/lib/use-api";
 import { canRecordInvoices, canSeeFees } from "@/lib/fees";
@@ -123,7 +124,7 @@ function Summary({ mandate, onSaved, messages }: { mandate: Mandate; onSaved: (m
             <p>{conflict.message}</p>
             <p>
               {messages["deals.codeName"]}: {conflict.current.code_name}. {messages["deals.ev"]}:{" "}
-              {conflict.current.estimated_ev}
+              {formatAmount(conflict.current.estimated_ev, languageOf(messages))}
             </p>
             <Button type="button" variant="outline" onClick={useNewer}>
               {messages["deals.useNewer"]}
@@ -224,8 +225,8 @@ function TeamTab({ mandateId, messages }: { mandateId: number; messages: Message
                 <TableCell>{member.name}</TableCell>
                 <TableCell>{member.role}</TableCell>
                 <TableCell>{member.added_by_name}</TableCell>
-                <TableCell>{new Date(member.added_at).toLocaleString()}</TableCell>
-                <TableCell>{member.expires_at ? new Date(member.expires_at).toLocaleDateString() : ""}</TableCell>
+                <TableCell>{formatDateTime(member.added_at, languageOf(messages))}</TableCell>
+                <TableCell>{formatIsoDate(member.expires_at, languageOf(messages))}</TableCell>
                 {canManage ? (
                   <TableCell>
                     <Button size="sm" variant="outline" onClick={() => void remove(member)}>
@@ -297,7 +298,7 @@ function TeamTab({ mandateId, messages }: { mandateId: number; messages: Message
           <TableBody>
             {(crossings.data ?? []).map((crossing, index) => (
               <TableRow key={index}>
-                <TableCell>{new Date(crossing.at).toLocaleString()}</TableCell>
+                <TableCell>{formatDateTime(crossing.at, languageOf(messages))}</TableCell>
                 <TableCell>{crossing.action}</TableCell>
                 <TableCell>{crossing.user_name}</TableCell>
                 <TableCell>{crossing.by_user_name}</TableCell>
@@ -328,7 +329,7 @@ function HistoryTab({ mandateId, version, messages }: { mandateId: number; versi
         <TableBody>
           {historyRows(history.data ?? []).map((row, index) => (
             <TableRow key={index}>
-              <TableCell>{new Date(row.when).toLocaleString()}</TableCell>
+              <TableCell>{formatDateTime(row.when, languageOf(messages))}</TableCell>
               <TableCell>{row.who}</TableCell>
               <TableCell>{row.what}</TableCell>
               <TableCell>{row.old}</TableCell>

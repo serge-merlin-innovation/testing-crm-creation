@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fieldErrors, MANDATE_TYPES, readDetail } from "@/lib/deals";
-import type { MessageKey } from "@/lib/i18n/messages";
+import { type MessageKey, languageOf } from "@/lib/i18n/messages";
+import { formatAmount } from "@/lib/i18n/format";
 import {
   groupByStage,
   OPPORTUNITY_STAGES,
@@ -110,7 +111,7 @@ export function OriginationView({ messages, canCreate }: { messages: Messages; c
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <p className="text-muted-foreground text-sm">
-            {messages["origination.weighted"]}: {weightedEv(rows).toFixed(0)}
+            {messages["origination.weighted"]}: {formatAmount(weightedEv(rows), languageOf(messages))}
           </p>
           {rows.length === 0 ? <p>{messages["origination.empty"]}</p> : null}
           <div className="grid gap-4 md:grid-cols-4">
