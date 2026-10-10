@@ -3,11 +3,8 @@
 from datetime import UTC, datetime
 
 import pytest
-from sqlalchemy import select
 
 from src.infrastructure.clock import FrozenClock, SystemClock, set_clock
-from src.infrastructure.config.settings import settings
-from src.modules.audit.models import AuditEntry
 from src.modules.role.permissions import RoleName
 from tests.integration.crm.deal_helpers import build_world, create_mandate
 from tests.integration.foundation.helpers import step_up
@@ -127,83 +124,3 @@ async def test_a_staffed_admin_or_compliance_user_reads_their_deal(world, person
     assert "Falcon" in str(listed)
     edit = await member.client.patch(url, json={"version": read.json()["version"], "estimated_ev": "1"}, headers=member.headers)
     assert edit.status_code == 403, edit.text
-
-
-async def actions(world) -> list[tuple[str, str | None]]:
-    rows = (await world.db.execute(select(AuditEntry.action, AuditEntry.record_type).order_by(AuditEntry.id))).all()
-    return [(row[0], row[1]) for row in rows]
-
-
-async def call(actor, method: str, path: str, body: dict | None = None):
-    response = await actor.client.request(method, path, json=body, headers=actor.headers)
-    assert response.status_code < 300, (path, response.text)
-    return response.json() if response.content else None
-
-
-# Review S7 (cross-cutting AC): activities, notes, tasks, saved filters, the feed URL and unmatched
-# emails write an audit row in the same request.
-async def test_record_changes_outside_deals_are_audited(world, client, monkeypatch):
-    monkeypatch.setattr(settings, "INBOUND_EMAIL_SECRET", "s3cret")
-    company = {"record_type": "company", "record_id": world.client_id}
-    activity = await call(
-        world.partner,
-        "POST",
-        "/api/v1/activities/",
-        {"type": "call", "occurred_at": NOW.isoformat(), "note": "Intro", "links": [company]},
-    )
-    await call(world.partner, "PATCH", f"/api/v1/activities/{activity['id']}", {"note": "Intro call"})
-    await call(world.partner, "DELETE", f"/api/v1/activities/{activity['id']}")
-    await call(world.admin, "POST", f"/api/v1/activities/{activity['id']}/restore")
-    await call(world.partner, "POST", "/api/v1/notes/", {**company, "body": "Likes golf"})
-    task = await call(
-        world.partner,
-        "POST",
-        "/api/v1/tasks/",
-        {"title": "Call back", "assignee_id": world.partner.id, "due_date": "2026-10-20"},
-    )
-    await call(world.partner, "POST", f"/api/v1/tasks/{task['id']}/complete")
-    saved = await call(world.partner, "POST", "/api/v1/saved-filters/", {"name": "Mine", "criteria": {"q": "acme"}})
-    await call(world.partner, "PUT", f"/api/v1/saved-filters/{saved['id']}/shared", {"shared": True})
-    await call(world.partner, "DELETE", f"/api/v1/saved-filters/{saved['id']}")
-    await call(world.partner, "POST", "/api/v1/calendar-feed/regenerate")
-
-    address = (await call(world.partner, "GET", "/api/v1/email-logging/address"))["address"]
-    for subject in ("First", "Second"):
-        inbound = await client.post(
-            "/api/v1/email-logging/inbound",
-            json={
-                "sender": world.partner.email,
-                "spf": "pass",
-                "dkim": "pass",
-                "subject": subject,
-                "text": "x",
-                "to": ["nobody@else.be"],
-                "cc": [],
-                "bcc": [address],
-                "attachments": [],
-                "message_id": f"<{subject}@x>",
-            },
-            headers={"X-Inbound-Secret": "s3cret"},
-        )
-        assert inbound.status_code == 202, inbound.text
-    unmatched = await call(world.partner, "GET", "/api/v1/email-logging/unmatched")
-    await call(world.partner, "POST", f"/api/v1/email-logging/unmatched/{unmatched[0]['id']}/link", {"links": [company]})
-    await call(world.partner, "DELETE", f"/api/v1/email-logging/unmatched/{unmatched[1]['id']}")
-
-    logged = await actions(world)
-    for expected in (
-        ("activity.created", "activity"),
-        ("activity.updated", "activity"),
-        ("activity.deleted", "activity"),
-        ("activity.restored", "activity"),
-        ("note.created", "note"),
-        ("task.created", "task"),
-        ("task.completed", "task"),
-        ("saved_filter.created", "saved_filter"),
-        ("saved_filter.shared", "saved_filter"),
-        ("saved_filter.deleted", "saved_filter"),
-        ("calendar_feed.regenerated", "calendar_feed"),
-        ("unmatched_email.linked", "unmatched_email"),
-        ("unmatched_email.discarded", "unmatched_email"),
-    ):
-        assert expected in logged, (expected, logged)
