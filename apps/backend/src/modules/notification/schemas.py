@@ -22,6 +22,8 @@ class EventKind(StrEnum):
     EXPORT_APPROVAL = "export.approval"
     MILESTONE_DUE = "milestone.due"
     CONFLICT_REVIEW_OVERDUE = "conflict.review_overdue"
+    BUYER_IDLE = "buyer.idle"
+    NDA_PENDING = "buyer.nda_pending"
     OPPORTUNITY_INVITED = "opportunity.invited"
 
 
