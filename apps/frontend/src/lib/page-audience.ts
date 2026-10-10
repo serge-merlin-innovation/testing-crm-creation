@@ -28,6 +28,12 @@ export const PAGE_AUDIENCE: Record<string, PageAudience> = {
   "/users": { kind: "permission", permission: "users.manage" },
   "/permissions": { kind: "permission", permission: "roles.manage" },
   "/analytics": { kind: "permission", permission: "dashboard.aggregated" },
+  // Signed-in only: the backend's 404 decides, so a hidden deal reads Not found for every role
+  // instead of a redirect that would differ between "no permission" and "not staffed".
+  "/deals": { kind: "authenticated" },
+  "/companies": { kind: "authenticated" },
+  "/contacts": { kind: "authenticated" },
+  "/picklists": { kind: "permission", permission: "settings.manage" },
 };
 
 const GATED_BY_DEFAULT: PageAudience = { kind: "authenticated" };

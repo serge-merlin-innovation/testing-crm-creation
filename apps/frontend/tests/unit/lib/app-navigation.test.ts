@@ -25,15 +25,27 @@ function hrefs(items: { href: string }[]) {
 // AUTHZ-01: the UI hides a control the role's permissions do not grant.
 describe("getPrimaryNavigation", () => {
   it("offers an admin user and permission administration", () => {
-    expect(hrefs(getPrimaryNavigation(admin))).toEqual(["/overview", "/users", "/permissions"]);
+    expect(hrefs(getPrimaryNavigation(admin))).toEqual([
+      "/overview",
+      "/companies",
+      "/contacts",
+      "/users",
+      "/permissions",
+      "/picklists",
+    ]);
   });
 
-  it("hides administration from an analyst", () => {
-    expect(hrefs(getPrimaryNavigation(analyst))).toEqual(["/overview"]);
+  it("gives an analyst deals, companies and contacts but no administration", () => {
+    expect(hrefs(getPrimaryNavigation(analyst))).toEqual(["/overview", "/deals", "/companies", "/contacts"]);
+  });
+
+  // ROLE-01 c2: an Admin has no deal permission, so no Deals link.
+  it("hides deals from an admin", () => {
+    expect(hrefs(getPrimaryNavigation(admin))).not.toContain("/deals");
   });
 
   it("offers read-only only the dashboards", () => {
-    expect(hrefs(getPrimaryNavigation(readOnly))).toEqual(["/overview", "/analytics"]);
+    expect(hrefs(getPrimaryNavigation(readOnly))).toEqual(["/overview", "/companies", "/contacts", "/analytics"]);
   });
 });
 
