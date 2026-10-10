@@ -128,6 +128,21 @@ class DealPolicy:
             raise DealForbiddenError(f"Missing {ACTION_PERMISSION[action].value}")
         return grant
 
+    async def authorize_summary(self, db: AsyncSession, user: dict[str, Any], mandate_id: int) -> DealGrant:
+        """The read-only deal summary (ROLE-01 c4): the team, or a deals.read_summary holder on any deal.
+
+        Only the summary, fee and invoice routes use this grant: every other deal route keeps `authorize`.
+        """
+        try:
+            return await self.authorize(db, user, mandate_id, DealAction.READ)
+        except DealNotFoundError:
+            if not has_permission(user, Permission.DEALS_READ_SUMMARY):
+                raise
+        mandate = await db.get(Mandate, mandate_id)
+        if mandate is None:
+            raise DealNotFoundError(f"Deal {mandate_id} not found")
+        return DealGrant(mandate=mandate, membership=None, user=user)
+
     async def _compliance_grant(self, db: AsyncSession, user: dict[str, Any], mandate_id: int) -> DealGrant:
         if has_permission(user, Permission.DEALS_READ_SUMMARY):
             mandate = (
@@ -155,6 +170,24 @@ def deal_access(action: DealAction) -> Any:
 
 
 DEAL_SCOPED_MARK = "__deal_scoped__"
+
+
+def mark_deal_scoped(dependency: Callable[..., Any]) -> Callable[..., Any]:
+    """Flags a dependency that resolves `{mandate_id}`, so the access-matrix guard sees its routes."""
+    setattr(dependency, DEAL_SCOPED_MARK, True)
+    return dependency
+
+
+async def _summary_dependency(
+    mandate_id: int,
+    db: AsyncSessionDep,
+    user: CurrentUserDep,
+    clock: Annotated[Clock, Depends(get_clock)],
+) -> DealGrant:
+    return await DealPolicy(clock.now()).authorize_summary(db, user, mandate_id)
+
+
+mark_deal_scoped(_summary_dependency)
 
 
 def _dependencies(call: Callable[..., Any] | None, dependant: Any) -> bool:
@@ -198,3 +231,4 @@ ReadGrant = Annotated[DealGrant, deal_access(DealAction.READ)]
 EditGrant = Annotated[DealGrant, deal_access(DealAction.EDIT)]
 TeamGrant = Annotated[DealGrant, deal_access(DealAction.MANAGE_TEAM)]
 ReopenGrant = Annotated[DealGrant, deal_access(DealAction.REOPEN)]
+SummaryGrant = Annotated[DealGrant, Depends(_summary_dependency)]

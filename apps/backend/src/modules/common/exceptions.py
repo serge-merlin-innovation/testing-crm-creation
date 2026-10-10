@@ -124,3 +124,7 @@ class RestoreWindowClosedError(ResourceExistsError):
 
 class TaskNotFoundError(ResourceNotFoundError):
     pass
+
+
+class InvoiceNotFoundError(ResourceNotFoundError):
+    pass

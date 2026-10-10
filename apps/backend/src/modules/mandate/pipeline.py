@@ -62,6 +62,17 @@ def set_kyc_check(check: KycCheck) -> None:
     _kyc_check = check
 
 
+# Slices that act when a deal closes as won (the fee slice raises the invoice task, DEAL-05).
+# A hook only adds rows and queues notifications: the close commits them with the deal, then sends.
+CloseHook = Callable[[AsyncSession, Mandate, datetime, NotificationService], Awaitable[None]]
+_close_hooks: list[CloseHook] = []
+
+
+def on_closed_won(hook: CloseHook) -> None:
+    if hook not in _close_hooks:
+        _close_hooks.append(hook)
+
+
 class StaleVersion(Exception):
     pass
 
@@ -335,7 +346,11 @@ class PipelineService:
             old_values={"stage": old_stage},
             new_values={key: value for key, value in outcome.items() if value is not None},
         )
+        if values.outcome == Outcome.CLOSED_WON:
+            for hook in _close_hooks:
+                await hook(db, mandate, now, self.notifications)
         await db.commit()
+        await self.notifications.flush_emails()
 
     async def reopen(self, db: AsyncSession, grant: DealGrant, values: MandateReopen, context: AuditContext) -> None:
         mandate = grant.mandate
