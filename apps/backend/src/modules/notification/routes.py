@@ -4,6 +4,8 @@ from fastapi import APIRouter
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
+from ..audit.dependencies import AuditContextDep
+from ..audit.service import AuditService
 from ..mandate.policy import DealPolicy
 from .dependencies import NotificationServiceDep
 from .schemas import NotificationRead, PreferenceRead, PreferencesUpdate
@@ -36,6 +38,18 @@ async def get_preferences(db: AsyncSessionDep, service: NotificationServiceDep, 
     description="Only the event types sent are changed.",
 )
 async def set_preferences(
-    values: PreferencesUpdate, db: AsyncSessionDep, service: NotificationServiceDep, user: CurrentUserDep
+    values: PreferencesUpdate,
+    db: AsyncSessionDep,
+    service: NotificationServiceDep,
+    user: CurrentUserDep,
+    context: AuditContextDep,
 ) -> list[Any]:
+    AuditService().record(
+        db,
+        context,
+        "notification_preferences.updated",
+        record_type="notification_preferences",
+        record_id=user["id"],
+        new_values={kind.value: channel.value for kind, channel in values.preferences.items()},
+    )
     return await service.set_preferences(db, user["id"], values.preferences)

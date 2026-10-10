@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy import ColumnElement, String, cast, func, literal, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..audit.service import AuditContext, AuditService
 from ..common.exceptions import PermissionDeniedError, ResourceNotFoundError, ValidationError
 from ..company.models import Company
 from ..contact.models import Contact, Employment
@@ -150,7 +151,14 @@ class SavedFilterService:
             "created_at": saved.created_at,
         }
 
-    async def create(self, db: AsyncSession, user: dict[str, Any], values: SavedFilterCreate, now: datetime) -> dict[str, Any]:
+    async def create(
+        self,
+        db: AsyncSession,
+        user: dict[str, Any],
+        values: SavedFilterCreate,
+        now: datetime,
+        context: AuditContext | None = None,
+    ) -> dict[str, Any]:
         saved = SavedFilter(
             owner_id=user["id"],
             name=values.name.strip(),
@@ -159,6 +167,16 @@ class SavedFilterService:
             shared=values.shared,
         )
         db.add(saved)
+        await db.flush()
+        if context is not None:
+            AuditService().record(
+                db,
+                context,
+                "saved_filter.created",
+                record_type="saved_filter",
+                record_id=saved.id,
+                new_values={"name": saved.name, "criteria": saved.criteria, "shared": saved.shared},
+            )
         await db.commit()
         return await self._read(db, saved)
 
@@ -176,17 +194,38 @@ class SavedFilterService:
             raise SavedFilterNotFoundError(f"Saved filter {filter_id} not found")
         return saved
 
-    async def set_shared(self, db: AsyncSession, user: dict[str, Any], filter_id: int, shared: bool) -> dict[str, Any]:
+    async def set_shared(
+        self, db: AsyncSession, user: dict[str, Any], filter_id: int, shared: bool, context: AuditContext | None = None
+    ) -> dict[str, Any]:
         saved = await self.get(db, user, filter_id)
         if saved.owner_id != user["id"]:
             raise PermissionDeniedError("Only the owner shares a filter")
+        if context is not None and saved.shared != shared:
+            AuditService().record(
+                db,
+                context,
+                "saved_filter.updated",
+                record_type="saved_filter",
+                record_id=saved.id,
+                old_values={"shared": saved.shared},
+                new_values={"shared": shared},
+            )
         saved.shared = shared
         await db.commit()
         return await self._read(db, saved)
 
-    async def delete(self, db: AsyncSession, user: dict[str, Any], filter_id: int) -> None:
+    async def delete(self, db: AsyncSession, user: dict[str, Any], filter_id: int, context: AuditContext | None = None) -> None:
         saved = await self.get(db, user, filter_id)
         if saved.owner_id != user["id"]:
             raise PermissionDeniedError("Only the owner deletes a filter")
+        if context is not None:
+            AuditService().record(
+                db,
+                context,
+                "saved_filter.deleted",
+                record_type="saved_filter",
+                record_id=saved.id,
+                old_values={"name": saved.name},
+            )
         await db.delete(saved)
         await db.commit()

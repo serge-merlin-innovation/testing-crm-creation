@@ -88,9 +88,9 @@ async def comment_request(
     db: AsyncSessionDep,
     service: AccessServiceDep,
     user: CurrentUserDep,
-    clock: ClockDep,
+    context: AuditContextDep,
 ) -> dict[str, Any]:
-    return await service.comment(db, user, request_id, values, clock.now())
+    return await service.comment(db, user, request_id, values, context)
 
 
 @requests_router.post(

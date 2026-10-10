@@ -380,8 +380,9 @@ class AccessService:
         return sorted(found.values(), key=lambda item: item["code_name"])
 
     async def comment(
-        self, db: AsyncSession, user: dict[str, Any], request_id: int, values: CommentCreate, now: datetime
+        self, db: AsyncSession, user: dict[str, Any], request_id: int, values: CommentCreate, context: AuditContext
     ) -> dict[str, Any]:
+        now = context.clock.now()
         request, approver = await self._visible_request(db, user, request_id, now)
         if request.status != RequestStatus.PENDING.value:
             raise ResourceExistsError("This request is already decided")
@@ -394,6 +395,14 @@ class AccessService:
                 recommendation=values.recommendation.value if values.recommendation else None,
                 on_behalf_of_id=approver.on_behalf_of_id if approver else None,
             )
+        )
+        self.audit.record(
+            db,
+            context,
+            "access_request.commented",
+            record_type="access_request",
+            record_id=request.id,
+            new_values={"recommendation": values.recommendation.value if values.recommendation else None},
         )
         await db.commit()
         return await self.context(db, user, request_id, now)

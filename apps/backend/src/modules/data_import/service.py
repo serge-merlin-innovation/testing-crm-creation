@@ -202,7 +202,14 @@ class ImportService:
         return record
 
     async def upload(
-        self, db: AsyncSession, user: dict[str, Any], entity: ImportEntity, filename: str, content: bytes, now: datetime
+        self,
+        db: AsyncSession,
+        user: dict[str, Any],
+        entity: ImportEntity,
+        filename: str,
+        content: bytes,
+        now: datetime,
+        context: AuditContext | None = None,
     ) -> dict[str, Any]:
         headers, rows = read_workbook(content)
         record = DataImport(
@@ -215,6 +222,16 @@ class ImportService:
             status=ImportStatus.UPLOADED.value,
         )
         db.add(record)
+        await db.flush()
+        if context is not None:
+            self.audit.record(
+                db,
+                context,
+                "import.uploaded",
+                record_type="import",
+                record_id=record.id,
+                new_values={"entity": record.entity, "filename": record.filename, "rows": len(rows)},
+            )
         await db.commit()
         return self.upload_read(record)
 

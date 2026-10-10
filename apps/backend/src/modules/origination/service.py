@@ -378,10 +378,18 @@ class OriginationService:
         await db.commit()
         return link
 
-    async def remove_link(self, db: AsyncSession, opportunity: Opportunity, link_id: int) -> None:
+    async def remove_link(self, db: AsyncSession, opportunity: Opportunity, link_id: int, context: AuditContext) -> None:
         link = await db.get(OpportunityLink, link_id)
         if link is None or link.opportunity_id != opportunity.id:
             raise OpportunityNotFoundError("Link not found")
+        self.audit.record(
+            db,
+            context,
+            "opportunity.link_removed",
+            record_type="opportunity",
+            record_id=opportunity.id,
+            old_values={"label": link.label, "url": link.url},
+        )
         await db.delete(link)
         await db.commit()
 
@@ -410,7 +418,9 @@ class OriginationService:
             await db.commit()
         return _credential(mandate)
 
-    async def remove_credential(self, db: AsyncSession, opportunity: Opportunity, mandate_id: int) -> None:
+    async def remove_credential(
+        self, db: AsyncSession, opportunity: Opportunity, mandate_id: int, context: AuditContext
+    ) -> None:
         row = (
             await db.execute(
                 select(OpportunityCredential).where(
@@ -420,6 +430,14 @@ class OriginationService:
         ).scalar_one_or_none()
         if row is None:
             raise OpportunityNotFoundError("Credential not found")
+        self.audit.record(
+            db,
+            context,
+            "opportunity.credential_removed",
+            record_type="opportunity",
+            record_id=opportunity.id,
+            old_values={"mandate_id": mandate_id},
+        )
         await db.delete(row)
         await db.commit()
 

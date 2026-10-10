@@ -4,6 +4,7 @@ from fastapi import APIRouter, Response
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
+from ..audit.dependencies import AuditContextDep
 from ..role.authorization import require_permission
 from .dependencies import ActivityServiceDep, NoteServiceDep
 from .schemas import (
@@ -33,9 +34,14 @@ RestorerDep = Annotated[dict[str, Any], require_permission(RESTORE_PERMISSION)]
     description="Shows on every linked record's timeline. Linking a deal needs edit access to it.",
 )
 async def log_activity(
-    values: ActivityCreate, db: AsyncSessionDep, service: ActivityServiceDep, user: CurrentUserDep, clock: ClockDep
+    values: ActivityCreate,
+    db: AsyncSessionDep,
+    service: ActivityServiceDep,
+    user: CurrentUserDep,
+    clock: ClockDep,
+    context: AuditContextDep,
 ) -> dict[str, Any]:
-    return await service.create(db, user, values, clock.now())
+    return await service.create(db, user, values, clock.now(), context)
 
 
 @router.get("/deleted", summary="Admin: activities deleted in the last 30 days, restorable")
@@ -56,15 +62,21 @@ async def edit_activity(
     service: ActivityServiceDep,
     user: CurrentUserDep,
     clock: ClockDep,
+    context: AuditContextDep,
 ) -> dict[str, Any]:
-    return await service.update(db, user, activity_id, values, clock.now())
+    return await service.update(db, user, activity_id, values, clock.now(), context)
 
 
 @router.delete("/{activity_id}", status_code=204, summary="Soft-delete an activity (author or admin)")
 async def delete_activity(
-    activity_id: int, db: AsyncSessionDep, service: ActivityServiceDep, user: CurrentUserDep, clock: ClockDep
+    activity_id: int,
+    db: AsyncSessionDep,
+    service: ActivityServiceDep,
+    user: CurrentUserDep,
+    clock: ClockDep,
+    context: AuditContextDep,
 ) -> Response:
-    await service.delete(db, user, activity_id, clock.now())
+    await service.delete(db, user, activity_id, clock.now(), context)
     return Response(status_code=204)
 
 
@@ -75,9 +87,14 @@ async def delete_activity(
     responses={409: {"description": "Deleted more than 30 days ago"}},
 )
 async def restore_activity(
-    activity_id: int, db: AsyncSessionDep, service: ActivityServiceDep, _: RestorerDep, clock: ClockDep
+    activity_id: int,
+    db: AsyncSessionDep,
+    service: ActivityServiceDep,
+    _: RestorerDep,
+    clock: ClockDep,
+    context: AuditContextDep,
 ) -> Response:
-    await service.restore(db, activity_id, clock.now())
+    await service.restore(db, activity_id, clock.now(), context)
     return Response(status_code=204)
 
 
@@ -89,9 +106,14 @@ async def restore_activity(
     description="Private: only the author, admins included. Deal-confidential: only the deal team of `mandate_id`.",
 )
 async def add_note(
-    values: NoteCreate, db: AsyncSessionDep, service: NoteServiceDep, user: CurrentUserDep, clock: ClockDep
+    values: NoteCreate,
+    db: AsyncSessionDep,
+    service: NoteServiceDep,
+    user: CurrentUserDep,
+    clock: ClockDep,
+    context: AuditContextDep,
 ) -> Any:
-    return await service.create(db, user, values, clock.now())
+    return await service.create(db, user, values, clock.now(), context)
 
 
 @timeline_router.get(

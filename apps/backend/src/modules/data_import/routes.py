@@ -29,10 +29,11 @@ async def upload_import(
     service: ImportServiceDep,
     user: ImporterDep,
     clock: ClockDep,
+    context: AuditContextDep,
     entity: Annotated[ImportEntity, Form()],
     file: Annotated[UploadFile, File(description="An .xlsx workbook; the first sheet's first row is the header")],
 ) -> dict[str, Any]:
-    return await service.upload(db, user, entity, file.filename or "import.xlsx", await file.read(), clock.now())
+    return await service.upload(db, user, entity, file.filename or "import.xlsx", await file.read(), clock.now(), context)
 
 
 @router.post(

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Response
 
 from ...infrastructure.clock import ClockDep
 from ...infrastructure.dependencies import AsyncSessionDep, CurrentUserDep
+from ..audit.dependencies import AuditContextDep
 from .dependencies import EmailLoggingServiceDep, InboundSecretDep
 from .schemas import InboundEmail, InboundResult, InteractionRead, LoggingAddressRead, UnmatchedLink, UnmatchedRead
 from .service import interactions
@@ -37,9 +38,13 @@ async def my_address(
     responses={401: {"description": "Bad webhook secret"}, 403: {"description": "Sender is not a CRM user"}},
 )
 async def inbound(
-    email: InboundEmail, db: AsyncSessionDep, service: EmailLoggingServiceDep, _: InboundSecretDep, clock: ClockDep
+    email: InboundEmail,
+    db: AsyncSessionDep,
+    service: EmailLoggingServiceDep,
+    _: InboundSecretDep,
+    context: AuditContextDep,
 ) -> InboundResult:
-    return await service.receive(db, email, clock.now())
+    return await service.receive(db, email, context)
 
 
 @router.get("/unmatched", response_model=list[UnmatchedRead], summary="My Unmatched inbox, newest first")
@@ -59,16 +64,16 @@ async def link_unmatched(
     db: AsyncSessionDep,
     service: EmailLoggingServiceDep,
     user: CurrentUserDep,
-    clock: ClockDep,
+    context: AuditContextDep,
 ) -> dict[str, Any]:
-    return await service.link(db, user, unmatched_id, values, clock.now())
+    return await service.link(db, user, unmatched_id, values, context)
 
 
 @router.delete("/unmatched/{unmatched_id}", status_code=204, summary="Discard an unmatched email")
 async def discard_unmatched(
-    unmatched_id: int, db: AsyncSessionDep, service: EmailLoggingServiceDep, user: CurrentUserDep
+    unmatched_id: int, db: AsyncSessionDep, service: EmailLoggingServiceDep, user: CurrentUserDep, context: AuditContextDep
 ) -> Response:
-    await service.discard(db, user, unmatched_id)
+    await service.discard(db, user, unmatched_id, context)
     return Response(status_code=204)
 
 
