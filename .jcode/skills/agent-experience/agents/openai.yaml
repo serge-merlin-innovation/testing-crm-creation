@@ -1,0 +1,5 @@
+interface:
+  display_name: "Agent experience"
+  short_description: "Recommendations-only report from a run's check failures, decisions and postmortems"
+policy:
+  allow_implicit_invocation: false
