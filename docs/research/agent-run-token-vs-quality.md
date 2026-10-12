@@ -59,6 +59,31 @@ Conclusion: this run gives no evidence that more tokens or a bigger context prod
 
 **Statistics.** Pearson r with a two-sided t-test p-value, plus Spearman ρ, over the 20 scored agents. Computed in plain Python, no libraries.
 
+## How the "failed first time" percentage is computed
+
+For each implementation agent:
+
+> **failed %** = criteria of its ticket that a later review found unmet ÷ all criteria of its ticket
+
+1. **Denominator: the ticket's criteria.** Each of the 20 tickets is a GitHub issue that lists the spec stories it covers. Every acceptance criterion (each `- [ ]` line) under those stories is counted. That gives 272 criteria over the 20 tickets. #5, for example, has 18.
+2. **Numerator: criteria a later review found unmet.** A criterion counts once as failed, even when several sources flag it, if any of these says the ticket's work did not meet it:
+   - **Review 1** (security and Chinese wall): each blocker or should-fix finding, mapped to the criterion it breaks.
+   - **Review 2** (the per-criterion spec trace): every criterion marked WEAK (a test exists but does not really prove the criterion), MISSING or CONTRADICTS.
+   - **Overturned decisions:** a row in `docs/DECISION-REPORT.md` marked "Superseded by review 2", where the agent had quietly narrowed the spec.
+3. **Attribution: which agent a failure counts against.**
+   - It counts against the ticket whose issue lists that criterion. The git history confirmed which agent's commits implemented it.
+   - Findings with no matching criterion are left out (e.g. formula injection, test endpoints).
+   - So are findings about code that had not merged yet when the review ran.
+   - Crashed or resumed attempts are not scored. bird (#14, crashed before writing code) and cat (finished #12's merge) appear on the map but carry no %. The agent that actually built the ticket carries it.
+
+**Worked example: #5 companies and contacts, 44.4% (8 of 18).** Review 2 marked 8 of #5's 18 criteria MISSING or WEAK, almost all because no screen existed for them: company register lookup (CO-01 c1), duplicate links (CO-01 c2), financials (CO-02 c1–c4), the group tree (CO-03 c1) and the contact edit form (CON-01 c2). The API and its tests were done.
+
+**How to read the number.**
+- **Two agents can share a failure.** hatchling built only #5's backend, and the coordinator told calf (#6) to build #5's screens. So those 8 failures are really shared between two agents. They are flagged *ambiguous*, as are 9 others: 17 of the 56 failures in total.
+- **It is a strict bar.** A WEAK criterion fails even when the feature works, because the test did not really prove it. The % measures "proven by a test", not "broken".
+- **The reviews were not uniform.** Review 1 read an earlier state of the branch (27f0e11, before #20 merged). Review 2 traced every criterion, so later or larger tickets met a more thorough check.
+- **It is hand-attributed.** The mapping from review findings to criteria was built by reading the review files (`failures.py` in the scratch dir, output in `data.json`). It is a careful estimate, not an independent measurement.
+
 ## Agent map
 
 Every session of the run. The coordinator at the left, its subagents grouped by phase. Each card shows the session name and ticket, its role, total tokens, peak context and, for implementation agents, the share of acceptance criteria that failed the first time.
