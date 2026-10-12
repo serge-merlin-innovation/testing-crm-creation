@@ -2,7 +2,7 @@
 
   compare.py --config run.json --ref-dir docs/research [--ref-data old/data.json]
 
-Reads the graph embedded in <ref-dir>/agent-run-map.html (and optionally an older data.json), then prints
+Reads the graph embedded in <ref-dir>/agent-run-map-timeline.html (and optionally an older data.json), then prints
 every difference in sessions, per-session tokens, failed % per ticket, and the edge set.
 """
 import json
@@ -26,7 +26,7 @@ def main():
     a = ap.parse_args()
     cfg = load_config(a.config)
     data, ed = read_json(cfg, "data.json"), read_json(cfg, "edges.json")
-    ref = embedded_graph(os.path.join(expand(a.ref_dir), "agent-run-map.html"))
+    ref = embedded_graph(os.path.join(expand(a.ref_dir), "agent-run-map-timeline.html"))
     new = {s["name"]: s for s in data["sessions"]}
     old = {n["name"]: n for n in ref["nodes"]}
     print(f"sessions: new {len(new)}, ref {len(old)}; only new {sorted(set(new) - set(old))}; only ref {sorted(set(old) - set(new))}")

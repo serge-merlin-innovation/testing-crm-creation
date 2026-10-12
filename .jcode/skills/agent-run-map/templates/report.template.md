@@ -2,10 +2,7 @@
 
 The {{TITLE}} run of {{RUN_DATE}}. Coordinator `{{COORDINATOR}}` and its {{N_CHILDREN}} subagent sessions. Read-only analysis, {{TODAY}}.
 
-Interactive views, both in this folder and self-contained (open in a browser, offline). Hover a card to highlight its links, click it for its token figures, failed criteria and postmortem link, and toggle link types in the legend.
-
-- [agent-run-map.html](agent-run-map.html): one column per agent type (coordinator, tickets, mergers, reviews, fixers), each column centred on a shared mid-line, with right-angled links between columns.
-- [agent-run-map-timeline.html](agent-run-map-timeline.html): time runs left to right, and each session sits one step after the sessions it waited on, in a lane for its role.
+Interactive view: [agent-run-map-timeline.html](agent-run-map-timeline.html) in this folder. It is self-contained, so open it in a browser, offline. Time runs left to right, and each session sits one step after the sessions it waited on, in a lane for its role. Hover a card to highlight its links, click it for its token figures, failed criteria and postmortem link, and toggle link types in the legend.
 
 ## Question
 

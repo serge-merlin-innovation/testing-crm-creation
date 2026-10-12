@@ -1,6 +1,5 @@
-"""Step 5: render the three outputs into <out_dir>.
+"""Step 6: render the two outputs into <out_dir>.
 
-  agent-run-map.html           columns layout, from templates/columns.template.html
   agent-run-map-timeline.html  timeline layout, from templates/timeline.template.html
   agent-run-token-vs-quality.md
       If the file is missing, it is created from templates/report.template.md.
@@ -188,7 +187,6 @@ def main():
     data = read_json(cfg, "data.json")
     ed = read_json(cfg, "edges.json")
     merger_scopes(data, ed, cfg["branch"])
-    print(html(cfg, "columns", "columns.template.html", "agent-run-map.html"))
     print(html(cfg, "timeline", "timeline.template.html", "agent-run-map-timeline.html"))
     print(report(cfg, data, ed))
 

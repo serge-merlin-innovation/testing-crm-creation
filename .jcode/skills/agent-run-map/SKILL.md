@@ -1,14 +1,13 @@
 ---
 name: agent-run-map
-description: "Map a finished multi-agent run: token use vs acceptance criteria failed first time, a Mermaid agent map with a postmortem index, and two offline HTML maps (columns and timeline)."
+description: "Map a finished multi-agent run: token use vs acceptance criteria failed first time, a Mermaid agent map with a postmortem index, and an offline HTML timeline map."
 disable-model-invocation: true
 ---
 
-You are mapping one **run**: a coordinator session and every subagent it spawned. The outputs are three files in the output folder:
+You are mapping one **run**: a coordinator session and every subagent it spawned. The outputs are two files in the output folder:
 
 - `agent-run-token-vs-quality.md`: the report, with an embedded Mermaid agent map and a postmortem index.
-- `agent-run-map.html`: one column per agent type, centred on a shared mid-line, orthogonal wires.
-- `agent-run-map-timeline.html`: time-ordered lanes.
+- `agent-run-map-timeline.html`: the interactive map. Time runs left to right, with one lane per role.
 
 The scripts in `scripts/` do the mechanical work (Python stdlib; Playwright from the repo's frontend for the check). Your job is the judgement they cannot do: the failure attribution and the report narrative. Run every script from this skill's folder with `--config <run.json>`. A full config, and the result of proving the skill against a real run, are in [`EXAMPLE.md`](EXAMPLE.md).
 
@@ -21,7 +20,7 @@ The scripts in `scripts/` do the mechanical work (Python stdlib; Playwright from
    | `coordinator` | `$JCODE_SESSION_ID` | coordinator session id |
    | `repo` | cwd | repo the run worked on |
    | `run_date` | coordinator's `created_at` day (UTC) | run window start; `days` (1) sets its length, or give `run_start` / `run_end` |
-   | `out_dir` | `<repo>/docs/research` | where the three outputs go |
+   | `out_dir` | `<repo>/docs/research` | where the two outputs go |
    | `work_dir` | see above | intermediate JSON (`data.json`, `edges.json`, `graph-*.json`, `issues.json`) |
    | `working_dir_globs` | none | keep sessions whose `working_dir` matches, e.g. the repo and its worktrees `~/Projects/<repo>-*` |
    | `branch` | repo's current branch | integration branch the mergers merged into |
@@ -41,11 +40,11 @@ The scripts in `scripts/` do the mechanical work (Python stdlib; Playwright from
 
 4. **Derive edges.** `python3 scripts/edges.py --config run.json`. Every edge carries the evidence it came from, see **Edges**. Done when every line under `unresolved` is either expected (the coordinator's own merges) or fixed with `edges.add` / `edges.drop` in the config, with the reason in the report.
 
-5. **Lay out.** `python3 scripts/layout_columns.py --config run.json` and `python3 scripts/layout_timeline.py --config run.json`. Done when both print their sizes, and the column counts add up to the session count.
+5. **Lay out.** `python3 scripts/layout_timeline.py --config run.json`. Done when it prints its size, and the lane counts add up to the session count.
 
-6. **Render.** `python3 scripts/render.py --config run.json`. It writes both HTML files, and creates the report from `templates/report.template.md` when it is missing. On later runs it refreshes only the `<!-- BEGIN:x -->…<!-- END:x -->` blocks. Then write every `<!-- WRITE: … -->` section of the report from `data.json`: the answer, the reading and caveats, the worked example, the limits. Done when no `WRITE:` comment is left, and every number in your prose matches a generated block.
+6. **Render.** `python3 scripts/render.py --config run.json`. It writes the HTML timeline map, and creates the report from `templates/report.template.md` when it is missing. On later runs it refreshes only the `<!-- BEGIN:x -->…<!-- END:x -->` blocks. Then write every `<!-- WRITE: … -->` section of the report from `data.json`: the answer, the reading and caveats, the worked example, the limits. Done when no `WRITE:` comment is left, and every number in your prose matches a generated block.
 
-7. **Verify.** `node scripts/check.mjs --repo <repo> --expect <sessions> --shots <work_dir> <out_dir>/agent-run-map.html <out_dir>/agent-run-map-timeline.html`. Look at the `*-fit.png` screenshots. When an earlier output exists, also run `python3 scripts/compare.py --config run.json --ref-dir <old out_dir>`, and explain every difference it prints in the report. Done when check.mjs exits 0 on both files: the expected card count, 0 overlaps, 0 errors, 0 network requests, and every postmortem link resolving.
+7. **Verify.** `node scripts/check.mjs --repo <repo> --expect <sessions> --shots <work_dir> <out_dir>/agent-run-map-timeline.html`. Look at the `*-fit.png` screenshot. When an earlier output exists, also run `python3 scripts/compare.py --config run.json --ref-dir <old out_dir>`, and explain every difference it prints in the report. Done when check.mjs exits 0: the expected card count, 0 overlaps, 0 errors, 0 network requests, and every postmortem link resolving.
 
 ## Reference
 

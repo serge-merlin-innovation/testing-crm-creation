@@ -31,8 +31,8 @@ The skill was proven against the run that produced `docs/research/agent-run-*` (
 - Sessions: 48 = 48. Per-session tokens (input, output, cache read, cache write, total, peak, model calls, messages, duration): 0 differences.
 - Postmortems: all 37 found from the sessions' own tool calls, the same 37 files as the hand list.
 - Failed %: 0 differences over the 20 scored agents (56 of 272 criteria, 17 ambiguous). Correlation table identical.
-- check.mjs: both HTML files 48 cards, 0 overlaps, 0 errors, 0 network requests, 37/37 postmortem links resolve.
-- Layouts: fed the hand-coded edge set, both layout scripts reproduce the committed positions and canvas sizes exactly.
+- check.mjs: the timeline HTML file shows 48 cards, 0 overlaps, 0 errors, 0 network requests, and all 37 postmortem links resolve.
+- Layout: fed the hand-coded edge set, the timeline layout script reproduces the committed positions and canvas size exactly.
 
 ## Edge differences (79 derived vs 74 hand-coded, 73 shared)
 
