@@ -86,90 +86,233 @@ For each implementation agent:
 
 ## Agent map
 
-Every session of the run. The coordinator at the left, its subagents grouped by phase. Each card shows the session name and ticket, its role, total tokens, peak context and, for implementation agents, the share of acceptance criteria that failed the first time.
+Every session of the run and how the sessions relate. Each card shows the session name and ticket, its role, total tokens, peak context and, for implementation agents, the share of acceptance criteria that failed the first time.
 
-- Colour: green under 15% failed, yellow 15-29%, red 30% or more. Grey cards are not implementation agents, or have no failure rate (a crashed or resumed attempt).
+**Arrows**
+
+| Arrow | Colour | Meaning |
+|---|---|---|
+| `A ──▶ B` | grey | ticket B was blocked by ticket A (the spec's dependency graph) |
+| `A ┄▶ B` "merged by" | blue | B merged A's branch into `feat/ma-crm` |
+| `A ━▶ B` "findings" | red | reviewer A's findings were fixed by B, or B was reviewed or verified after merger A |
+| `A ┄▶ B` "resumed / respawned / split into 3" | purple | B took over A's unfinished job |
+| `calf ┄▶ hatchling` | yellow | calf (#6) built #5's screens that hatchling left out |
+
+**Cards**
+
+- Colour: green under 15% failed, yellow 15-29%, red 30% or more, grey for agents that are not implementation agents. A dashed grey card crashed or was killed.
 - A thick orange border marks a peak context over 200K tokens.
-- Dotted arrows: a session started by another subagent rather than by the coordinator.
+- "📄 postmortem" means the session wrote one. Click the card to open it (works in VS Code and in other Mermaid viewers that allow links). GitHub disables diagram links, so use the index below the diagram there.
 
 ```mermaid
 flowchart LR
-  dragon["<b>dragon</b><br/>coordinator<br/>93.9M tok · peak 444K"]:::coord
-  subgraph tickets["Tickets (implementation)"]
-    direction TB
-    humpback["<b>humpback · #1</b><br/>implementation<br/>18.9M tok · peak 317K<br/>failed 27.3% (3/11)"]:::mid
-    wyvern["<b>wyvern · #2</b><br/>implementation<br/>10.9M tok · peak 217K<br/>failed 29.4% (5/17)"]:::mid
-    macaque["<b>macaque · #3</b><br/>implementation<br/>10.2M tok · peak 189K<br/>failed 14.3% (2/14)"]:::good
-    tigress["<b>tigress · #4</b><br/>implementation<br/>9.0M tok · peak 177K<br/>failed 0.0% (0/19)"]:::good
-    hatchling["<b>hatchling · #5</b><br/>implementation<br/>4.0M tok · peak 121K<br/>failed 44.4% (8/18)"]:::bad
-    calf["<b>calf · #6</b><br/>implementation<br/>20.2M tok · peak 329K<br/>failed 12.5% (2/16)"]:::good
-    puppy["<b>puppy · #7</b><br/>implementation<br/>5.5M tok · peak 133K<br/>failed 23.1% (3/13)"]:::mid
-    retriever["<b>retriever · #8</b><br/>implementation<br/>13.8M tok · peak 251K<br/>failed 7.7% (1/13)"]:::good
-    microbe["<b>microbe · #9</b><br/>implementation<br/>17.3M tok · peak 272K<br/>failed 33.3% (4/12)"]:::bad
-    mushroom["<b>mushroom · #10</b><br/>implementation<br/>25.5M tok · peak 300K<br/>failed 8.3% (1/12)"]:::good
-    rose["<b>rose · #11</b><br/>implementation<br/>17.6M tok · peak 249K<br/>failed 12.5% (2/16)"]:::good
-    seedling["<b>seedling · #12</b><br/>implementation<br/>26.6M tok · peak 309K<br/>failed 10.0% (1/10)"]:::good
-    cat["<b>cat · #12</b><br/>implementation<br/>960K tok · peak 61K"]:::other
-    maple["<b>maple · #13</b><br/>implementation<br/>18.4M tok · peak 289K<br/>failed 25.0% (5/20)"]:::mid
-    bird["<b>bird · #14</b><br/>implementation<br/>1.2M tok · peak 93K"]:::other
-    bug["<b>bug · #14</b><br/>implementation<br/>24.3M tok · peak 318K<br/>failed 13.3% (2/15)"]:::good
-    sabertooth["<b>sabertooth · #15</b><br/>implementation<br/>11.8M tok · peak 234K<br/>failed 10.0% (1/10)"]:::good
-    pawprint["<b>pawprint · #16</b><br/>implementation<br/>18.4M tok · peak 284K<br/>failed 18.2% (2/11)"]:::mid
-    chipmunk["<b>chipmunk · #17</b><br/>implementation<br/>21.2M tok · peak 263K<br/>failed 33.3% (3/9)"]:::bad
-    mizaru["<b>mizaru · #18</b><br/>implementation<br/>9.4M tok · peak 178K<br/>failed 16.7% (1/6)"]:::mid
-    iwazaru["<b>iwazaru · #19</b><br/>implementation<br/>25.8M tok · peak 295K<br/>failed 25.0% (3/12)"]:::mid
-    dog["<b>dog · #20</b><br/>implementation<br/>111.9M tok · peak 556K<br/>failed 38.9% (7/18)"]:::bad
+  dragon["<b>dragon</b><br/>coordinator<br/>93.9M tok · peak 444K<br/>📄 postmortem"]:::coord
+  subgraph g_tickets["Tickets (dependency graph)"]
+    direction LR
+    humpback["<b>humpback · #1</b><br/>implementation<br/>18.9M tok · peak 317K<br/>failed 27.3% (3/11)<br/>📄 postmortem"]:::mid
+    wyvern["<b>wyvern · #2</b><br/>implementation<br/>10.9M tok · peak 217K<br/>failed 29.4% (5/17)<br/>📄 postmortem"]:::mid
+    macaque["<b>macaque · #3</b><br/>implementation<br/>10.2M tok · peak 189K<br/>failed 14.3% (2/14)<br/>📄 postmortem"]:::good
+    tigress["<b>tigress · #4</b><br/>implementation<br/>9.0M tok · peak 177K<br/>failed 0.0% (0/19)<br/>📄 postmortem"]:::good
+    hatchling["<b>hatchling · #5</b><br/>implementation<br/>4.0M tok · peak 121K<br/>failed 44.4% (8/18)<br/>📄 postmortem"]:::bad
+    calf["<b>calf · #6</b><br/>implementation<br/>20.2M tok · peak 329K<br/>failed 12.5% (2/16)<br/>📄 postmortem"]:::good
+    puppy["<b>puppy · #7</b><br/>implementation<br/>5.5M tok · peak 133K<br/>failed 23.1% (3/13)<br/>📄 postmortem"]:::mid
+    retriever["<b>retriever · #8</b><br/>implementation<br/>13.8M tok · peak 251K<br/>failed 7.7% (1/13)<br/>📄 postmortem"]:::good
+    microbe["<b>microbe · #9</b><br/>implementation<br/>17.3M tok · peak 272K<br/>failed 33.3% (4/12)<br/>📄 postmortem"]:::bad
+    mushroom["<b>mushroom · #10</b><br/>implementation<br/>25.5M tok · peak 300K<br/>failed 8.3% (1/12)<br/>📄 postmortem"]:::good
+    rose["<b>rose · #11</b><br/>implementation<br/>17.6M tok · peak 249K<br/>failed 12.5% (2/16)<br/>📄 postmortem"]:::good
+    seedling["<b>seedling · #12</b><br/>implementation<br/>26.6M tok · peak 309K<br/>failed 10.0% (1/10)<br/>no postmortem"]:::good
+    cat["<b>cat · #12</b><br/>implementation<br/>960K tok · peak 61K<br/>📄 postmortem"]:::other
+    maple["<b>maple · #13</b><br/>implementation<br/>18.4M tok · peak 289K<br/>failed 25.0% (5/20)<br/>📄 postmortem"]:::mid
+    bird["<b>bird · #14</b><br/>implementation<br/>1.2M tok · peak 93K<br/>no postmortem"]:::dead
+    bug["<b>bug · #14</b><br/>implementation<br/>24.3M tok · peak 318K<br/>failed 13.3% (2/15)<br/>📄 postmortem"]:::good
+    sabertooth["<b>sabertooth · #15</b><br/>implementation<br/>11.8M tok · peak 234K<br/>failed 10.0% (1/10)<br/>📄 postmortem"]:::good
+    pawprint["<b>pawprint · #16</b><br/>implementation<br/>18.4M tok · peak 284K<br/>failed 18.2% (2/11)<br/>📄 postmortem"]:::mid
+    chipmunk["<b>chipmunk · #17</b><br/>implementation<br/>21.2M tok · peak 263K<br/>failed 33.3% (3/9)<br/>📄 postmortem"]:::bad
+    mizaru["<b>mizaru · #18</b><br/>implementation<br/>9.4M tok · peak 178K<br/>failed 16.7% (1/6)<br/>📄 postmortem"]:::mid
+    iwazaru["<b>iwazaru · #19</b><br/>implementation<br/>25.8M tok · peak 295K<br/>failed 25.0% (3/12)<br/>📄 postmortem"]:::mid
+    dog["<b>dog · #20</b><br/>implementation<br/>111.9M tok · peak 556K<br/>failed 38.9% (7/18)<br/>📄 postmortem"]:::bad
   end
-  subgraph mergers["Mergers"]
-    direction TB
-    duckling["<b>duckling</b><br/>merger<br/>1.5M tok · peak 79K"]:::other
-    kikazaru["<b>kikazaru</b><br/>merger<br/>4.5M tok · peak 110K"]:::other
-    tulip["<b>tulip</b><br/>merger<br/>7.3M tok · peak 144K"]:::other
-    ant["<b>ant</b><br/>merger<br/>1.7M tok · peak 67K"]:::other
-    chicken["<b>chicken</b><br/>merger<br/>976K tok · peak 60K"]:::other
-    cricket["<b>cricket</b><br/>merger<br/>875K tok · peak 65K"]:::other
-    dove["<b>dove</b><br/>merger<br/>821K tok · peak 56K"]:::other
-    giraffe["<b>giraffe</b><br/>merger<br/>21.4M tok · peak 251K"]:::other
-    turkey["<b>turkey</b><br/>merger<br/>11.5M tok · peak 165K"]:::other
+  subgraph g_merge["Mergers into feat/ma-crm"]
+    direction LR
+    duckling["<b>duckling</b><br/>merger<br/>1.5M tok · peak 79K<br/>no postmortem"]:::other
+    kikazaru["<b>kikazaru</b><br/>merger<br/>4.5M tok · peak 110K<br/>📄 postmortem"]:::other
+    tulip["<b>tulip</b><br/>merger<br/>7.3M tok · peak 144K<br/>📄 postmortem"]:::other
+    ant["<b>ant</b><br/>merger<br/>1.7M tok · peak 67K<br/>📄 postmortem"]:::other
+    chicken["<b>chicken</b><br/>merger<br/>976K tok · peak 60K<br/>📄 postmortem"]:::other
+    cricket["<b>cricket</b><br/>merger<br/>875K tok · peak 65K<br/>📄 postmortem"]:::other
+    dove["<b>dove</b><br/>merger<br/>821K tok · peak 56K<br/>📄 postmortem"]:::other
+    giraffe["<b>giraffe</b><br/>merger<br/>21.4M tok · peak 251K<br/>📄 postmortem"]:::other
+    turkey["<b>turkey</b><br/>merger<br/>11.5M tok · peak 165K<br/>📄 postmortem"]:::other
   end
-  subgraph review1["Review 1"]
-    direction TB
-    eagle["<b>eagle</b><br/>reviewer<br/>12.4M tok · peak 237K"]:::other
+  subgraph g_rev["Reviews"]
+    direction LR
+    eagle["<b>eagle</b><br/>reviewer<br/>12.4M tok · peak 237K<br/>no postmortem"]:::other
+    ladybug["<b>ladybug</b><br/>reviewer<br/>8.1M tok · peak 211K<br/>no postmortem"]:::dead
+    lobster["<b>lobster</b><br/>reviewer<br/>7.3M tok · peak 150K<br/>no postmortem"]:::other
+    mosquito["<b>mosquito</b><br/>reviewer<br/>5.6M tok · peak 184K<br/>no postmortem"]:::other
+    ox["<b>ox</b><br/>reviewer<br/>9.2M tok · peak 197K<br/>no postmortem"]:::other
+    pig["<b>pig</b><br/>reviewer<br/>5.4M tok · peak 191K<br/>no postmortem"]:::other
+    rabbit["<b>rabbit</b><br/>verifier<br/>8.1M tok · peak 200K<br/>no postmortem"]:::other
   end
-  subgraph review1_fixers["Review 1 fixers"]
-    direction TB
-    fish["<b>fish</b><br/>fixer<br/>30.4M tok · peak 278K"]:::other
-    fox["<b>fox</b><br/>fixer<br/>22.8M tok · peak 246K"]:::other
+  subgraph g_fix["Fixers"]
+    direction LR
+    fish["<b>fish</b><br/>fixer<br/>30.4M tok · peak 278K<br/>📄 postmortem"]:::other
+    fox["<b>fox</b><br/>fixer<br/>22.8M tok · peak 246K<br/>📄 postmortem"]:::other
+    owl["<b>owl</b><br/>fixer<br/>4.8M tok · peak 109K<br/>📄 postmortem"]:::other
+    rat["<b>rat</b><br/>fixer<br/>10.8M tok · peak 167K<br/>📄 postmortem"]:::other
+    ram["<b>ram</b><br/>fixer<br/>27.2M tok · peak 275K<br/>📄 postmortem"]:::other
+    rooster["<b>rooster</b><br/>fixer<br/>31.0M tok · peak 272K<br/>📄 postmortem"]:::other
+    shrimp["<b>shrimp</b><br/>fixer<br/>5.6M tok · peak 152K<br/>📄 postmortem"]:::other
+    sauropod["<b>sauropod</b><br/>fixer<br/>8.9M tok · peak 168K<br/>no postmortem"]:::dead
+    tiger["<b>tiger</b><br/>fixer<br/>8.6M tok · peak 152K<br/>📄 postmortem"]:::other
   end
-  subgraph review2["Review 2"]
-    direction TB
-    ladybug["<b>ladybug</b><br/>reviewer<br/>8.1M tok · peak 211K"]:::other
-    lobster["<b>lobster</b><br/>reviewer<br/>7.3M tok · peak 150K"]:::other
-    mosquito["<b>mosquito</b><br/>reviewer<br/>5.6M tok · peak 184K"]:::other
-    ox["<b>ox</b><br/>reviewer<br/>9.2M tok · peak 197K"]:::other
-    pig["<b>pig</b><br/>reviewer<br/>5.4M tok · peak 191K"]:::other
-  end
-  subgraph review2_fixers["Review 2 fixers"]
-    direction TB
-    owl["<b>owl</b><br/>fixer<br/>4.8M tok · peak 109K"]:::other
-    rat["<b>rat</b><br/>fixer<br/>10.8M tok · peak 167K"]:::other
-    ram["<b>ram</b><br/>fixer<br/>27.2M tok · peak 275K"]:::other
-    rooster["<b>rooster</b><br/>fixer<br/>31.0M tok · peak 272K"]:::other
-    shrimp["<b>shrimp</b><br/>fixer<br/>5.6M tok · peak 152K"]:::other
-    sauropod["<b>sauropod</b><br/>fixer<br/>8.9M tok · peak 168K"]:::other
-    tiger["<b>tiger</b><br/>fixer<br/>8.6M tok · peak 152K"]:::other
-  end
-  subgraph verification["Verification"]
-    direction TB
-    rabbit["<b>rabbit</b><br/>verifier<br/>8.1M tok · peak 200K"]:::other
-  end
-  dragon --> tickets
-  dragon --> mergers
-  dragon --> review1
-  dragon --> review1_fixers
-  dragon --> review2
-  dragon --> review2_fixers
-  dragon --> verification
+  dragon ==>|spawns all| g_tickets
+  humpback --> wyvern
+  wyvern --> macaque
+  wyvern --> tigress
+  humpback --> hatchling
+  humpback --> calf
+  hatchling --> calf
+  calf --> puppy
+  calf --> retriever
+  puppy --> retriever
+  retriever --> microbe
+  retriever --> mushroom
+  puppy --> mushroom
+  microbe --> rose
+  puppy --> rose
+  microbe --> seedling
+  mushroom --> seedling
+  retriever --> maple
+  microbe --> maple
+  maple --> bug
+  mushroom --> bug
+  retriever --> sabertooth
+  puppy --> sabertooth
+  puppy --> pawprint
+  mushroom --> chipmunk
+  seedling --> chipmunk
+  calf --> mizaru
+  tigress --> iwazaru
+  puppy --> iwazaru
+  mizaru --> iwazaru
+  macaque --> dog
+  rose --> dog
+  bug --> dog
+  wyvern -.->|merged by| duckling
+  macaque -.->|merged by| kikazaru
+  tigress -.->|merged by| kikazaru
+  puppy -.->|merged by| kikazaru
+  mizaru -.->|merged by| kikazaru
+  pawprint -.->|merged by| tulip
+  iwazaru -.->|merged by| tulip
+  sabertooth -.->|merged by| tulip
+  mushroom -.->|merged by| tulip
+  maple -.->|merged by| ant
+  rose -.->|merged by| ant
+  cat -.->|merged by| chicken
+  bug -.->|merged by| cricket
+  chipmunk -.->|merged by| dove
+  dog -.->|merged by| giraffe
+  fish -.->|merged by| giraffe
+  fox -.->|merged by| giraffe
+  owl -.->|merged by| turkey
+  rat -.->|merged by| turkey
+  rooster -.->|merged by| turkey
+  ram -.->|merged by| turkey
+  shrimp -.->|merged by| turkey
+  tiger -.->|merged by| turkey
+  eagle ==>|findings| fish
+  eagle ==>|findings| fox
+  lobster ==>|findings| owl
+  lobster ==>|findings| rat
+  mosquito ==>|findings| rooster
+  pig ==>|findings| ram
+  ox ==>|findings| shrimp
+  ox ==>|findings| sauropod
+  seedling -.->|resumed| cat
+  bird -.->|respawned| bug
+  sauropod -.->|resumed| tiger
+  ladybug -.->|split into 3| mosquito
+  ladybug -.-> pig
+  ladybug -.-> ox
+  calf -.->|built #5 pages| hatchling
+  giraffe ==>|branch reviewed| lobster
+  giraffe ==>|branch reviewed| mosquito
+  turkey ==>|verified| rabbit
+  linkStyle 1 stroke:#64748b
+  linkStyle 2 stroke:#64748b
+  linkStyle 3 stroke:#64748b
+  linkStyle 4 stroke:#64748b
+  linkStyle 5 stroke:#64748b
+  linkStyle 6 stroke:#64748b
+  linkStyle 7 stroke:#64748b
+  linkStyle 8 stroke:#64748b
+  linkStyle 9 stroke:#64748b
+  linkStyle 10 stroke:#64748b
+  linkStyle 11 stroke:#64748b
+  linkStyle 12 stroke:#64748b
+  linkStyle 13 stroke:#64748b
+  linkStyle 14 stroke:#64748b
+  linkStyle 15 stroke:#64748b
+  linkStyle 16 stroke:#64748b
+  linkStyle 17 stroke:#64748b
+  linkStyle 18 stroke:#64748b
+  linkStyle 19 stroke:#64748b
+  linkStyle 20 stroke:#64748b
+  linkStyle 21 stroke:#64748b
+  linkStyle 22 stroke:#64748b
+  linkStyle 23 stroke:#64748b
+  linkStyle 24 stroke:#64748b
+  linkStyle 25 stroke:#64748b
+  linkStyle 26 stroke:#64748b
+  linkStyle 27 stroke:#64748b
+  linkStyle 28 stroke:#64748b
+  linkStyle 29 stroke:#64748b
+  linkStyle 30 stroke:#64748b
+  linkStyle 31 stroke:#64748b
+  linkStyle 32 stroke:#64748b
+  linkStyle 33 stroke:#2563eb
+  linkStyle 34 stroke:#2563eb
+  linkStyle 35 stroke:#2563eb
+  linkStyle 36 stroke:#2563eb
+  linkStyle 37 stroke:#2563eb
+  linkStyle 38 stroke:#2563eb
+  linkStyle 39 stroke:#2563eb
+  linkStyle 40 stroke:#2563eb
+  linkStyle 41 stroke:#2563eb
+  linkStyle 42 stroke:#2563eb
+  linkStyle 43 stroke:#2563eb
+  linkStyle 44 stroke:#2563eb
+  linkStyle 45 stroke:#2563eb
+  linkStyle 46 stroke:#2563eb
+  linkStyle 47 stroke:#2563eb
+  linkStyle 48 stroke:#2563eb
+  linkStyle 49 stroke:#2563eb
+  linkStyle 50 stroke:#2563eb
+  linkStyle 51 stroke:#2563eb
+  linkStyle 52 stroke:#2563eb
+  linkStyle 53 stroke:#2563eb
+  linkStyle 54 stroke:#2563eb
+  linkStyle 55 stroke:#2563eb
+  linkStyle 56 stroke:#dc2626
+  linkStyle 57 stroke:#dc2626
+  linkStyle 58 stroke:#dc2626
+  linkStyle 59 stroke:#dc2626
+  linkStyle 60 stroke:#dc2626
+  linkStyle 61 stroke:#dc2626
+  linkStyle 62 stroke:#dc2626
+  linkStyle 63 stroke:#dc2626
+  linkStyle 64 stroke:#7c3aed
+  linkStyle 65 stroke:#7c3aed
+  linkStyle 66 stroke:#7c3aed
+  linkStyle 67 stroke:#7c3aed
+  linkStyle 68 stroke:#7c3aed
+  linkStyle 69 stroke:#7c3aed
+  linkStyle 70 stroke:#ca8a04
+  linkStyle 71 stroke:#dc2626
+  linkStyle 72 stroke:#dc2626
+  linkStyle 73 stroke:#dc2626
   style dragon stroke:#c2410c,stroke-width:3px
   style humpback stroke:#c2410c,stroke-width:3px
   style wyvern stroke:#c2410c,stroke-width:3px
@@ -193,12 +336,103 @@ flowchart LR
   style ladybug stroke:#c2410c,stroke-width:3px
   style ram stroke:#c2410c,stroke-width:3px
   style rooster stroke:#c2410c,stroke-width:3px
+  click dragon "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-2256-main-ma-crm-implementation.md" "Postmortem of dragon" _blank
+  click humpback "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0340-worker-crm-foundation.md" "Postmortem of humpback" _blank
+  click hatchling "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0357-worker-companies-contacts-picklists.md" "Postmortem of hatchling" _blank
+  click wyvern "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0419-worker-two-factor-login.md" "Postmortem of wyvern" _blank
+  click calf "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0432-worker-mandates-deal-team.md" "Postmortem of calf" _blank
+  click macaque "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0449-worker-sessions-logout-mobile.md" "Postmortem of macaque" _blank
+  click tigress "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0445-worker-ma-crm-t4-invitations-passwords.md" "Postmortem of tigress" _blank
+  click puppy "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0456-worker-activities-tasks-notifications.md" "Postmortem of puppy" _blank
+  click mizaru "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0459-worker-public-api.md" "Postmortem of mizaru" _blank
+  click kikazaru "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0828-worker-merge-t3-t4-t7-t18.md" "Postmortem of kikazaru" _blank
+  click iwazaru "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0921-worker-t19-offboarding-gdpr-exports.md" "Postmortem of iwazaru" _blank
+  click retriever "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0905-worker-ticket-8-pipeline.md" "Postmortem of retriever" _blank
+  click pawprint "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0915-worker-ma-crm-t16-search-merge-import.md" "Postmortem of pawprint" _blank
+  click sabertooth "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0936-worker-ma-crm-t15-email-calendar.md" "Postmortem of sabertooth" _blank
+  click microbe "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1002-worker-t9-conflict-kyc.md" "Postmortem of microbe" _blank
+  click mushroom "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1028-worker-ticket-10-fees-invoices.md" "Postmortem of mushroom" _blank
+  click tulip "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1106-worker-merge-t16-t19-t15-t10.md" "Postmortem of tulip" _blank
+  click rose "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1136-worker-ticket-11-wall-crossing.md" "Postmortem of rose" _blank
+  click maple "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1118-worker-ticket-13-buyers.md" "Postmortem of maple" _blank
+  click ant "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1151-worker-merge-13-11-into-ma-crm.md" "Postmortem of ant" _blank
+  click bug "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1421-worker-ticket-14-process.md" "Postmortem of bug" _blank
+  click cat "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1347-worker-ticket-12-merge-resume.md" "Postmortem of cat" _blank
+  click chicken "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1358-worker-merge-12-into-ma-crm.md" "Postmortem of chicken" _blank
+  click chipmunk "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1506-worker-ticket-17-reporting.md" "Postmortem of chipmunk" _blank
+  click cricket "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1434-worker-merge-ticket-14.md" "Postmortem of cricket" _blank
+  click dog "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1652-worker-ticket-20-production-readiness.md" "Postmortem of dog" _blank
+  click dove "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1517-worker-merge-ticket-17.md" "Postmortem of dove" _blank
+  click fish "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1633-worker-review-security-nfr-fixes.md" "Postmortem of fish" _blank
+  click fox "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1653-worker-review-fixes-wall.md" "Postmortem of fox" _blank
+  click giraffe "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1743-worker-merge-t20-fix-sec-fix-wall.md" "Postmortem of giraffe" _blank
+  click owl "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1903-worker-std-fe-fixes.md" "Postmortem of owl" _blank
+  click rat "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1925-worker-review2-backend-fixes.md" "Postmortem of rat" _blank
+  click ram "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-2001-worker-spec-b-fixes.md" "Postmortem of ram" _blank
+  click rooster "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-2030-worker-spec-review-a-fixes.md" "Postmortem of rooster" _blank
+  click shrimp "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1949-worker-spec-c-f1-ui-screens.md" "Postmortem of shrimp" _blank
+  click tiger "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-2205-worker-spec-c-review-fixes.md" "Postmortem of tiger" _blank
+  click turkey "https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-2203-worker-merge-review2-fixes.md" "Postmortem of turkey" _blank
   classDef coord fill:#1e293b,color:#fff,stroke:#0f172a
   classDef good fill:#dcfce7,stroke:#16a34a
   classDef mid fill:#fef9c3,stroke:#ca8a04
   classDef bad fill:#fee2e2,stroke:#dc2626
+  classDef dead fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:4 3
   classDef other fill:#f1f5f9,stroke:#64748b
 ```
+
+### Postmortem index
+
+| Session | Role | Postmortem |
+|---|---|---|
+| dragon | coordinator | [2026-10-10-2256-main-ma-crm-implementation.md](../../postmortem/2026-10-10-2256-main-ma-crm-implementation.md) |
+| humpback (#1) | implementation | [2026-10-10-0340-worker-crm-foundation.md](../../postmortem/2026-10-10-0340-worker-crm-foundation.md) |
+| wyvern (#2) | implementation | [2026-10-10-0419-worker-two-factor-login.md](../../postmortem/2026-10-10-0419-worker-two-factor-login.md) |
+| macaque (#3) | implementation | [2026-10-10-0449-worker-sessions-logout-mobile.md](../../postmortem/2026-10-10-0449-worker-sessions-logout-mobile.md) |
+| tigress (#4) | implementation | [2026-10-10-0445-worker-ma-crm-t4-invitations-passwords.md](../../postmortem/2026-10-10-0445-worker-ma-crm-t4-invitations-passwords.md) |
+| hatchling (#5) | implementation | [2026-10-10-0357-worker-companies-contacts-picklists.md](../../postmortem/2026-10-10-0357-worker-companies-contacts-picklists.md) |
+| calf (#6) | implementation | [2026-10-10-0432-worker-mandates-deal-team.md](../../postmortem/2026-10-10-0432-worker-mandates-deal-team.md) |
+| puppy (#7) | implementation | [2026-10-10-0456-worker-activities-tasks-notifications.md](../../postmortem/2026-10-10-0456-worker-activities-tasks-notifications.md) |
+| retriever (#8) | implementation | [2026-10-10-0905-worker-ticket-8-pipeline.md](../../postmortem/2026-10-10-0905-worker-ticket-8-pipeline.md) |
+| microbe (#9) | implementation | [2026-10-10-1002-worker-t9-conflict-kyc.md](../../postmortem/2026-10-10-1002-worker-t9-conflict-kyc.md) |
+| mushroom (#10) | implementation | [2026-10-10-1028-worker-ticket-10-fees-invoices.md](../../postmortem/2026-10-10-1028-worker-ticket-10-fees-invoices.md) |
+| rose (#11) | implementation | [2026-10-10-1136-worker-ticket-11-wall-crossing.md](../../postmortem/2026-10-10-1136-worker-ticket-11-wall-crossing.md) |
+| seedling (#12) | implementation | none (none (died mid-merge; cat wrote the #12 postmortem)) |
+| cat (#12) | implementation | [2026-10-10-1347-worker-ticket-12-merge-resume.md](../../postmortem/2026-10-10-1347-worker-ticket-12-merge-resume.md) |
+| maple (#13) | implementation | [2026-10-10-1118-worker-ticket-13-buyers.md](../../postmortem/2026-10-10-1118-worker-ticket-13-buyers.md) |
+| bird (#14) | implementation | none (none (crashed)) |
+| bug (#14) | implementation | [2026-10-10-1421-worker-ticket-14-process.md](../../postmortem/2026-10-10-1421-worker-ticket-14-process.md) |
+| sabertooth (#15) | implementation | [2026-10-10-0936-worker-ma-crm-t15-email-calendar.md](../../postmortem/2026-10-10-0936-worker-ma-crm-t15-email-calendar.md) |
+| pawprint (#16) | implementation | [2026-10-10-0915-worker-ma-crm-t16-search-merge-import.md](../../postmortem/2026-10-10-0915-worker-ma-crm-t16-search-merge-import.md) |
+| chipmunk (#17) | implementation | [2026-10-10-1506-worker-ticket-17-reporting.md](../../postmortem/2026-10-10-1506-worker-ticket-17-reporting.md) |
+| mizaru (#18) | implementation | [2026-10-10-0459-worker-public-api.md](../../postmortem/2026-10-10-0459-worker-public-api.md) |
+| iwazaru (#19) | implementation | [2026-10-10-0921-worker-t19-offboarding-gdpr-exports.md](../../postmortem/2026-10-10-0921-worker-t19-offboarding-gdpr-exports.md) |
+| dog (#20) | implementation | [2026-10-10-1652-worker-ticket-20-production-readiness.md](../../postmortem/2026-10-10-1652-worker-ticket-20-production-readiness.md) |
+| duckling | merger | none (none written (early merger, before mergers were told to run retro-auto)) |
+| kikazaru | merger | [2026-10-10-0828-worker-merge-t3-t4-t7-t18.md](../../postmortem/2026-10-10-0828-worker-merge-t3-t4-t7-t18.md) |
+| tulip | merger | [2026-10-10-1106-worker-merge-t16-t19-t15-t10.md](../../postmortem/2026-10-10-1106-worker-merge-t16-t19-t15-t10.md) |
+| ant | merger | [2026-10-10-1151-worker-merge-13-11-into-ma-crm.md](../../postmortem/2026-10-10-1151-worker-merge-13-11-into-ma-crm.md) |
+| chicken | merger | [2026-10-10-1358-worker-merge-12-into-ma-crm.md](../../postmortem/2026-10-10-1358-worker-merge-12-into-ma-crm.md) |
+| cricket | merger | [2026-10-10-1434-worker-merge-ticket-14.md](../../postmortem/2026-10-10-1434-worker-merge-ticket-14.md) |
+| dove | merger | [2026-10-10-1517-worker-merge-ticket-17.md](../../postmortem/2026-10-10-1517-worker-merge-ticket-17.md) |
+| giraffe | merger | [2026-10-10-1743-worker-merge-t20-fix-sec-fix-wall.md](../../postmortem/2026-10-10-1743-worker-merge-t20-fix-sec-fix-wall.md) |
+| turkey | merger | [2026-10-10-2203-worker-merge-review2-fixes.md](../../postmortem/2026-10-10-2203-worker-merge-review2-fixes.md) |
+| eagle | reviewer | none (none (read-only reviewer)) |
+| fish | fixer | [2026-10-10-1633-worker-review-security-nfr-fixes.md](../../postmortem/2026-10-10-1633-worker-review-security-nfr-fixes.md) |
+| fox | fixer | [2026-10-10-1653-worker-review-fixes-wall.md](../../postmortem/2026-10-10-1653-worker-review-fixes-wall.md) |
+| ladybug | reviewer | none (none (failed reviewer)) |
+| lobster | reviewer | none (none (read-only reviewer)) |
+| mosquito | reviewer | none (none (read-only reviewer)) |
+| ox | reviewer | none (none (read-only reviewer)) |
+| pig | reviewer | none (none (read-only reviewer)) |
+| owl | fixer | [2026-10-10-1903-worker-std-fe-fixes.md](../../postmortem/2026-10-10-1903-worker-std-fe-fixes.md) |
+| rat | fixer | [2026-10-10-1925-worker-review2-backend-fixes.md](../../postmortem/2026-10-10-1925-worker-review2-backend-fixes.md) |
+| ram | fixer | [2026-10-10-2001-worker-spec-b-fixes.md](../../postmortem/2026-10-10-2001-worker-spec-b-fixes.md) |
+| rooster | fixer | [2026-10-10-2030-worker-spec-review-a-fixes.md](../../postmortem/2026-10-10-2030-worker-spec-review-a-fixes.md) |
+| shrimp | fixer | [2026-10-10-1949-worker-spec-c-f1-ui-screens.md](../../postmortem/2026-10-10-1949-worker-spec-c-f1-ui-screens.md) |
+| sauropod | fixer | none (none (killed; tiger wrote the postmortem)) |
+| tiger | fixer | [2026-10-10-2205-worker-spec-c-review-fixes.md](../../postmortem/2026-10-10-2205-worker-spec-c-review-fixes.md) |
+| rabbit | verifier | none (none (read-only verifier)) |
 
 ## Sessions
 
