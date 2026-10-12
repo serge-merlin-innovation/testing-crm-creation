@@ -4,7 +4,7 @@ description: "Turn a finished multi-agent run's check failures, decisions and po
 disable-model-invocation: true
 ---
 
-You are writing one report, `docs/research/agent-experience-improvements.md`, from one finished **run** (a coordinator and the subagents it spawned). It lists only the biggest opportunities to save time and tokens, to give the human more control over agent decisions, and to make the process smoother. Each one is a recommendation, where it goes, and a short reason. It holds no analysis sections, raw counts tables, method notes or narrative.
+You are writing one report, `docs/research/agent-experience-improvements.md`, from one finished **run** (a coordinator and the subagents it spawned). It lists only the biggest opportunities to save time and tokens, to give the human more control over agent decisions, and to make the process smoother. Each one is a recommendation, where it goes, the problem seen, and why the fix solves it. It holds no analysis sections, raw counts tables, method notes or narrative.
 
 ## Inputs
 
@@ -29,16 +29,16 @@ Leave out quality assessments: ISO 25010 or any other standards-based evaluation
 One sentence: the inputs (log lines, decision count, postmortem count), the run date and the PR. Each table is ordered by impact, largest first.
 
 ## Time and tokens
-| Recommendation | Where | Why |
-|---|---|---|
+| Recommendation | Where | Problem seen | Why this fix |
+|---|---|---|---|
 
 ## Controllability
-| Recommendation | Where | Why |
-|---|---|---|
+| Recommendation | Where | Problem seen | Why this fix |
+|---|---|---|---|
 
 ## Processing
-| Recommendation | Where | Why |
-|---|---|---|
+| Recommendation | Where | Problem seen | Why this fix |
+|---|---|---|---|
 ```
 
 - **Time and tokens** covers wasted reruns, long or flaky suites, environment setup, and rules the agents learn by failing.
@@ -46,6 +46,7 @@ One sentence: the inputs (log lines, decision count, postmortem count), the run 
 - **Processing** covers ticket slicing, coordination, merging, knowledge left outside the repo, and the logging itself.
 - **Recommendation** is the change, stated as an imperative.
 - **Where** is the file path or paths, in backticks.
-- **Why** is one or two sentences: the cost observed in this run, with its evidence count (log lines, postmortems or decision rows).
+- **Problem seen** is one or two sentences: the cost observed in this run, with its evidence count (log lines, postmortems or decision rows).
+- **Why this fix** is one sentence: how the change removes that cost, and why it beats the obvious alternative where one exists.
 
-Done when every row has all three cells, and nothing in the report draws on a quality assessment.
+Done when every row has all four cells, and nothing in the report draws on a quality assessment.
