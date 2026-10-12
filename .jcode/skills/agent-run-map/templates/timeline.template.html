@@ -111,7 +111,7 @@ G.nodes.forEach(n => {
   d.id = "c-"+n.name;
   Object.assign(d.style, {left:p.x+"px", top:p.y+"px", width:Z.card_w+"px", height:Z.card_h+"px"});
   const head = n.name + (n.ticket ? ` · #${n.ticket}` : "");
-  const q = n.quality ? `<div class="fl">failed ${n.quality.pct}% (${n.quality.failed}/${n.quality.total})${n.quality.scored ? "" : " · not scored"}</div>` : "";
+  const q = n.quality ? `<div class="fl">AC failed ${n.quality.pct}% (${n.quality.failed}/${n.quality.total})${n.quality.scored ? "" : " · not scored"}</div>` : "";
   const pm = n.postmortem ? `<a class="pm" href="${esc(n.postmortem)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 postmortem</a>`
                           : `<div class="nopm">no postmortem</div>`;
   d.innerHTML = `<div class="nm">${esc(head)}</div><div class="rl">${esc(n.role)}${n.scope ? " · " + esc(n.scope) : ""}</div>
