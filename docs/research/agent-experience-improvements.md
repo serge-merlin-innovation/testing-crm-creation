@@ -8,7 +8,7 @@ Read-only analysis, 2026-10-12, of the M&A CRM run of 2026-10-10 (coordinator pl
 |---|---|---|
 | `check-failures.log` | 500 failing checks, 2026-10-10 08:58 to 22:21 | The logger keeps only the last 500 lines (`MAX_LINES` in `scripts/check-failures/log.mjs`), so tickets #1 to #7 (03:00 to 08:58) are lost. It also mixes intended TDD reds with real waste, with no column to tell them apart. |
 | `docs/DECISION-REPORT.md` | 86 decision rows (ids 1 to 70 and 80 to 95) | 12 rows were later marked *Superseded*, 4 are *Needs user*. |
-| `postmortem/*.md` | 38 postmortems: 36 workers, the coordinator, the ISO 25010 assessment | Several fixes they propose target `~/.jcode-notes/ma-crm/notes.md`, which lives outside the repo and dies with this project. |
+| `postmortem/*.md` | 37 postmortems: 36 workers and the coordinator | Several fixes they propose target `~/.jcode-notes/ma-crm/notes.md`, which lives outside the repo and dies with this project. |
 
 Each "still open" status below was checked against the current `feat/ma-crm` tip (`9e9e2fb`).
 
@@ -17,7 +17,7 @@ Each "still open" status below was checked against the current `feat/ma-crm` tip
 1. **Most agent decisions were spec gaps, not real choices.** Of 86 decisions, about 12 needed a human at run time (vendor, cost, hosting). About 50 answer questions a better spec template would have asked up front: which permission, which recipient, what "monthly" means, the full status list, the fee maths. About 17 are engineering conventions the boilerplate should settle once, as ADRs. About 9 are about the local machine, the process or ticket slicing, and a rule or skill fix would have made them non-decisions.
 2. **The worst decisions were silent narrowings.** 12 rows narrowed an acceptance criterion and were reverted after review 2. The constitution has no rule against this, so add one.
 3. **About half of the logged failures were not TDD reds.** 267 of 500 lines fall into eight avoidable causes. The biggest are a brittle `Mock(spec=Settings)` pattern (66 lines from 3 runs), late guard tests (73), environment and port collisions (25), domain errors flattened into generic 500s (23) and timing flakes (24).
-4. **The same boilerplate defects were found again and again.** Duplicate Alembic ids or several heads came up in 10 postmortems, spurious autogenerate diffs in 9, the throwaway e2e database in 12. The fix for each is still missing on the branch.
+4. **The same boilerplate defects were found again and again.** Duplicate Alembic ids or several heads came up in 10 postmortems, spurious autogenerate diffs in 9, the throwaway e2e database in 11. The fix for each is still missing on the branch.
 5. **Run knowledge leaked out of the repo.** The e2e recipe, the merger runbook and the gotchas went into private notes. The next project starts from zero.
 
 ---
@@ -106,15 +106,15 @@ These rows each narrowed a stated criterion and were reverted by review 2: **8, 
 
 ## 3. Postmortems: recurring findings
 
-Counted across the 38 files. "Open" means verified as still unfixed on the branch tip.
+Counted across the 37 files. "Open" means verified as still unfixed on the branch tip.
 
 | Finding | Postmortems | Status | Fix |
 |---|---|---|---|
-| E2E needs a throwaway, migrated, seeded DB with no script. Ports shared. Compose maps `5432:5432` while `.env` uses 55432. | 12 (0340, 0419, 0432, 0915, 0921, 1151, 1358, 1421, 1517, 2205, main, ISO) | Ports env **done**. Fresh-DB script and compose port **open**. | `scripts/e2e-fresh.sh` plus `pnpm test:e2e:fresh`. Map `${POSTGRES_PORT:-5432}:5432`. Make `playwright.config.ts` refuse to run against 5432 or the `.env` port. Make the pre-push hook use the same script, so nobody needs `--no-verify` (decisions 1 and 10). |
+| E2E needs a throwaway, migrated, seeded DB with no script. Ports shared. Compose maps `5432:5432` while `.env` uses 55432. | 11 (0340, 0419, 0432, 0915, 0921, 1151, 1358, 1421, 1517, 2205, main) | Ports env **done**. Fresh-DB script and compose port **open**. | `scripts/e2e-fresh.sh` plus `pnpm test:e2e:fresh`. Map `${POSTGRES_PORT:-5432}:5432`. Make `playwright.config.ts` refuse to run against 5432 or the `.env` port. Make the pre-push hook use the same script, so nobody needs `--no-verify` (decisions 1 and 10). |
 | Alembic autogenerate emits spurious `unique` on `roles.id` and `user.id`, and the template output fails ruff | 9 (0357, 0456, 0459, 0905, 0915, 0936, 1002, 1028, 1421) | **Open** (`unique=True` still on both PKs; `script.py.mako` still uses `typing.Union`) | Drop `unique=True` on PKs, modernise the mako template, add ruff as an Alembic `post_write_hook`, add `alembic check` to CI. |
 | Parallel branches pick the same Alembic id, or leave two heads | 10 (0357, 0445, 0449, 0459, 0828, 0921, 1106, 1118, 1358, main) | **Open** (no `get_heads` test exists) | Unit test: unique revision ids, exactly one head, no hand-typed ids (reject runs like `abcdef`). |
 | Guard tests (module wiring, i18n, `.env.example`, step-up) surface only in the full run | 7 (0445, 0456, 0936, 1506, 1925, 2001, 2205) | Open | `pnpm check:quick` (all unit guards, about 25 s) named in the `implement` worker steps and run by pre-commit. Plus a "new module checklist" in `docs/agents/backend.md`. |
-| Suites exceed the 10-minute tool cap (integration 15 to 55 min under load) | 7 (1136, 1434, 1653, 1925, 2030, 2203, ISO) | Open (`test:integration` still serial; an auto-applied `slow` marker exists in `tests/integration/conftest.py` but nothing documents `-m "not slow"`) | `-n auto` by default, document the `slow` deselect for iteration, a documented "run it detached with a log file" recipe, and a coordinator cap on concurrent full runs. |
+| Suites exceed the 10-minute tool cap (integration 15 to 55 min under load) | 6 (1136, 1434, 1653, 1925, 2030, 2203) | Open (`test:integration` still serial; an auto-applied `slow` marker exists in `tests/integration/conftest.py` but nothing documents `-m "not slow"`) | `-n auto` by default, document the `slow` deselect for iteration, a documented "run it detached with a log file" recipe, and a coordinator cap on concurrent full runs. |
 | E2E specs collide on data (non-unique names, non-`exact` locators, no wait after a mutating click) | 8 (0905, 0936, 1506, 1743, 1949, 2001, 2030, 2205) | Partly (`runId()` exists) | ESLint: ban `Date.now()` in `tests/e2e/**` and require `exact: true` on short role names. Builders in `identities.ts`. An `e2e.md` conventions doc. |
 | Bulk edits through Python or `sed` heredocs silently dropped code | 6 (0340, 0419, 0445, 1633, 1652, 1653) | Habit | Constitution line, plus a harness hook that warns on `python3 - <<` or `sed -i` against `src/`. |
 | Domain error messages swallowed into a generic 500 | 4 (0432, 0905, 0915, 1002) + 23 log lines | **Open** | See log cause F. |
@@ -125,8 +125,6 @@ Counted across the 38 files. "Open" means verified as still unfixed on the branc
 | Coordinator idled for hours on wake-ups that never arrived | main | Open | Coordinator polls every 15 min and never relies on a wake alone (`implement` skill or swarm prompt). |
 | Code review run inside a worker cannot spawn its two reviewers. The review 2 spec reviewer (ladybug) died after 28 min without writing anything. | main | Open | `code-review`: the root spawns one reviewer per axis and splits the spec axis by epic above about 100 criteria. Reviewers write incrementally. Note: the coordinator blamed the job's size, but the server log shows ladybug died on an account rate limit (`429 rate_limit_error`, 3 retries over 2 min) at a 211K-token context, well below the window. Splitting helped only by luck; the real fixes are incremental writes, a longer backoff on 429, and a guard that respawns a `failed` member at once. |
 | Merge state lost when a worker died | 1347 | Open | Mergers commit WIP or write progress to the notes before long steps. |
-| Dependency audit not a gate (3 critical Next.js CVEs) | ISO | **Open** | CI: `pnpm audit --prod --audit-level=high` and `uvx pip-audit`. |
-| `AGENTS.md` points to `CONTEXT.md` and `docs/adr/`, which do not exist | ISO | **Open** | Create both. They are the natural home for most decisions in 2.1. |
 | gitleaks and prettier silently absent | 0432, 0936, 1743, 1903 | Open | The setup skill installs gitleaks. Pick one formatter for the frontend. |
 
 ### 3.1 Knowledge that must move into the repo
@@ -190,16 +188,15 @@ Ordered by failures avoided per hour of work:
 
 1. `make_settings()` test factory, and remove `Mock(spec=Settings)` (66 log lines).
 2. Decide the domain-error message policy (generic by design today) and write it as an ADR, plus a `user_facing` marker if detail should show (23 log lines, 4 postmortems).
-3. `scripts/e2e-fresh.sh` plus `pnpm test:e2e:fresh`. Make `playwright.config.ts` fail fast on port 5432 or the `.env` port. Map the compose port through `${POSTGRES_PORT}`. Point the pre-push hook at the script (25 log lines, 12 postmortems, decisions 1, 2, 10).
+3. `scripts/e2e-fresh.sh` plus `pnpm test:e2e:fresh`. Make `playwright.config.ts` fail fast on port 5432 or the `.env` port. Map the compose port through `${POSTGRES_PORT}`. Point the pre-push hook at the script (25 log lines, 11 postmortems, decisions 1, 2, 10).
 4. Alembic hygiene: a single-head and unique-id test, no `unique=True` on PKs, a modern mako template, a ruff `post_write_hook`, `alembic check` in CI (19 postmortems).
 5. `pnpm check:quick`: every unit guard on both sides, under 30 s, run by pre-commit and named in skills (guard causes B1 to B4: 73 lines).
 6. ESLint rules for what the vitest scans check today (typography, `toLocale*`, raw dates, `Date.now()` in e2e, `exact: true`), so the editor catches them first.
-7. Pytest: `-n auto` by default, `perf` and `slow` markers excluded from the default run, the perf budget only in CI's k6 job (24 log lines, 7 postmortems).
+7. Pytest: `-n auto` by default, `perf` and `slow` markers excluded from the default run, the perf budget only in CI's k6 job (24 log lines, 6 postmortems).
 8. Self-registering slices (routers, jobs, tabs), so parallel tickets stop conflicting on shared lists.
 9. Test builders: backend `create_mandate()` with a fresh client by default, `inbound_payload(**overrides)`; frontend `uniqueCompanyName()`, `freshClient()` (11 log lines, contract drift).
 10. `[dependency-groups] dev` in `pyproject.toml`.
-11. CI dependency audit (`pnpm audit`, `pip-audit`).
-12. The check-failures logger: a `phase` column, daily rotation, a worktree column (see 1.3).
+11. The check-failures logger: a `phase` column, daily rotation, a worktree column (see 1.3).
 
 ### 4.4 Docs scaffolding in the boilerplate
 
@@ -224,4 +221,4 @@ Ordered by failures avoided per hour of work:
 
 - The log was bucketed with `awk` on the error column. The buckets in 1.2 are approximate: the "assertion" bucket (233) mixes TDD reds and real regressions, and the logger cannot tell them apart.
 - The decision kinds in 2.1 are my classification of each row's text. A row could fit two kinds, and I gave it the one that names who should have decided.
-- Postmortem counts come from each finding's title and suggested change, cross-checked by grepping all 38 files for the finding's key terms (re-verified 2026-10-12). "Open" was checked by grepping the current tree (`unique=True` in the user and role models, `typing.Union` in `script.py.mako`, no `get_heads` in tests, `optional-dependencies` in `pyproject.toml`, `5432:5432` in compose, no `audit` in `ci.yml`, no `CONTEXT.md` or `docs/adr/`).
+- Postmortem counts come from each finding's title and suggested change, cross-checked by grepping all 37 files for the finding's key terms (re-verified 2026-10-12). "Open" was checked by grepping the current tree (`unique=True` in the user and role models, `typing.Union` in `script.py.mako`, no `get_heads` in tests, `optional-dependencies` in `pyproject.toml`, `5432:5432` in compose, no `CONTEXT.md` or `docs/adr/`).
