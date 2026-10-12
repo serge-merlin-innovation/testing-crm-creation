@@ -59,6 +59,122 @@ Conclusion: this run gives no evidence that more tokens or a bigger context prod
 
 **Statistics.** Pearson r with a two-sided t-test p-value, plus Spearman ρ, over the 20 scored agents. Computed in plain Python, no libraries.
 
+## Agent map
+
+Every session of the run. The coordinator at the left, its subagents grouped by phase. Each card shows the session name and ticket, its role, total tokens, peak context and, for implementation agents, the share of acceptance criteria that failed the first time.
+
+- Colour: green under 15% failed, yellow 15-29%, red 30% or more. Grey cards are not implementation agents, or have no failure rate (a crashed or resumed attempt).
+- A thick orange border marks a peak context over 200K tokens.
+- Dotted arrows: a session started by another subagent rather than by the coordinator.
+
+```mermaid
+flowchart LR
+  dragon["<b>dragon</b><br/>coordinator<br/>93.9M tok · peak 444K"]:::coord
+  subgraph tickets["Tickets (implementation)"]
+    direction TB
+    humpback["<b>humpback · #1</b><br/>implementation<br/>18.9M tok · peak 317K<br/>failed 27.3% (3/11)"]:::mid
+    wyvern["<b>wyvern · #2</b><br/>implementation<br/>10.9M tok · peak 217K<br/>failed 29.4% (5/17)"]:::mid
+    macaque["<b>macaque · #3</b><br/>implementation<br/>10.2M tok · peak 189K<br/>failed 14.3% (2/14)"]:::good
+    tigress["<b>tigress · #4</b><br/>implementation<br/>9.0M tok · peak 177K<br/>failed 0.0% (0/19)"]:::good
+    hatchling["<b>hatchling · #5</b><br/>implementation<br/>4.0M tok · peak 121K<br/>failed 44.4% (8/18)"]:::bad
+    calf["<b>calf · #6</b><br/>implementation<br/>20.2M tok · peak 329K<br/>failed 12.5% (2/16)"]:::good
+    puppy["<b>puppy · #7</b><br/>implementation<br/>5.5M tok · peak 133K<br/>failed 23.1% (3/13)"]:::mid
+    retriever["<b>retriever · #8</b><br/>implementation<br/>13.8M tok · peak 251K<br/>failed 7.7% (1/13)"]:::good
+    microbe["<b>microbe · #9</b><br/>implementation<br/>17.3M tok · peak 272K<br/>failed 33.3% (4/12)"]:::bad
+    mushroom["<b>mushroom · #10</b><br/>implementation<br/>25.5M tok · peak 300K<br/>failed 8.3% (1/12)"]:::good
+    rose["<b>rose · #11</b><br/>implementation<br/>17.6M tok · peak 249K<br/>failed 12.5% (2/16)"]:::good
+    seedling["<b>seedling · #12</b><br/>implementation<br/>26.6M tok · peak 309K<br/>failed 10.0% (1/10)"]:::good
+    cat["<b>cat · #12</b><br/>implementation<br/>960K tok · peak 61K"]:::other
+    maple["<b>maple · #13</b><br/>implementation<br/>18.4M tok · peak 289K<br/>failed 25.0% (5/20)"]:::mid
+    bird["<b>bird · #14</b><br/>implementation<br/>1.2M tok · peak 93K"]:::other
+    bug["<b>bug · #14</b><br/>implementation<br/>24.3M tok · peak 318K<br/>failed 13.3% (2/15)"]:::good
+    sabertooth["<b>sabertooth · #15</b><br/>implementation<br/>11.8M tok · peak 234K<br/>failed 10.0% (1/10)"]:::good
+    pawprint["<b>pawprint · #16</b><br/>implementation<br/>18.4M tok · peak 284K<br/>failed 18.2% (2/11)"]:::mid
+    chipmunk["<b>chipmunk · #17</b><br/>implementation<br/>21.2M tok · peak 263K<br/>failed 33.3% (3/9)"]:::bad
+    mizaru["<b>mizaru · #18</b><br/>implementation<br/>9.4M tok · peak 178K<br/>failed 16.7% (1/6)"]:::mid
+    iwazaru["<b>iwazaru · #19</b><br/>implementation<br/>25.8M tok · peak 295K<br/>failed 25.0% (3/12)"]:::mid
+    dog["<b>dog · #20</b><br/>implementation<br/>111.9M tok · peak 556K<br/>failed 38.9% (7/18)"]:::bad
+  end
+  subgraph mergers["Mergers"]
+    direction TB
+    duckling["<b>duckling</b><br/>merger<br/>1.5M tok · peak 79K"]:::other
+    kikazaru["<b>kikazaru</b><br/>merger<br/>4.5M tok · peak 110K"]:::other
+    tulip["<b>tulip</b><br/>merger<br/>7.3M tok · peak 144K"]:::other
+    ant["<b>ant</b><br/>merger<br/>1.7M tok · peak 67K"]:::other
+    chicken["<b>chicken</b><br/>merger<br/>976K tok · peak 60K"]:::other
+    cricket["<b>cricket</b><br/>merger<br/>875K tok · peak 65K"]:::other
+    dove["<b>dove</b><br/>merger<br/>821K tok · peak 56K"]:::other
+    giraffe["<b>giraffe</b><br/>merger<br/>21.4M tok · peak 251K"]:::other
+    turkey["<b>turkey</b><br/>merger<br/>11.5M tok · peak 165K"]:::other
+  end
+  subgraph review1["Review 1"]
+    direction TB
+    eagle["<b>eagle</b><br/>reviewer<br/>12.4M tok · peak 237K"]:::other
+  end
+  subgraph review1_fixers["Review 1 fixers"]
+    direction TB
+    fish["<b>fish</b><br/>fixer<br/>30.4M tok · peak 278K"]:::other
+    fox["<b>fox</b><br/>fixer<br/>22.8M tok · peak 246K"]:::other
+  end
+  subgraph review2["Review 2"]
+    direction TB
+    ladybug["<b>ladybug</b><br/>reviewer<br/>8.1M tok · peak 211K"]:::other
+    lobster["<b>lobster</b><br/>reviewer<br/>7.3M tok · peak 150K"]:::other
+    mosquito["<b>mosquito</b><br/>reviewer<br/>5.6M tok · peak 184K"]:::other
+    ox["<b>ox</b><br/>reviewer<br/>9.2M tok · peak 197K"]:::other
+    pig["<b>pig</b><br/>reviewer<br/>5.4M tok · peak 191K"]:::other
+  end
+  subgraph review2_fixers["Review 2 fixers"]
+    direction TB
+    owl["<b>owl</b><br/>fixer<br/>4.8M tok · peak 109K"]:::other
+    rat["<b>rat</b><br/>fixer<br/>10.8M tok · peak 167K"]:::other
+    ram["<b>ram</b><br/>fixer<br/>27.2M tok · peak 275K"]:::other
+    rooster["<b>rooster</b><br/>fixer<br/>31.0M tok · peak 272K"]:::other
+    shrimp["<b>shrimp</b><br/>fixer<br/>5.6M tok · peak 152K"]:::other
+    sauropod["<b>sauropod</b><br/>fixer<br/>8.9M tok · peak 168K"]:::other
+    tiger["<b>tiger</b><br/>fixer<br/>8.6M tok · peak 152K"]:::other
+  end
+  subgraph verification["Verification"]
+    direction TB
+    rabbit["<b>rabbit</b><br/>verifier<br/>8.1M tok · peak 200K"]:::other
+  end
+  dragon --> tickets
+  dragon --> mergers
+  dragon --> review1
+  dragon --> review1_fixers
+  dragon --> review2
+  dragon --> review2_fixers
+  dragon --> verification
+  style dragon stroke:#c2410c,stroke-width:3px
+  style humpback stroke:#c2410c,stroke-width:3px
+  style wyvern stroke:#c2410c,stroke-width:3px
+  style calf stroke:#c2410c,stroke-width:3px
+  style iwazaru stroke:#c2410c,stroke-width:3px
+  style retriever stroke:#c2410c,stroke-width:3px
+  style pawprint stroke:#c2410c,stroke-width:3px
+  style sabertooth stroke:#c2410c,stroke-width:3px
+  style microbe stroke:#c2410c,stroke-width:3px
+  style mushroom stroke:#c2410c,stroke-width:3px
+  style rose stroke:#c2410c,stroke-width:3px
+  style maple stroke:#c2410c,stroke-width:3px
+  style seedling stroke:#c2410c,stroke-width:3px
+  style bug stroke:#c2410c,stroke-width:3px
+  style chipmunk stroke:#c2410c,stroke-width:3px
+  style dog stroke:#c2410c,stroke-width:3px
+  style eagle stroke:#c2410c,stroke-width:3px
+  style fish stroke:#c2410c,stroke-width:3px
+  style fox stroke:#c2410c,stroke-width:3px
+  style giraffe stroke:#c2410c,stroke-width:3px
+  style ladybug stroke:#c2410c,stroke-width:3px
+  style ram stroke:#c2410c,stroke-width:3px
+  style rooster stroke:#c2410c,stroke-width:3px
+  classDef coord fill:#1e293b,color:#fff,stroke:#0f172a
+  classDef good fill:#dcfce7,stroke:#16a34a
+  classDef mid fill:#fef9c3,stroke:#ca8a04
+  classDef bad fill:#fee2e2,stroke:#dc2626
+  classDef other fill:#f1f5f9,stroke:#64748b
+```
+
 ## Sessions
 
 Peak context over 200K is in bold. "Failed first time" = failed criteria / the ticket's criteria. Only one agent per ticket is scored.
