@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>M&amp;A CRM agent run: agent map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; margin: 0; color: #0f172a; background: #fff; }
+  header { padding: 16px 24px; border-bottom: 1px solid #e2e8f0; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p { margin: 4px 0; font-size: 14px; color: #334155; }
+  .legend { display: flex; flex-wrap: wrap; gap: 24px; padding: 12px 24px; font-size: 13px; border-bottom: 1px solid #e2e8f0; }
+  .legend table { border-collapse: collapse; }
+  .legend td { padding: 2px 8px; }
+  .sw { display: inline-block; width: 14px; height: 14px; border: 1px solid; vertical-align: middle; margin-right: 6px; }
+  .toolbar { position: sticky; top: 0; background: #f8fafc; padding: 8px 24px; border-bottom: 1px solid #e2e8f0; z-index: 2; font-size: 13px; }
+  .toolbar button { margin-right: 6px; padding: 4px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; cursor: pointer; }
+  #viewport { overflow: auto; height: calc(100vh - 260px); min-height: 400px; }
+  #stage { transform-origin: 0 0; padding: 24px; display: inline-block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>M&amp;A CRM agent run: agent map</h1>
+  <p>Every session of the 2026-10-10 run and how the sessions relate. Each card shows the session name and ticket, its role, total tokens, peak context and, for implementation agents, the share of acceptance criteria that failed the first time.</p>
+  <p>Generated from the Mermaid diagram in <code>agent-run-token-vs-quality.md</code>. Click a card with "postmortem" to open it on GitHub.</p>
+</header>
+<div class="legend">
+  <table>
+    <tr><td><b>Arrow</b></td><td><b>Meaning</b></td></tr>
+    <tr><td style="color:#64748b">A ──▶ B</td><td>ticket B was blocked by ticket A</td></tr>
+    <tr><td style="color:#2563eb">A ┄▶ B "merged by"</td><td>B merged A's branch into feat/ma-crm</td></tr>
+    <tr><td style="color:#dc2626">A ━▶ B "findings"</td><td>reviewer A's findings were fixed by B, or B reviewed/verified after merger A</td></tr>
+    <tr><td style="color:#7c3aed">A ┄▶ B "resumed / respawned / split"</td><td>B took over A's unfinished job</td></tr>
+    <tr><td style="color:#ca8a04">calf ┄▶ hatchling</td><td>calf (#6) built #5's screens that hatchling left out</td></tr>
+  </table>
+  <table>
+    <tr><td><b>Card</b></td></tr>
+    <tr><td><span class="sw" style="background:#dcfce7;border-color:#16a34a"></span>under 15% of criteria failed</td></tr>
+    <tr><td><span class="sw" style="background:#fef9c3;border-color:#ca8a04"></span>15 to 29% failed</td></tr>
+    <tr><td><span class="sw" style="background:#fee2e2;border-color:#dc2626"></span>30% or more failed</td></tr>
+    <tr><td><span class="sw" style="background:#f1f5f9;border-color:#64748b"></span>not an implementation agent</td></tr>
+    <tr><td><span class="sw" style="background:#e5e7eb;border-color:#6b7280;border-style:dashed"></span>crashed or was killed</td></tr>
+    <tr><td><span class="sw" style="background:#fff;border:3px solid #f97316"></span>peak context over 200K tokens</td></tr>
+  </table>
+</div>
+<div class="toolbar">
+  <button onclick="zoom(1.2)">Zoom in</button>
+  <button onclick="zoom(1/1.2)">Zoom out</button>
+  <button onclick="fit()">Fit width</button>
+  <button onclick="setScale(1)">100%</button>
+  <span id="pct"></span>
+</div>
+<div id="viewport"><div id="stage"><pre class="mermaid">
+flowchart LR
+  dragon[&quot;&lt;b&gt;dragon&lt;/b&gt;&lt;br/&gt;coordinator&lt;br/&gt;93.9M tok · peak 444K&lt;br/&gt;📄 postmortem&quot;]:::coord
+  subgraph g_tickets[&quot;Tickets (dependency graph)&quot;]
+    direction LR
+    humpback[&quot;&lt;b&gt;humpback · #1&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;18.9M tok · peak 317K&lt;br/&gt;failed 27.3% (3/11)&lt;br/&gt;📄 postmortem&quot;]:::mid
+    wyvern[&quot;&lt;b&gt;wyvern · #2&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;10.9M tok · peak 217K&lt;br/&gt;failed 29.4% (5/17)&lt;br/&gt;📄 postmortem&quot;]:::mid
+    macaque[&quot;&lt;b&gt;macaque · #3&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;10.2M tok · peak 189K&lt;br/&gt;failed 14.3% (2/14)&lt;br/&gt;📄 postmortem&quot;]:::good
+    tigress[&quot;&lt;b&gt;tigress · #4&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;9.0M tok · peak 177K&lt;br/&gt;failed 0.0% (0/19)&lt;br/&gt;📄 postmortem&quot;]:::good
+    hatchling[&quot;&lt;b&gt;hatchling · #5&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;4.0M tok · peak 121K&lt;br/&gt;failed 44.4% (8/18)&lt;br/&gt;📄 postmortem&quot;]:::bad
+    calf[&quot;&lt;b&gt;calf · #6&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;20.2M tok · peak 329K&lt;br/&gt;failed 12.5% (2/16)&lt;br/&gt;📄 postmortem&quot;]:::good
+    puppy[&quot;&lt;b&gt;puppy · #7&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;5.5M tok · peak 133K&lt;br/&gt;failed 23.1% (3/13)&lt;br/&gt;📄 postmortem&quot;]:::mid
+    retriever[&quot;&lt;b&gt;retriever · #8&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;13.8M tok · peak 251K&lt;br/&gt;failed 7.7% (1/13)&lt;br/&gt;📄 postmortem&quot;]:::good
+    microbe[&quot;&lt;b&gt;microbe · #9&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;17.3M tok · peak 272K&lt;br/&gt;failed 33.3% (4/12)&lt;br/&gt;📄 postmortem&quot;]:::bad
+    mushroom[&quot;&lt;b&gt;mushroom · #10&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;25.5M tok · peak 300K&lt;br/&gt;failed 8.3% (1/12)&lt;br/&gt;📄 postmortem&quot;]:::good
+    rose[&quot;&lt;b&gt;rose · #11&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;17.6M tok · peak 249K&lt;br/&gt;failed 12.5% (2/16)&lt;br/&gt;📄 postmortem&quot;]:::good
+    seedling[&quot;&lt;b&gt;seedling · #12&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;26.6M tok · peak 309K&lt;br/&gt;failed 10.0% (1/10)&lt;br/&gt;no postmortem&quot;]:::good
+    cat[&quot;&lt;b&gt;cat · #12&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;960K tok · peak 61K&lt;br/&gt;📄 postmortem&quot;]:::other
+    maple[&quot;&lt;b&gt;maple · #13&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;18.4M tok · peak 289K&lt;br/&gt;failed 25.0% (5/20)&lt;br/&gt;📄 postmortem&quot;]:::mid
+    bird[&quot;&lt;b&gt;bird · #14&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;1.2M tok · peak 93K&lt;br/&gt;no postmortem&quot;]:::dead
+    bug[&quot;&lt;b&gt;bug · #14&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;24.3M tok · peak 318K&lt;br/&gt;failed 13.3% (2/15)&lt;br/&gt;📄 postmortem&quot;]:::good
+    sabertooth[&quot;&lt;b&gt;sabertooth · #15&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;11.8M tok · peak 234K&lt;br/&gt;failed 10.0% (1/10)&lt;br/&gt;📄 postmortem&quot;]:::good
+    pawprint[&quot;&lt;b&gt;pawprint · #16&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;18.4M tok · peak 284K&lt;br/&gt;failed 18.2% (2/11)&lt;br/&gt;📄 postmortem&quot;]:::mid
+    chipmunk[&quot;&lt;b&gt;chipmunk · #17&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;21.2M tok · peak 263K&lt;br/&gt;failed 33.3% (3/9)&lt;br/&gt;📄 postmortem&quot;]:::bad
+    mizaru[&quot;&lt;b&gt;mizaru · #18&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;9.4M tok · peak 178K&lt;br/&gt;failed 16.7% (1/6)&lt;br/&gt;📄 postmortem&quot;]:::mid
+    iwazaru[&quot;&lt;b&gt;iwazaru · #19&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;25.8M tok · peak 295K&lt;br/&gt;failed 25.0% (3/12)&lt;br/&gt;📄 postmortem&quot;]:::mid
+    dog[&quot;&lt;b&gt;dog · #20&lt;/b&gt;&lt;br/&gt;implementation&lt;br/&gt;111.9M tok · peak 556K&lt;br/&gt;failed 38.9% (7/18)&lt;br/&gt;📄 postmortem&quot;]:::bad
+  end
+  subgraph g_merge[&quot;Mergers into feat/ma-crm&quot;]
+    direction LR
+    duckling[&quot;&lt;b&gt;duckling&lt;/b&gt;&lt;br/&gt;merger&lt;br/&gt;1.5M tok · peak 79K&lt;br/&gt;no postmortem&quot;]:::other
+    kikazaru[&quot;&lt;b&gt;kikazaru&lt;/b&gt;&lt;br/&gt;merger&lt;br/&gt;4.5M tok · peak 110K&lt;br/&gt;📄 postmortem&quot;]:::other
+    tulip[&quot;&lt;b&gt;tulip&lt;/b&gt;&lt;br/&gt;merger&lt;br/&gt;7.3M tok · peak 144K&lt;br/&gt;📄 postmortem&quot;]:::other
+    ant[&quot;&lt;b&gt;ant&lt;/b&gt;&lt;br/&gt;merger&lt;br/&gt;1.7M tok · peak 67K&lt;br/&gt;📄 postmortem&quot;]:::other
+    chicken[&quot;&lt;b&gt;chicken&lt;/b&gt;&lt;br/&gt;merger&lt;br/&gt;976K tok · peak 60K&lt;br/&gt;📄 postmortem&quot;]:::other
+    cricket[&quot;&lt;b&gt;cricket&lt;/b&gt;&lt;br/&gt;merger&lt;br/&gt;875K tok · peak 65K&lt;br/&gt;📄 postmortem&quot;]:::other
+    dove[&quot;&lt;b&gt;dove&lt;/b&gt;&lt;br/&gt;merger&lt;br/&gt;821K tok · peak 56K&lt;br/&gt;📄 postmortem&quot;]:::other
+    giraffe[&quot;&lt;b&gt;giraffe&lt;/b&gt;&lt;br/&gt;merger&lt;br/&gt;21.4M tok · peak 251K&lt;br/&gt;📄 postmortem&quot;]:::other
+    turkey[&quot;&lt;b&gt;turkey&lt;/b&gt;&lt;br/&gt;merger&lt;br/&gt;11.5M tok · peak 165K&lt;br/&gt;📄 postmortem&quot;]:::other
+  end
+  subgraph g_rev[&quot;Reviews&quot;]
+    direction LR
+    eagle[&quot;&lt;b&gt;eagle&lt;/b&gt;&lt;br/&gt;reviewer&lt;br/&gt;12.4M tok · peak 237K&lt;br/&gt;no postmortem&quot;]:::other
+    ladybug[&quot;&lt;b&gt;ladybug&lt;/b&gt;&lt;br/&gt;reviewer&lt;br/&gt;8.1M tok · peak 211K&lt;br/&gt;no postmortem&quot;]:::dead
+    lobster[&quot;&lt;b&gt;lobster&lt;/b&gt;&lt;br/&gt;reviewer&lt;br/&gt;7.3M tok · peak 150K&lt;br/&gt;no postmortem&quot;]:::other
+    mosquito[&quot;&lt;b&gt;mosquito&lt;/b&gt;&lt;br/&gt;reviewer&lt;br/&gt;5.6M tok · peak 184K&lt;br/&gt;no postmortem&quot;]:::other
+    ox[&quot;&lt;b&gt;ox&lt;/b&gt;&lt;br/&gt;reviewer&lt;br/&gt;9.2M tok · peak 197K&lt;br/&gt;no postmortem&quot;]:::other
+    pig[&quot;&lt;b&gt;pig&lt;/b&gt;&lt;br/&gt;reviewer&lt;br/&gt;5.4M tok · peak 191K&lt;br/&gt;no postmortem&quot;]:::other
+    rabbit[&quot;&lt;b&gt;rabbit&lt;/b&gt;&lt;br/&gt;verifier&lt;br/&gt;8.1M tok · peak 200K&lt;br/&gt;no postmortem&quot;]:::other
+  end
+  subgraph g_fix[&quot;Fixers&quot;]
+    direction LR
+    fish[&quot;&lt;b&gt;fish&lt;/b&gt;&lt;br/&gt;fixer&lt;br/&gt;30.4M tok · peak 278K&lt;br/&gt;📄 postmortem&quot;]:::other
+    fox[&quot;&lt;b&gt;fox&lt;/b&gt;&lt;br/&gt;fixer&lt;br/&gt;22.8M tok · peak 246K&lt;br/&gt;📄 postmortem&quot;]:::other
+    owl[&quot;&lt;b&gt;owl&lt;/b&gt;&lt;br/&gt;fixer&lt;br/&gt;4.8M tok · peak 109K&lt;br/&gt;📄 postmortem&quot;]:::other
+    rat[&quot;&lt;b&gt;rat&lt;/b&gt;&lt;br/&gt;fixer&lt;br/&gt;10.8M tok · peak 167K&lt;br/&gt;📄 postmortem&quot;]:::other
+    ram[&quot;&lt;b&gt;ram&lt;/b&gt;&lt;br/&gt;fixer&lt;br/&gt;27.2M tok · peak 275K&lt;br/&gt;📄 postmortem&quot;]:::other
+    rooster[&quot;&lt;b&gt;rooster&lt;/b&gt;&lt;br/&gt;fixer&lt;br/&gt;31.0M tok · peak 272K&lt;br/&gt;📄 postmortem&quot;]:::other
+    shrimp[&quot;&lt;b&gt;shrimp&lt;/b&gt;&lt;br/&gt;fixer&lt;br/&gt;5.6M tok · peak 152K&lt;br/&gt;📄 postmortem&quot;]:::other
+    sauropod[&quot;&lt;b&gt;sauropod&lt;/b&gt;&lt;br/&gt;fixer&lt;br/&gt;8.9M tok · peak 168K&lt;br/&gt;no postmortem&quot;]:::dead
+    tiger[&quot;&lt;b&gt;tiger&lt;/b&gt;&lt;br/&gt;fixer&lt;br/&gt;8.6M tok · peak 152K&lt;br/&gt;📄 postmortem&quot;]:::other
+  end
+  dragon ==&gt;|spawns all| g_tickets
+  humpback --&gt; wyvern
+  wyvern --&gt; macaque
+  wyvern --&gt; tigress
+  humpback --&gt; hatchling
+  humpback --&gt; calf
+  hatchling --&gt; calf
+  calf --&gt; puppy
+  calf --&gt; retriever
+  puppy --&gt; retriever
+  retriever --&gt; microbe
+  retriever --&gt; mushroom
+  puppy --&gt; mushroom
+  microbe --&gt; rose
+  puppy --&gt; rose
+  microbe --&gt; seedling
+  mushroom --&gt; seedling
+  retriever --&gt; maple
+  microbe --&gt; maple
+  maple --&gt; bug
+  mushroom --&gt; bug
+  retriever --&gt; sabertooth
+  puppy --&gt; sabertooth
+  puppy --&gt; pawprint
+  mushroom --&gt; chipmunk
+  seedling --&gt; chipmunk
+  calf --&gt; mizaru
+  tigress --&gt; iwazaru
+  puppy --&gt; iwazaru
+  mizaru --&gt; iwazaru
+  macaque --&gt; dog
+  rose --&gt; dog
+  bug --&gt; dog
+  wyvern -.-&gt;|merged by| duckling
+  macaque -.-&gt;|merged by| kikazaru
+  tigress -.-&gt;|merged by| kikazaru
+  puppy -.-&gt;|merged by| kikazaru
+  mizaru -.-&gt;|merged by| kikazaru
+  pawprint -.-&gt;|merged by| tulip
+  iwazaru -.-&gt;|merged by| tulip
+  sabertooth -.-&gt;|merged by| tulip
+  mushroom -.-&gt;|merged by| tulip
+  maple -.-&gt;|merged by| ant
+  rose -.-&gt;|merged by| ant
+  cat -.-&gt;|merged by| chicken
+  bug -.-&gt;|merged by| cricket
+  chipmunk -.-&gt;|merged by| dove
+  dog -.-&gt;|merged by| giraffe
+  fish -.-&gt;|merged by| giraffe
+  fox -.-&gt;|merged by| giraffe
+  owl -.-&gt;|merged by| turkey
+  rat -.-&gt;|merged by| turkey
+  rooster -.-&gt;|merged by| turkey
+  ram -.-&gt;|merged by| turkey
+  shrimp -.-&gt;|merged by| turkey
+  tiger -.-&gt;|merged by| turkey
+  eagle ==&gt;|findings| fish
+  eagle ==&gt;|findings| fox
+  lobster ==&gt;|findings| owl
+  lobster ==&gt;|findings| rat
+  mosquito ==&gt;|findings| rooster
+  pig ==&gt;|findings| ram
+  ox ==&gt;|findings| shrimp
+  ox ==&gt;|findings| sauropod
+  seedling -.-&gt;|resumed| cat
+  bird -.-&gt;|respawned| bug
+  sauropod -.-&gt;|resumed| tiger
+  ladybug -.-&gt;|split into 3| mosquito
+  ladybug -.-&gt; pig
+  ladybug -.-&gt; ox
+  calf -.-&gt;|built #5 pages| hatchling
+  giraffe ==&gt;|branch reviewed| lobster
+  giraffe ==&gt;|branch reviewed| mosquito
+  turkey ==&gt;|verified| rabbit
+  linkStyle 1 stroke:#64748b
+  linkStyle 2 stroke:#64748b
+  linkStyle 3 stroke:#64748b
+  linkStyle 4 stroke:#64748b
+  linkStyle 5 stroke:#64748b
+  linkStyle 6 stroke:#64748b
+  linkStyle 7 stroke:#64748b
+  linkStyle 8 stroke:#64748b
+  linkStyle 9 stroke:#64748b
+  linkStyle 10 stroke:#64748b
+  linkStyle 11 stroke:#64748b
+  linkStyle 12 stroke:#64748b
+  linkStyle 13 stroke:#64748b
+  linkStyle 14 stroke:#64748b
+  linkStyle 15 stroke:#64748b
+  linkStyle 16 stroke:#64748b
+  linkStyle 17 stroke:#64748b
+  linkStyle 18 stroke:#64748b
+  linkStyle 19 stroke:#64748b
+  linkStyle 20 stroke:#64748b
+  linkStyle 21 stroke:#64748b
+  linkStyle 22 stroke:#64748b
+  linkStyle 23 stroke:#64748b
+  linkStyle 24 stroke:#64748b
+  linkStyle 25 stroke:#64748b
+  linkStyle 26 stroke:#64748b
+  linkStyle 27 stroke:#64748b
+  linkStyle 28 stroke:#64748b
+  linkStyle 29 stroke:#64748b
+  linkStyle 30 stroke:#64748b
+  linkStyle 31 stroke:#64748b
+  linkStyle 32 stroke:#64748b
+  linkStyle 33 stroke:#2563eb
+  linkStyle 34 stroke:#2563eb
+  linkStyle 35 stroke:#2563eb
+  linkStyle 36 stroke:#2563eb
+  linkStyle 37 stroke:#2563eb
+  linkStyle 38 stroke:#2563eb
+  linkStyle 39 stroke:#2563eb
+  linkStyle 40 stroke:#2563eb
+  linkStyle 41 stroke:#2563eb
+  linkStyle 42 stroke:#2563eb
+  linkStyle 43 stroke:#2563eb
+  linkStyle 44 stroke:#2563eb
+  linkStyle 45 stroke:#2563eb
+  linkStyle 46 stroke:#2563eb
+  linkStyle 47 stroke:#2563eb
+  linkStyle 48 stroke:#2563eb
+  linkStyle 49 stroke:#2563eb
+  linkStyle 50 stroke:#2563eb
+  linkStyle 51 stroke:#2563eb
+  linkStyle 52 stroke:#2563eb
+  linkStyle 53 stroke:#2563eb
+  linkStyle 54 stroke:#2563eb
+  linkStyle 55 stroke:#2563eb
+  linkStyle 56 stroke:#dc2626
+  linkStyle 57 stroke:#dc2626
+  linkStyle 58 stroke:#dc2626
+  linkStyle 59 stroke:#dc2626
+  linkStyle 60 stroke:#dc2626
+  linkStyle 61 stroke:#dc2626
+  linkStyle 62 stroke:#dc2626
+  linkStyle 63 stroke:#dc2626
+  linkStyle 64 stroke:#7c3aed
+  linkStyle 65 stroke:#7c3aed
+  linkStyle 66 stroke:#7c3aed
+  linkStyle 67 stroke:#7c3aed
+  linkStyle 68 stroke:#7c3aed
+  linkStyle 69 stroke:#7c3aed
+  linkStyle 70 stroke:#ca8a04
+  linkStyle 71 stroke:#dc2626
+  linkStyle 72 stroke:#dc2626
+  linkStyle 73 stroke:#dc2626
+  style dragon stroke:#c2410c,stroke-width:3px
+  style humpback stroke:#c2410c,stroke-width:3px
+  style wyvern stroke:#c2410c,stroke-width:3px
+  style calf stroke:#c2410c,stroke-width:3px
+  style iwazaru stroke:#c2410c,stroke-width:3px
+  style retriever stroke:#c2410c,stroke-width:3px
+  style pawprint stroke:#c2410c,stroke-width:3px
+  style sabertooth stroke:#c2410c,stroke-width:3px
+  style microbe stroke:#c2410c,stroke-width:3px
+  style mushroom stroke:#c2410c,stroke-width:3px
+  style rose stroke:#c2410c,stroke-width:3px
+  style maple stroke:#c2410c,stroke-width:3px
+  style seedling stroke:#c2410c,stroke-width:3px
+  style bug stroke:#c2410c,stroke-width:3px
+  style chipmunk stroke:#c2410c,stroke-width:3px
+  style dog stroke:#c2410c,stroke-width:3px
+  style eagle stroke:#c2410c,stroke-width:3px
+  style fish stroke:#c2410c,stroke-width:3px
+  style fox stroke:#c2410c,stroke-width:3px
+  style giraffe stroke:#c2410c,stroke-width:3px
+  style ladybug stroke:#c2410c,stroke-width:3px
+  style ram stroke:#c2410c,stroke-width:3px
+  style rooster stroke:#c2410c,stroke-width:3px
+  click dragon &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-2256-main-ma-crm-implementation.md&quot; &quot;Postmortem of dragon&quot; _blank
+  click humpback &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0340-worker-crm-foundation.md&quot; &quot;Postmortem of humpback&quot; _blank
+  click hatchling &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0357-worker-companies-contacts-picklists.md&quot; &quot;Postmortem of hatchling&quot; _blank
+  click wyvern &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0419-worker-two-factor-login.md&quot; &quot;Postmortem of wyvern&quot; _blank
+  click calf &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0432-worker-mandates-deal-team.md&quot; &quot;Postmortem of calf&quot; _blank
+  click macaque &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0449-worker-sessions-logout-mobile.md&quot; &quot;Postmortem of macaque&quot; _blank
+  click tigress &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0445-worker-ma-crm-t4-invitations-passwords.md&quot; &quot;Postmortem of tigress&quot; _blank
+  click puppy &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0456-worker-activities-tasks-notifications.md&quot; &quot;Postmortem of puppy&quot; _blank
+  click mizaru &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0459-worker-public-api.md&quot; &quot;Postmortem of mizaru&quot; _blank
+  click kikazaru &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0828-worker-merge-t3-t4-t7-t18.md&quot; &quot;Postmortem of kikazaru&quot; _blank
+  click iwazaru &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0921-worker-t19-offboarding-gdpr-exports.md&quot; &quot;Postmortem of iwazaru&quot; _blank
+  click retriever &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0905-worker-ticket-8-pipeline.md&quot; &quot;Postmortem of retriever&quot; _blank
+  click pawprint &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0915-worker-ma-crm-t16-search-merge-import.md&quot; &quot;Postmortem of pawprint&quot; _blank
+  click sabertooth &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-0936-worker-ma-crm-t15-email-calendar.md&quot; &quot;Postmortem of sabertooth&quot; _blank
+  click microbe &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1002-worker-t9-conflict-kyc.md&quot; &quot;Postmortem of microbe&quot; _blank
+  click mushroom &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1028-worker-ticket-10-fees-invoices.md&quot; &quot;Postmortem of mushroom&quot; _blank
+  click tulip &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1106-worker-merge-t16-t19-t15-t10.md&quot; &quot;Postmortem of tulip&quot; _blank
+  click rose &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1136-worker-ticket-11-wall-crossing.md&quot; &quot;Postmortem of rose&quot; _blank
+  click maple &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1118-worker-ticket-13-buyers.md&quot; &quot;Postmortem of maple&quot; _blank
+  click ant &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1151-worker-merge-13-11-into-ma-crm.md&quot; &quot;Postmortem of ant&quot; _blank
+  click bug &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1421-worker-ticket-14-process.md&quot; &quot;Postmortem of bug&quot; _blank
+  click cat &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1347-worker-ticket-12-merge-resume.md&quot; &quot;Postmortem of cat&quot; _blank
+  click chicken &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1358-worker-merge-12-into-ma-crm.md&quot; &quot;Postmortem of chicken&quot; _blank
+  click chipmunk &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1506-worker-ticket-17-reporting.md&quot; &quot;Postmortem of chipmunk&quot; _blank
+  click cricket &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1434-worker-merge-ticket-14.md&quot; &quot;Postmortem of cricket&quot; _blank
+  click dog &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1652-worker-ticket-20-production-readiness.md&quot; &quot;Postmortem of dog&quot; _blank
+  click dove &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1517-worker-merge-ticket-17.md&quot; &quot;Postmortem of dove&quot; _blank
+  click fish &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1633-worker-review-security-nfr-fixes.md&quot; &quot;Postmortem of fish&quot; _blank
+  click fox &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1653-worker-review-fixes-wall.md&quot; &quot;Postmortem of fox&quot; _blank
+  click giraffe &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1743-worker-merge-t20-fix-sec-fix-wall.md&quot; &quot;Postmortem of giraffe&quot; _blank
+  click owl &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1903-worker-std-fe-fixes.md&quot; &quot;Postmortem of owl&quot; _blank
+  click rat &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1925-worker-review2-backend-fixes.md&quot; &quot;Postmortem of rat&quot; _blank
+  click ram &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-2001-worker-spec-b-fixes.md&quot; &quot;Postmortem of ram&quot; _blank
+  click rooster &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-2030-worker-spec-review-a-fixes.md&quot; &quot;Postmortem of rooster&quot; _blank
+  click shrimp &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-1949-worker-spec-c-f1-ui-screens.md&quot; &quot;Postmortem of shrimp&quot; _blank
+  click tiger &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-2205-worker-spec-c-review-fixes.md&quot; &quot;Postmortem of tiger&quot; _blank
+  click turkey &quot;https://github.com/serge-merlin-innovation/testing-crm-creation/blob/feat/ma-crm/postmortem/2026-10-10-2203-worker-merge-review2-fixes.md&quot; &quot;Postmortem of turkey&quot; _blank
+  classDef coord fill:#1e293b,color:#fff,stroke:#0f172a
+  classDef good fill:#dcfce7,stroke:#16a34a
+  classDef mid fill:#fef9c3,stroke:#ca8a04
+  classDef bad fill:#fee2e2,stroke:#dc2626
+  classDef dead fill:#e5e7eb,stroke:#6b7280,stroke-dasharray:4 3
+  classDef other fill:#f1f5f9,stroke:#64748b
+
+</pre></div></div>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: false, securityLevel: "loose", flowchart: { htmlLabels: true, useMaxWidth: false }, maxTextSize: 200000, maxEdges: 2000 });
+  await mermaid.run({ querySelector: ".mermaid" });
+  window.fit();
+</script>
+<script>
+  let scale = 1;
+  const stage = () => document.getElementById("stage");
+  function setScale(s) { scale = Math.max(0.05, Math.min(4, s)); stage().style.transform = `scale(${scale})`; document.getElementById("pct").textContent = Math.round(scale * 100) + "%"; }
+  function zoom(f) { setScale(scale * f); }
+  window.fit = function () { const svg = document.querySelector("#stage svg"); if (!svg) return; const w = svg.getBoundingClientRect().width / scale; setScale((document.getElementById("viewport").clientWidth - 48) / w); };
+</script>
+</body>
+</html>
