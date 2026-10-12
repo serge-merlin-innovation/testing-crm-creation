@@ -2,7 +2,7 @@
 
 The M&A CRM run of 2026-10-10. Coordinator `dragon` and its 47 subagent sessions. Read-only analysis, 2026-10-12.
 
-Interactive view: `~/.jcode-notes/ma-crm/agent-map/index.html` (agent map, one card per session, scatter plots). Raw data: `~/.jcode-notes/ma-crm/agent-map/data.json`.
+Interactive view: [agent-run-map.html](agent-run-map.html) in this folder. It is a self-contained page: open it in a browser, offline. It has one card per session and arrows between related sessions, which you can toggle by type. Hover a card to highlight its links, and click it for its token figures, failed criteria and postmortem link. The earlier scratch version with scatter plots is at `~/.jcode-notes/ma-crm/agent-map/index.html`, and the raw data at `~/.jcode-notes/ma-crm/agent-map/data.json`.
 
 ## Question
 
