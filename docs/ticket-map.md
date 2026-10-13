@@ -66,26 +66,6 @@ flowchart TD
     T17 --> T20
     T19 --> T20
 
-    click T1 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/1" _blank
-    click T2 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/2" _blank
-    click T3 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/3" _blank
-    click T4 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/4" _blank
-    click T5 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/5" _blank
-    click T6 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/6" _blank
-    click T7 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/7" _blank
-    click T8 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/8" _blank
-    click T9 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/9" _blank
-    click T10 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/10" _blank
-    click T11 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/11" _blank
-    click T12 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/12" _blank
-    click T13 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/13" _blank
-    click T14 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/14" _blank
-    click T15 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/15" _blank
-    click T16 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/16" _blank
-    click T17 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/17" _blank
-    click T18 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/18" _blank
-    click T19 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/19" _blank
-    click T20 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/20" _blank
 
     class T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T15,T16,T18,T19 green
     class T11,T12,T13 blue
