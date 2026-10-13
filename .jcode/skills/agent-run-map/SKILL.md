@@ -8,10 +8,10 @@ You are mapping one **run**: a coordinator session and every subagent it spawned
 
 - `agent-run-map-timeline.html`: the interactive map. Time runs left to right, with one lane per role.
 
-Do not write a Markdown report (no `agent-run-token-vs-quality.md`) or any other file into the output folder. Intermediate JSON stays in `work_dir`, and anything you need to tell the user goes in your final message.
-
+Everything is local. Each postmortem link is a relative path from the HTML file to the session's local `<repo>/postmortem/*.md` file, never a GitHub or other remote URL. The HTML is self-contained and loads nothing over the network.
+ 
 The scripts in `scripts/` do the mechanical work (Python stdlib; Playwright from the repo's frontend for the check). Your job is the judgement they cannot do: the failure attribution. Run every script from this skill's folder with `--config <run.json>`. A full config, and the result of proving the skill against a real run, are in [`EXAMPLE.md`](EXAMPLE.md).
-
+ 
 ## Steps
 
 1. **Write the run config.** Create `run.json` in a work dir outside the repo (default `~/.jcode-notes/agent-run-map/<coordinator-short-name>-<run-date>/`). Only `coordinator` is required. Default it to the current session (`$JCODE_SESSION_ID`) when the user says "my last run" from the coordinator. Otherwise search `~/.jcode/sessions/session_*.json` for the session whose `id` many others name as `parent_id`. Keys:
@@ -30,7 +30,6 @@ The scripts in `scripts/` do the mechanical work (Python stdlib; Playwright from
    | `decision_report` | none | repo-relative decision log whose rows carry `superseded_marker` ("Superseded by review") |
    | `failures` | `<work_dir>/failures.json` | the judged failure rows (step 3) |
    | `hot_context` | 200000 | peak context drawn with an orange outline |
-   | `postmortem_url` | relative paths | URL prefix for Mermaid `click` links, e.g. `https://github.com/<org>/<repo>/blob/<branch>/postmortem/` |
    | `overrides`, `primary`, `edges`, `ticket_commits`, `role_patterns` | none | corrections, see Reference |
 
    Done when the file parses and names an existing `~/.jcode/sessions/<coordinator>.json`.
@@ -45,7 +44,7 @@ The scripts in `scripts/` do the mechanical work (Python stdlib; Playwright from
 
 6. **Render.** `python3 scripts/render.py --config run.json`. It writes `agent-run-map-timeline.html` and nothing else. Done when it prints that one path.
 
-7. **Verify.** `node scripts/check.mjs --repo <repo> --expect <sessions> --shots <work_dir> <out_dir>/agent-run-map-timeline.html`. Look at the `*-fit.png` screenshot. When an earlier output exists, also run `python3 scripts/compare.py --config run.json --ref-dir <old out_dir>`, and explain every difference it prints in your final message. Done when check.mjs exits 0: the expected card count, 0 overlaps, 0 errors, 0 network requests, and every postmortem link resolving.
+7. **Verify.** `node scripts/check.mjs --repo <repo> --expect <sessions> --shots <work_dir> <out_dir>/agent-run-map-timeline.html`. Look at the `*-fit.png` screenshot. When an earlier output exists, also run `python3 scripts/compare.py --config run.json --ref-dir <old out_dir>`, and explain every difference it prints in your final message. Done when check.mjs exits 0: the expected card count, 0 overlaps, 0 errors, 0 network requests, and every postmortem link resolving to a local file on disk.
 
 ## Reference
 
