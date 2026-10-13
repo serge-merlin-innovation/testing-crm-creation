@@ -1,5 +1,5 @@
 interface:
   display_name: "Agent run map"
-  short_description: "Map a multi-agent run: tokens vs quality, Mermaid agent map and HTML timeline"
+  short_description: "Map a multi-agent run as an offline HTML timeline: tokens vs quality per agent"
 policy:
   allow_implicit_invocation: false
