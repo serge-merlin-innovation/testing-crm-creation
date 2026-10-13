@@ -2,15 +2,11 @@
 
 How the GitHub issues for the M&A CRM spec ([`docs/specs/ma-crm.md`](specs/ma-crm.md)) depend on each other. An arrow `A --> B` means A blocks B: B can start only once A is closed. GitHub holds the authoritative edges as native "blocked by" links on each issue.
 
-```mermaid
 flowchart TD
-    classDef auth fill:#dbeafe,stroke:#1d4ed8,color:#1e3a8a
-    classDef data fill:#dcfce7,stroke:#15803d,color:#14532d
-    classDef deal fill:#fef3c7,stroke:#b45309,color:#78350f
-    classDef wall fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
-    classDef report fill:#ede9fe,stroke:#6d28d9,color:#4c1d95
-    classDef final fill:#e5e7eb,stroke:#374151,color:#111827
-
+    classDef green fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef blue fill:#dbeafe,stroke:#1d4ed8,color:#1e3a8a
+    classDef gray fill:#e5e7eb,stroke:#374151,color:#111827
+ 
     T1["#1 Foundation: email login, roles,<br/>permission matrix, audit log"]
     T2["#2 Two-factor login, lockout,<br/>suspicious-login alerts"]
     T3["#3 Session timeout, logout<br/>everywhere, mobile access"]
@@ -31,7 +27,7 @@ flowchart TD
     T18["#18 Public API,<br/>tokens and OAuth"]
     T19["#19 Offboarding, GDPR rights,<br/>export controls"]
     T20["#20 Production readiness:<br/>i18n, a11y, security, perf"]
-
+ 
     T1 --> T2
     T2 --> T3
     T2 --> T4
@@ -68,7 +64,7 @@ flowchart TD
     T16 --> T20
     T17 --> T20
     T19 --> T20
-
+ 
     click T1 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/1" _blank
     click T2 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/2" _blank
     click T3 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/3" _blank
@@ -89,15 +85,11 @@ flowchart TD
     click T18 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/18" _blank
     click T19 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/19" _blank
     click T20 "https://github.com/serge-merlin-innovation/testing-crm-creation/issues/20" _blank
-
-    class T1,T2,T3,T4 auth
-    class T5,T16 data
-    class T6,T7,T8,T10,T12,T13,T14,T15 deal
-    class T9,T11,T18,T19 wall
-    class T17 report
-    class T20 final
-```
-
+ 
+    class T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T15,T16,T18,T19 green
+    class T11,T12,T13 blue
+    class T14,T17,T20 gray
+ 
 Colours: blue is authentication, green is companies and contacts, amber is deal and buyer work, red is access control and compliance, purple is reporting, grey is the final production-readiness pass.
 
 ## Critical path
