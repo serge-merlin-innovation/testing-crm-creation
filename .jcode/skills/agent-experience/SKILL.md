@@ -12,8 +12,6 @@ You are writing one report, `docs/research/agent-experience-improvements.md`, fr
 - The run's decision report (`docs/DECISION-REPORT.md`, or `docs/decisions/<spec>.md`): the decisions agents took on the user's behalf.
 - `postmortem/*.md` written by the run's coordinator and workers.
 
-Leave out quality assessments: ISO 25010 or any other standards-based evaluation, audits, and load or security reviews, even when they sit in `postmortem/` or `docs/research/`. Use none of their findings, counts or recommendations.
-
 ## Steps
 
 1. **Read every input in full.** Bucket the log lines by error text, and tell planned TDD reds (a single red on a new test, then green) apart from waste (repeats, environment, fixtures, guards, drift). Group the decisions by who should have taken them: the spec, an ADR, the constitution, or really the agent at run time. Group the postmortem findings that repeat across files. Done when every log line, decision row and run postmortem has been read, and you have a count for each bucket.
