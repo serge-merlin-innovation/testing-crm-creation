@@ -12,8 +12,12 @@ from ....infrastructure.auth.http_exceptions import (
 from ....infrastructure.logging import get_logger
 from ..constants import EXCEPTION_MAPPING, GENERIC_ERROR_MESSAGE, SUPPORT_ID_LENGTH
 from ..exceptions import (
+    DealClosedError,
+    DealFrozenError,
     DomainError,
     InsufficientCreditsError,
+    UserExistsError,
+    ValidationError,
 )
 
 logger = get_logger()
@@ -52,15 +56,36 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         support_id = _generate_support_id()
         logger.warning(f"Validation error [{support_id}] on {request.method} {request.url.path}: {exc.errors()}")
+        # Field and message only, never the submitted input, so a form can show the error inline.
+        errors = [
+            {"field": ".".join(str(part) for part in error["loc"][1:]), "message": error["msg"].removeprefix("Value error, ")}
+            for error in exc.errors()
+        ]
         return JSONResponse(
             status_code=422,
-            content={"detail": "Invalid request. Please check your input and try again.", "support_id": support_id},
+            content={
+                "detail": "Invalid request. Please check your input and try again.",
+                "errors": errors,
+                "support_id": support_id,
+            },
         )
 
     @app.exception_handler(DomainError)
     async def domain_exception_handler(request: Request, exc: DomainError) -> JSONResponse:
         support_id = _generate_support_id()
         http_exception = map_exception(exc)
+
+        if isinstance(exc, ValidationError):
+            # Raised with a message written for the user, naming the field when there is one.
+            content: dict[str, object] = {"detail": str(exc), "support_id": support_id}
+            if exc.field:
+                content["errors"] = [{"field": exc.field, "message": str(exc)}]
+            return JSONResponse(status_code=http_exception.status_code, content=content)
+
+        if isinstance(exc, (UserExistsError, DealClosedError, DealFrozenError)):
+            return JSONResponse(
+                status_code=http_exception.status_code, content={"detail": http_exception.detail, "support_id": support_id}
+            )
 
         if isinstance(exc, InsufficientCreditsError):
             logger.info(f"Insufficient credits [{support_id}] on {request.method} {request.url.path}: {exc}")

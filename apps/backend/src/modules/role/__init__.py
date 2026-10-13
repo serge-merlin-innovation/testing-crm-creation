@@ -1,25 +1,14 @@
 from .models import Role as RoleModel
-from .schemas import (
-    Role as RoleSchema,
-)
-from .schemas import (
-    RoleBase,
-    RoleCreate,
-    RoleCreateInternal,
-    RoleDelete,
-    RoleRead,
-    RoleUpdate,
-    RoleUpdateInternal,
-)
+from .permissions import ALL_PERMISSIONS, DEFAULT_ROLES, Permission, RoleName
+from .schemas import PermissionMatrix, RolePermissionsUpdate, RoleRead
 
 __all__ = [
+    "ALL_PERMISSIONS",
+    "DEFAULT_ROLES",
+    "Permission",
+    "PermissionMatrix",
     "RoleModel",
-    "RoleSchema",
-    "RoleBase",
-    "RoleCreate",
-    "RoleCreateInternal",
-    "RoleDelete",
+    "RoleName",
+    "RolePermissionsUpdate",
     "RoleRead",
-    "RoleUpdate",
-    "RoleUpdateInternal",
 ]

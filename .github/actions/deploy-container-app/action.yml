@@ -133,12 +133,7 @@ runs:
             validate_https_environment_variable BACKEND_URL >/dev/null
             ;;
           backend-container-app)
-            frontend_base_url="$(validate_https_environment_variable FRONTEND_BASE_URL)"
-            oauth_redirect_base_url="$(validate_https_environment_variable OAUTH_REDIRECT_BASE_URL)"
-            if [[ "$frontend_base_url" != "$oauth_redirect_base_url" ]]; then
-              echo "FRONTEND_BASE_URL and OAUTH_REDIRECT_BASE_URL must use the same frontend origin." >&2
-              exit 1
-            fi
+            validate_https_environment_variable FRONTEND_BASE_URL >/dev/null
             ;;
           *)
             echo "Unsupported Container App template: $BICEP_TEMPLATE_FILE." >&2

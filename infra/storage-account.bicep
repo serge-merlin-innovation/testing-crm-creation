@@ -2,7 +2,15 @@
 // All account-specific values are passed in as parameters by the caller.
 
 param name string
-param location string = resourceGroup().location
+// NFR-01: client data and its backups stay in EU data centres. Same list in every template.
+@allowed([
+  'westeurope'
+  'northeurope'
+  'francecentral'
+  'germanywestcentral'
+  'swedencentral'
+])
+param location string = any(resourceGroup().location)
 param tags object = {}
 
 // ---------- Redundancy and tier ----------
@@ -76,6 +84,29 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2024-01-01' = {
     allowBlobPublicAccess: false
     minimumTlsVersion: minimumTlsVersion
     supportsHttpsTrafficOnly: true
+    // NFR-01: AES-256 at rest for every service, with Microsoft-managed keys.
+    encryption: {
+      keySource: 'Microsoft.Storage'
+      requireInfrastructureEncryption: true
+      services: {
+        blob: {
+          enabled: true
+          keyType: 'Account'
+        }
+        file: {
+          enabled: true
+          keyType: 'Account'
+        }
+        queue: {
+          enabled: true
+          keyType: 'Account'
+        }
+        table: {
+          enabled: true
+          keyType: 'Account'
+        }
+      }
+    }
     publicNetworkAccess: publicNetworkAccess
     networkAcls: {
       bypass: networkAclsBypass

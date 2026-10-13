@@ -187,3 +187,100 @@ class TestDataclassModelRules:
         ]
 
         assert not offenders, f"modules/{module}/models.py has an unindexed foreign key at lines {offenders}."
+
+
+# The boilerplate's auth layer is built on the user model and the shared error handler; nothing else
+# under `infrastructure` may reach up into a feature module.
+INFRASTRUCTURE_MODULE_IMPORTS_ALLOWED = {"user", "common"}
+
+
+def imported_modules_of(path: Path) -> set[str]:
+    names: set[str] = set()
+    for node in ast.walk(parse(path)):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            dotted = node.module.split(".")
+            if "modules" in dotted and (node.level > 0 or dotted[0] == "src"):
+                names.add(dotted[dotted.index("modules") + 1] if len(dotted) > dotted.index("modules") + 1 else "")
+    return names
+
+
+class TestDependencyDirection:
+    def test_infrastructure_imports_no_feature_module(self):
+        offenders = {
+            str(path.relative_to(BACKEND_DIRECTORY)): sorted(imported - INFRASTRUCTURE_MODULE_IMPORTS_ALLOWED)
+            for path in (BACKEND_DIRECTORY / "src" / "infrastructure").rglob("*.py")
+            if (imported := imported_modules_of(path)) - INFRASTRUCTURE_MODULE_IMPORTS_ALLOWED
+        }
+        assert offenders == {}
+
+    def test_modules_never_import_interfaces(self):
+        offenders = [
+            str(path.relative_to(BACKEND_DIRECTORY))
+            for path in MODULES_DIRECTORY.rglob("*.py")
+            for node in ast.walk(parse(path))
+            if isinstance(node, ast.ImportFrom) and node.module and "interfaces" in node.module.split(".")
+        ]
+        assert offenders == []
+
+
+def slice_imports() -> dict[str, set[str]]:
+    edges: dict[str, set[str]] = {}
+    for path in MODULES_DIRECTORY.rglob("*.py"):
+        owner = path.relative_to(MODULES_DIRECTORY).parts[0]
+        for node in ast.walk(parse(path)):
+            if isinstance(node, ast.ImportFrom) and node.level == 2 and node.module:
+                target = node.module.split(".")[0]
+                if target != owner and (MODULES_DIRECTORY / target).is_dir():
+                    edges.setdefault(owner, set()).add(target)
+    return edges
+
+
+def slice_cycles(edges: dict[str, set[str]]) -> list[frozenset[str]]:
+    """Strongly connected groups of two or more slices (Tarjan)."""
+    index: dict[str, int] = {}
+    low: dict[str, int] = {}
+    stack: list[str] = []
+    groups: list[frozenset[str]] = []
+
+    def visit(node: str) -> None:
+        index[node] = low[node] = len(index)
+        stack.append(node)
+        for target in edges.get(node, ()):
+            if target not in index:
+                visit(target)
+                low[node] = min(low[node], low[target])
+            elif target in stack:
+                low[node] = min(low[node], index[target])
+        if low[node] == index[node]:
+            group = set()
+            while True:
+                member = stack.pop()
+                group.add(member)
+                if member == node:
+                    break
+            if len(group) > 1:
+                groups.append(frozenset(group))
+
+    for node in sorted(edges):
+        if node not in index:
+            visit(node)
+    return groups
+
+
+# Cycles that predate this guard. Remove an entry when its slices are split; never add one.
+KNOWN_SLICE_CYCLES = {
+    frozenset({"company", "contact"}),
+    frozenset({"role", "security", "session", "user"}),
+}
+
+
+class TestSliceIndependence:
+    def test_no_new_import_cycle_between_slices(self):
+        new = [sorted(group) for group in slice_cycles(slice_imports()) if group not in KNOWN_SLICE_CYCLES]
+        assert new == [], f"These slices import each other: {new}"
+
+    def test_the_audit_slice_imports_no_other_slice(self):
+        assert slice_imports().get("audit", set()) - {SHARED_MODULE} == set()
+
+    def test_the_cycle_finder_sees_a_cycle(self):
+        assert slice_cycles({"a": {"b"}, "b": {"c"}, "c": {"a"}, "d": {"a"}}) == [frozenset({"a", "b", "c"})]

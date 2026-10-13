@@ -11,8 +11,8 @@ name: Infra
 # Secrets Officer assignment, and create the account-scoped Foundry assignments
 # that let it deploy models and publish agent versions.
 #
-# POSTGRES_ADMIN_PASSWORD, GHCR_TOKEN, and BACKEND_SECRET_KEY are optional GitHub bootstrap
-# secrets when the matching values already exist in Key Vault; a new vault requires all three.
+# POSTGRES_ADMIN_PASSWORD, GHCR_TOKEN, BACKEND_SECRET_KEY and TOTP_ENCRYPTION_KEY are optional GitHub bootstrap
+# secrets when the matching values already exist in Key Vault; a new vault requires all four.
 # Their values are never stored in the checked-in Bicep parameter files.
 on:
   workflow_dispatch:
@@ -67,6 +67,11 @@ on:
         required: true
         type: boolean
         default: true
+      deploy_uptime_monitor:
+        description: Deploy the uptime probe and alerts (NFR-03); set the UPTIME_PROBE_ORIGIN variable first
+        required: true
+        type: boolean
+        default: false
 concurrency:
   group: azure-infrastructure
   cancel-in-progress: false
@@ -168,7 +173,8 @@ jobs:
             infra/parameters/storage-account.bicepparam \
             infra/parameters/blob-container.bicepparam \
             infra/parameters/container-app-environment.bicepparam \
-            infra/parameters/ai-foundry.bicepparam; do
+            infra/parameters/ai-foundry.bicepparam \
+            infra/parameters/uptime-monitor.bicepparam; do
             az bicep build-params \
               --file "$parameters_file" \
               --stdout \
@@ -269,9 +275,11 @@ jobs:
           BOOTSTRAP_POSTGRES_ADMIN_PASSWORD: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
           BOOTSTRAP_GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           BOOTSTRAP_BACKEND_SECRET_KEY: ${{ secrets.BACKEND_SECRET_KEY }}
+          BOOTSTRAP_TOTP_ENCRYPTION_KEY: ${{ secrets.TOTP_ENCRYPTION_KEY }}
           REQUIRE_POSTGRES_SECRET: ${{ inputs.deploy_key_vault || inputs.deploy_postgres_server }}
           REQUIRE_GHCR_SECRET: ${{ inputs.deploy_key_vault }}
           REQUIRE_BACKEND_SECRET_KEY: ${{ inputs.deploy_key_vault }}
+          REQUIRE_TOTP_ENCRYPTION_KEY: ${{ inputs.deploy_key_vault }}
 
       - name: Deploy PostgreSQL server
         if: ${{ inputs.deploy_postgres_server }}
@@ -371,6 +379,34 @@ jobs:
           parameters-file: infra/parameters/ai-foundry.bicepparam
           deployment-name: cd-ai-foundry
 
+  deploy-uptime-monitor:
+    name: Deploy uptime monitor
+    needs: deploy-resource-group
+    if: ${{ inputs.deploy_infrastructure && inputs.deploy_uptime_monitor }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_BUDGET_ALERT_EMAIL: ${{ vars.AZURE_BUDGET_ALERT_EMAIL }}
+      UPTIME_PROBE_ORIGIN: ${{ vars.UPTIME_PROBE_ORIGIN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Log in to Azure with OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy uptime monitor
+        uses: ./.github/actions/deploy-bicep
+        with:
+          template-file: infra/uptime-monitor.bicep
+          parameters-file: infra/parameters/uptime-monitor.bicepparam
+          deployment-name: cd-uptime-monitor
+
   deployment-summary:
     name: Write deployment summary
     needs:
@@ -381,6 +417,7 @@ jobs:
       - deploy-storage
       - deploy-container-apps-environment
       - deploy-ai-foundry
+      - deploy-uptime-monitor
     if: ${{ always() && inputs.deploy_infrastructure && !cancelled() }}
     runs-on: ubuntu-latest
     steps:

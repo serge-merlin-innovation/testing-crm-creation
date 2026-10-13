@@ -35,7 +35,7 @@ type Fetcher = (
 ) => Promise<Response>;
 
 function backendAnswering(
-  user: { roleName: string | null; isSuperuser: boolean } | number,
+  user: { roleName: string | null; permissions: string[] } | number,
 ) {
   return vi.fn<Fetcher>(() =>
     Promise.resolve(
@@ -43,8 +43,9 @@ function backendAnswering(
         ? jsonResponse({ detail: "nope" }, user)
         : jsonResponse({
             id: 1,
+            email: "ann@firm.be",
             role_name: user.roleName,
-            is_superuser: user.isSuperuser,
+            permissions: user.roleName ? user.permissions : null,
           }),
     ),
   );
@@ -53,7 +54,7 @@ function backendAnswering(
 function forwardedIdentity(response: Response) {
   return {
     role: response.headers.get("x-middleware-request-x-session-role"),
-    superuser: response.headers.get("x-middleware-request-x-session-superuser"),
+    permissions: response.headers.get("x-middleware-request-x-session-permissions"),
   };
 }
 
@@ -128,23 +129,24 @@ describe("tier 2: no session", () => {
 });
 
 describe("tier 3: who the session belongs to", () => {
-  const admin = { roleName: "user", isSuperuser: true };
-  const user = { roleName: "user", isSuperuser: false };
-  const reviewer = { roleName: "reviewer", isSuperuser: false };
-  const roleless = { roleName: null, isSuperuser: false };
+  const admin = { roleName: "Admin", permissions: ["users.manage", "roles.manage", "settings.manage", "audit.read"] };
+  const analyst = { roleName: "Analyst / Associate", permissions: ["deals.read_staffed", "deals.edit_staffed"] };
+  const readOnly = { roleName: "Read-only", permissions: ["dashboard.aggregated"] };
+  const roleless = { roleName: null, permissions: [] };
 
   it.each([
     ["/overview", admin, true],
-    ["/overview", user, true],
+    ["/overview", analyst, true],
     ["/overview", roleless, true],
     ["/users", admin, true],
-    ["/users", user, false],
+    ["/users", analyst, false],
     ["/users", roleless, false],
-    ["/users/42", user, false],
-    ["/analytics", admin, true],
-    ["/analytics", user, true],
-    ["/analytics", reviewer, false],
-    ["/analytics", roleless, false],
+    ["/users/42", analyst, false],
+    ["/permissions", admin, true],
+    ["/permissions", readOnly, false],
+    ["/analytics", readOnly, true],
+    ["/analytics", analyst, false],
+    ["/analytics", admin, false],
   ])("%s for %o → allowed: %s", async (path, viewer, allowed) => {
     vi.stubGlobal("fetch", backendAnswering(viewer));
 
@@ -187,18 +189,18 @@ describe("when the backend cannot answer", () => {
   it("does not claim an identity it could not resolve", async () => {
     expect(forwardedIdentity(await proxy(signedIn("/overview")))).toEqual({
       role: "",
-      superuser: "false",
+      permissions: "",
     });
   });
 });
 
 describe("the forwarded identity", () => {
-  it("carries the resolved role and superuser flag to the page", async () => {
-    vi.stubGlobal("fetch", backendAnswering({ roleName: "reviewer", isSuperuser: false }));
+  it("carries the resolved role and permissions to the page", async () => {
+    vi.stubGlobal("fetch", backendAnswering({ roleName: "Read-only", permissions: ["dashboard.aggregated"] }));
 
     expect(forwardedIdentity(await proxy(signedIn("/overview")))).toEqual({
-      role: "reviewer",
-      superuser: "false",
+      role: "Read-only",
+      permissions: "dashboard.aggregated",
     });
   });
 
@@ -208,19 +210,19 @@ describe("the forwarded identity", () => {
     expect(
       forwardedIdentity(
         await proxy(
-          request("/", { headers: { "x-session-superuser": "true" } }),
+          request("/", { headers: { "x-session-permissions": "users.manage" } }),
         ),
       ),
-    ).toEqual({ role: "", superuser: "false" });
+    ).toEqual({ role: "", permissions: "" });
   });
 
-  it("overwrites a hand-written superuser header instead of trusting it", async () => {
-    vi.stubGlobal("fetch", backendAnswering({ roleName: "user", isSuperuser: false }));
+  it("overwrites a hand-written permissions header instead of trusting it", async () => {
+    vi.stubGlobal("fetch", backendAnswering({ roleName: "Read-only", permissions: ["dashboard.aggregated"] }));
 
     const response = await proxy(
       signedIn("/users", {
-        "x-session-superuser": "true",
-        "x-session-role": "admin",
+        "x-session-permissions": "users.manage",
+        "x-session-role": "Admin",
       }),
     );
 
@@ -228,7 +230,7 @@ describe("the forwarded identity", () => {
   });
 
   it("gains nothing from a forged superuser cookie", async () => {
-    vi.stubGlobal("fetch", backendAnswering({ roleName: "user", isSuperuser: false }));
+    vi.stubGlobal("fetch", backendAnswering({ roleName: "Read-only", permissions: ["dashboard.aggregated"] }));
 
     const response = await proxy(
       request("/users", {
@@ -242,7 +244,7 @@ describe("the forwarded identity", () => {
   });
 
   it("sends the backend the session cookie and nothing else", async () => {
-    const fetcher = backendAnswering({ roleName: "user", isSuperuser: false });
+    const fetcher = backendAnswering({ roleName: "Read-only", permissions: ["dashboard.aggregated"] });
     vi.stubGlobal("fetch", fetcher);
 
     await proxy(
@@ -258,5 +260,51 @@ describe("the forwarded identity", () => {
     expect(new Headers(init?.headers).get("Cookie")).toBe(
       "session_id=session-1",
     );
+  });
+});
+
+describe("signed-in pages are never cached (AUTH-04 c2)", () => {
+  it("marks a gated page no-store so Back after Log out asks the server again", async () => {
+    vi.stubGlobal("fetch", backendAnswering({ roleName: "Partner", permissions: [] }));
+
+    const response = await proxy(signedIn("/overview"));
+
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+
+  it("sends a revoked session's Back navigation to login instead of the page", async () => {
+    vi.stubGlobal("fetch", backendAnswering(401));
+
+    const response = await proxy(signedIn("/overview"));
+
+    expect(getRedirectUrl(response)).toContain("/login");
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+});
+
+describe("the user's language follows them to every device (NFR-04 c1)", () => {
+  function backendWithLanguage(language: string) {
+    return vi.fn<Fetcher>(() =>
+      Promise.resolve(
+        jsonResponse({ id: 1, email: "ann@firm.be", role_name: "Partner", permissions: ["deals.read_staffed"], language }),
+      ),
+    );
+  }
+
+  it("renders the page in the saved language and keeps it in the lang cookie", async () => {
+    vi.stubGlobal("fetch", backendWithLanguage("nl"));
+
+    const response = await proxy(signedIn("/overview"));
+
+    expect(response.headers.get("x-middleware-request-cookie")).toContain("lang=nl");
+    expect(response.cookies.get("lang")?.value).toBe("nl");
+  });
+
+  it("leaves an existing cookie alone: Profile rewrites it when the user changes language", async () => {
+    vi.stubGlobal("fetch", backendWithLanguage("fr"));
+
+    const response = await proxy(signedIn("/overview", { Cookie: "session_id=session-1; lang=nl" }));
+
+    expect(response.cookies.get("lang")).toBeUndefined();
   });
 });

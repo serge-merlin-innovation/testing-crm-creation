@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Text
+from sqlalchemy import JSON, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...infrastructure.database.models import SoftDeleteMixin, TimestampMixin
@@ -11,8 +11,6 @@ if TYPE_CHECKING:
 
 
 class Role(Base, TimestampMixin, SoftDeleteMixin):
-    """A bare label for role-based authorization: no permission matrix, no business logic."""
-
     __tablename__ = "roles"
 
     id: Mapped[int] = mapped_column(
@@ -25,6 +23,8 @@ class Role(Base, TimestampMixin, SoftDeleteMixin):
     )
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     description: Mapped[str | None] = mapped_column(Text, default=None)
+    # Reassign a new list to change it: JSON columns do not track in-place mutation.
+    permissions: Mapped[list[str]] = mapped_column(JSON, nullable=False, default_factory=list)
 
     users: Mapped[list["User"]] = relationship("User", back_populates="role", lazy="selectin", default_factory=list, init=False)
 

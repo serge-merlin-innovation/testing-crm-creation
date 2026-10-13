@@ -1,6 +1,7 @@
 import re
 
 from ..config.settings import EnvironmentOption, Settings
+from ..geoip import GeoIp, UnknownGeoIp
 from ..logging import get_logger
 
 logger = get_logger()
@@ -15,7 +16,26 @@ class ProductionSecurityValidator:
         self.settings = settings
         self.logger = get_logger()
 
+    def validate_test_hooks(self) -> None:
+        deployed = self.settings.ENVIRONMENT in (EnvironmentOption.PRODUCTION, EnvironmentOption.STAGING)
+        if deployed and self.settings.TEST_HOOKS_ENABLED:
+            raise ProductionSecurityError(
+                "TEST_HOOKS_ENABLED is true on a deployed environment. The hooks freeze the clock and read "
+                "captured emails without authentication; they are for local runs and tests only."
+            )
+        if deployed and not self.settings.BREACH_CHECK_ENABLED:
+            raise ProductionSecurityError(
+                "BREACH_CHECK_ENABLED is false on a deployed environment. New passwords must be checked "
+                "against known breaches (AUTH-12); the switch is for offline e2e runs only."
+            )
+        if deployed and len(self.settings.TOTP_ENCRYPTION_KEY) < 32:
+            raise ProductionSecurityError(
+                "TOTP_ENCRYPTION_KEY is missing or shorter than 32 characters on a deployed environment. "
+                "Without it 2FA secrets are encrypted with a key derived from SECRET_KEY; set it from Key Vault."
+            )
+
     def validate_production_security(self) -> None:
+        self.validate_test_hooks()
         if not self._is_production():
             self.logger.debug("Not in production environment, skipping security validation")
             return
@@ -45,6 +65,12 @@ class ProductionSecurityValidator:
                 "SECRET_KEY is using default or insecure value. "
                 "This compromises session security, CSRF protection, and JWT tokens. "
                 "Generate a strong, unique secret key for production."
+            )
+
+        if len(self.settings.TOTP_ENCRYPTION_KEY) < 32:
+            errors.append(
+                "TOTP_ENCRYPTION_KEY is missing or shorter than 32 characters. "
+                "It encrypts 2FA secrets at rest; set it from Key Vault."
             )
 
         if self._is_database_using_default_credentials():
@@ -85,10 +111,7 @@ class ProductionSecurityValidator:
         session_warnings = self._check_session_security()
         warnings.extend(session_warnings)
 
-        warnings.extend(self._check_first_superuser_credentials())
-
-        oauth_warnings = self._check_oauth_tenant_scope()
-        warnings.extend(oauth_warnings)
+        warnings.extend(self._check_first_admin_credentials())
 
         for warning in warnings:
             self.logger.warning(f"PRODUCTION SECURITY WARNING: {warning}")
@@ -148,20 +171,6 @@ class ProductionSecurityValidator:
     def _is_database_password_empty(self) -> bool:
         return not self.settings.POSTGRES_PASSWORD or self.settings.POSTGRES_PASSWORD.strip() == ""
 
-    def _check_oauth_tenant_scope(self) -> list[str]:
-        warnings = []
-
-        multi_tenant_authorities = {"", "common", "organizations", "consumers"}
-
-        if self.settings.OAUTH_MICROSOFT_CLIENT_ID and self.settings.OAUTH_MICROSOFT_TENANT in multi_tenant_authorities:
-            warnings.append(
-                f"OAUTH_MICROSOFT_TENANT is '{self.settings.OAUTH_MICROSOFT_TENANT or 'unset'}', a multi-tenant "
-                f"authority, while a Microsoft OAuth client is configured. Any Microsoft account can then reach "
-                f"the sign-in flow. Set it to your Entra directory (tenant) GUID for production."
-            )
-
-        return warnings
-
     def _is_cors_too_permissive(self) -> bool:
         return self.settings.CORS_ENABLED and "*" in self.settings.CORS_ORIGINS_LIST
 
@@ -202,24 +211,17 @@ class ProductionSecurityValidator:
 
         return warnings
 
-    def _check_first_superuser_credentials(self) -> list[str]:
+    def _check_first_admin_credentials(self) -> list[str]:
         warnings: list[str] = []
 
-        if not self.settings.FIRST_SUPERUSER_USERNAME or not self.settings.FIRST_SUPERUSER_PASSWORD:
+        if not self.settings.FIRST_ADMIN_EMAIL or not self.settings.FIRST_ADMIN_PASSWORD:
             return warnings
 
-        weak_usernames = ["admin", "administrator", "root", "user", "test", "demo"]
-        if self.settings.FIRST_SUPERUSER_USERNAME.lower() in weak_usernames:
-            warnings.append(
-                f"First superuser username '{self.settings.FIRST_SUPERUSER_USERNAME}' is predictable. "
-                f"Consider using a less obvious username for better security."
-            )
-
-        password = self.settings.FIRST_SUPERUSER_PASSWORD
+        password = self.settings.FIRST_ADMIN_PASSWORD
         if len(password) < 12:
             warnings.append(
-                "First superuser password is shorter than 12 characters. Use a longer, "
-                "stronger password for the first superuser in production."
+                "First admin password is shorter than 12 characters. Use a longer, "
+                "stronger password for the first admin in production."
             )
 
         weak_passwords = {
@@ -252,8 +254,7 @@ class ProductionSecurityValidator:
         }
         if password.lower() in weak_passwords:
             warnings.append(
-                "First superuser password appears to be a common weak password. "
-                "Use a strong, unique password for the first superuser."
+                "First admin password appears to be a common weak password. Use a strong, unique password for the first admin."
             )
 
         return warnings
@@ -262,3 +263,20 @@ class ProductionSecurityValidator:
 def validate_production_security(settings: Settings) -> None:
     validator = ProductionSecurityValidator(settings)
     validator.validate_production_security()
+
+
+def validate_geoip(settings: Settings, geoip: GeoIp) -> None:
+    """New-country alerts (AUTH-06 c1) need a geo-IP adapter. A named provider that is not wired is
+    a broken deploy; no provider at all is allowed, and said loudly at every start."""
+    if settings.ENVIRONMENT != EnvironmentOption.PRODUCTION:
+        return
+    if settings.GEOIP_PROVIDER and isinstance(geoip, UnknownGeoIp):
+        raise ProductionSecurityError(
+            f"GEOIP_PROVIDER is '{settings.GEOIP_PROVIDER}' but no geo-IP adapter is wired: every country "
+            "would read as unknown and new-country login alerts would never fire."
+        )
+    if not settings.GEOIP_PROVIDER:
+        logger.warning(
+            "PRODUCTION SECURITY WARNING: no GEOIP_PROVIDER, so new-country login alerts are OFF (AUTH-06 c1). "
+            "Only new-device alerts are sent."
+        )

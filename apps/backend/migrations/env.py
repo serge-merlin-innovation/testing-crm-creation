@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from src.infrastructure.config.settings import settings
 from src.infrastructure.database.migration_validation import validate_production_migration
 from src.infrastructure.database.session import Base
+from src.modules.search.models import SEARCH_INDEXES
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -38,6 +39,13 @@ def import_models(package_name):
 import_models("src.modules")
 target_metadata = Base.metadata
 
+# Expression indexes created by raw DDL (see modules/search/models.py); autogenerate cannot model them.
+RAW_DDL_INDEXES = {name for indexes in SEARCH_INDEXES.values() for name, _expression in indexes}
+
+
+def include_object(obj, name, type_, reflected, compare_to):
+    return not (type_ == "index" and reflected and name in RAW_DDL_INDEXES)
+
 
 def run_migrations_offline() -> None:
     context.configure(
@@ -45,6 +53,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -52,7 +61,7 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(connection=connection, target_metadata=target_metadata, include_object=include_object)
 
     with context.begin_transaction():
         context.run_migrations()

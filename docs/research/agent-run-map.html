@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent run map: M&amp;A CRM, 2026-10-10</title>
+<style>
+  :root { --bg:#f8fafc; --ink:#0f172a; --dim:#64748b; --line:#e2e8f0;
+          --good:#dcfce7; --goodb:#16a34a; --mid:#fef9c3; --midb:#ca8a04; --bad:#fee2e2; --badb:#dc2626;
+          --other:#ffffff; --otherb:#94a3b8; --hot:#ea580c; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; }
+  body { font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; color:var(--ink); background:var(--bg); display:flex; flex-direction:column; }
+  header { padding:14px 20px 6px; flex:none; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  header p { margin:0; color:var(--dim); max-width:1100px; }
+  .bar { flex:none; display:flex; flex-wrap:wrap; gap:10px 20px; align-items:center; padding:8px 20px 10px; border-bottom:1px solid var(--line); background:#fff; }
+  .bar label { display:flex; gap:6px; align-items:center; cursor:pointer; user-select:none; }
+  .key { display:inline-block; width:24px; height:0; border-top:2.5px solid; }
+  .key.dash { border-top-style:dashed; }
+  .sw { display:inline-block; width:12px; height:12px; border-radius:3px; border:1.5px solid; vertical-align:-2px; margin-right:4px; }
+  .zoom { margin-left:auto; display:flex; gap:6px; align-items:center; }
+  .zoom button { border:1px solid var(--line); background:#fff; border-radius:6px; padding:2px 9px; cursor:pointer; font-size:14px; }
+  #wrap { flex:1; overflow:auto; position:relative; cursor:grab; }
+  #wrap.drag { cursor:grabbing; }
+  #stage { position:relative; transform-origin:0 0; }
+  .lane { position:absolute; left:0; right:0; border-top:1px dashed var(--line); }
+  .lane:nth-child(odd) { background:rgba(148,163,184,.05); }
+  .lane span { position:sticky; left:0; display:inline-block; padding:10px 14px; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); }
+  .colhead { position:absolute; text-align:center; font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); }
+  .axis { position:absolute; left:0; right:0; border-top:1px dashed #cbd5e1; }
+  svg#wires { position:absolute; left:0; top:0; pointer-events:none; overflow:visible; }
+  .card { position:absolute; background:var(--other); border:1.5px solid var(--otherb); border-radius:9px; padding:8px 10px; cursor:pointer;
+          box-shadow:0 1px 2px rgba(15,23,42,.06); transition:opacity .15s, transform .15s; overflow:hidden; }
+  .card:hover { transform:translateY(-1px); box-shadow:0 4px 10px rgba(15,23,42,.12); }
+  .card.good { background:var(--good); border-color:var(--goodb); }
+  .card.mid  { background:var(--mid);  border-color:var(--midb); }
+  .card.bad  { background:var(--bad);  border-color:var(--badb); }
+  .card.coord{ background:#1e293b; color:#fff; border-color:#0f172a; }
+  .card.dead { border-style:dashed; background:#f1f5f9; }
+  .card.hot  { outline:3px solid var(--hot); outline-offset:1px; }
+  .card .nm { font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card .rl { color:var(--dim); font-size:11.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card.coord .rl, .card.coord .mt { color:#cbd5e1; }
+  .card .mt { font-size:11.5px; }
+  .card .fl { font-weight:700; font-size:11.5px; }
+  .card a.pm { font-size:11.5px; text-decoration:none; color:#1d4ed8; }
+  .card.coord a.pm { color:#93c5fd; }
+  .card .nopm { font-size:11.5px; color:var(--dim); }
+  #stage.dim .card { opacity:.2; }
+  #stage.dim .card.on { opacity:1; }
+  #panel { position:fixed; right:16px; top:16px; width:350px; max-height:calc(100vh - 32px); overflow:auto; background:#fff; border:1px solid var(--line);
+           border-radius:12px; box-shadow:0 12px 32px rgba(15,23,42,.18); padding:14px 16px; display:none; z-index:5; }
+  #panel h3 { margin:0 0 6px; font-size:15px; }
+  #panel table { border-collapse:collapse; width:100%; margin:6px 0; }
+  #panel td { padding:2px 0; vertical-align:top; }
+  #panel td:first-child { color:var(--dim); width:44%; }
+  #panel .x { position:absolute; right:10px; top:6px; border:0; background:none; font-size:18px; cursor:pointer; color:var(--dim); }
+  #panel ul { margin:4px 0 0 16px; padding:0; }
+  footer { flex:none; padding:6px 20px 10px; color:var(--dim); border-top:1px solid var(--line); background:#fff; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Agent run map: M&amp;A CRM (2026-10-10)</h1>
+  <p>One column per agent type, in the order the run used them; each column is centred on the dashed mid-line. A time-ordered view is in <a href="agent-run-map-timeline.html">agent-run-map-timeline.html</a>. Card colour shows the share of a ticket's acceptance criteria that a later independent review found unmet (implementation agents only). An orange outline marks a peak context over 200K tokens. Hover a card to highlight its links, click it for details. Drag to pan, use the buttons to zoom. Method and caveats: <a href="agent-run-token-vs-quality.md">agent-run-token-vs-quality.md</a>.</p>
+</header>
+<div class="bar" id="legend"></div>
+<div id="wrap"><div id="stage"><svg id="wires"></svg></div></div>
+<div id="panel"><button class="x" onclick="closePanel()">×</button><div id="pbody"></div></div>
+<footer id="foot"></footer>
+<script>
+const G = {"nodes": [{"name": "dragon", "role": "coordinator", "phase": "coordinator", "ticket": null, "model": "claude-opus-5-5", "duration_min": 1300.2, "model_calls": 416, "input_tokens": 267563, "output_tokens": 163208, "cache_read_tokens": 88489415, "cache_creation_tokens": 4942295, "total_tokens": 93862481, "peak_context": 444041, "scope": "Coordinator: split the spec into 20 tickets, spawned and merged every agent, opened the PR", "created_at": "2026-10-10T01:06:18.843646Z", "postmortem": "../../postmortem/2026-10-10-2256-main-ma-crm-implementation.md", "no_pm": null}, {"name": "humpback", "role": "implementation", "phase": "tickets", "ticket": 1, "model": "claude-opus-5-5", "duration_min": 32.5, "model_calls": 95, "input_tokens": 190646, "output_tokens": 191301, "cache_read_tokens": 18243420, "cache_creation_tokens": 289075, "total_tokens": 18914442, "peak_context": 317327, "scope": null, "created_at": "2026-10-10T01:08:52.684085Z", "quality": {"total": 11, "failed": 3, "pct": 27.3, "title": "Foundation: email-only login, one role per user, permission matrix and append-only audit log", "failed_ids": ["AUD-01 c1 (ambiguous)", "AUD-01 c3", "ROLE-01 c1"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0340-worker-crm-foundation.md", "no_pm": null}, {"name": "hatchling", "role": "implementation", "phase": "tickets", "ticket": 5, "model": "claude-opus-5-5", "duration_min": 13.8, "model_calls": 46, "input_tokens": 49434, "output_tokens": 83790, "cache_read_tokens": 3743727, "cache_creation_tokens": 92728, "total_tokens": 3969679, "peak_context": 120980, "scope": "#5 backend slice only (pages went to calf)", "created_at": "2026-10-10T01:43:26.712313Z", "quality": {"total": 18, "failed": 8, "pct": 44.4, "title": "Companies, contacts and reference data", "failed_ids": ["CO-01 c1 (ambiguous)", "CO-01 c2 (ambiguous)", "CO-02 c1 (ambiguous)", "CO-02 c2 (ambiguous)", "CO-02 c3 (ambiguous)", "CO-02 c4 (ambiguous)", "CO-03 c1 (ambiguous)", "CON-01 c2 (ambiguous)"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0357-worker-companies-contacts-picklists.md", "no_pm": null}, {"name": "wyvern", "role": "implementation", "phase": "tickets", "ticket": 2, "model": "claude-opus-5-5", "duration_min": 36.6, "model_calls": 79, "input_tokens": 131413, "output_tokens": 193705, "cache_read_tokens": 10363565, "cache_creation_tokens": 189228, "total_tokens": 10877911, "peak_context": 217480, "scope": null, "created_at": "2026-10-10T01:43:26.808168Z", "quality": {"total": 17, "failed": 5, "pct": 29.4, "title": "Two-factor login, lockout and suspicious-login alerts", "failed_ids": ["AUTH-01 c5", "AUTH-01 c8", "AUTH-02 c2", "AUTH-06 c1", "AUTH-12 c1"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0419-worker-two-factor-login.md", "no_pm": null}, {"name": "calf", "role": "implementation", "phase": "tickets", "ticket": 6, "model": "claude-opus-5-5", "duration_min": 35.4, "model_calls": 105, "input_tokens": 202686, "output_tokens": 189423, "cache_read_tokens": 19468944, "cache_creation_tokens": 300966, "total_tokens": 20162019, "peak_context": 329218, "scope": "#6 plus the #5 frontend pages", "created_at": "2026-10-10T01:57:22.476657Z", "quality": {"total": 16, "failed": 2, "pct": 12.5, "title": "Mandates with code names, deal team and the Chinese wall", "failed_ids": ["AUTHZ-02 c6", "ROLE-01 c2 (ambiguous)"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0432-worker-mandates-deal-team.md", "no_pm": null}, {"name": "macaque", "role": "implementation", "phase": "tickets", "ticket": 3, "model": "claude-opus-5-5", "duration_min": 29.6, "model_calls": 87, "input_tokens": 107206, "output_tokens": 92111, "cache_read_tokens": 9872977, "cache_creation_tokens": 160766, "total_tokens": 10233060, "peak_context": 189018, "scope": null, "created_at": "2026-10-10T02:20:04.442309Z", "quality": {"total": 14, "failed": 2, "pct": 14.3, "title": "Session timeout, logout everywhere and mobile access", "failed_ids": ["AUTH-04 c2", "AUTH-04 c4"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0449-worker-sessions-logout-mobile.md", "no_pm": null}, {"name": "tigress", "role": "implementation", "phase": "tickets", "ticket": 4, "model": "claude-opus-5-5", "duration_min": 28.8, "model_calls": 73, "input_tokens": 103652, "output_tokens": 119083, "cache_read_tokens": 8636320, "cache_creation_tokens": 148679, "total_tokens": 9007734, "peak_context": 176931, "scope": null, "created_at": "2026-10-10T02:20:04.518009Z", "quality": {"total": 19, "failed": 0, "pct": 0.0, "title": "User onboarding by invitation, password policy and password reset", "failed_ids": [], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0445-worker-ma-crm-t4-invitations-passwords.md", "no_pm": null}, {"name": "puppy", "role": "implementation", "phase": "tickets", "ticket": 7, "model": "claude-opus-5-5", "duration_min": 24.3, "model_calls": 59, "input_tokens": 62919, "output_tokens": 88434, "cache_read_tokens": 5267363, "cache_creation_tokens": 104303, "total_tokens": 5523019, "peak_context": 132555, "scope": null, "created_at": "2026-10-10T02:32:54.687994Z", "quality": {"total": 13, "failed": 3, "pct": 23.1, "title": "Activities, private notes, tasks and notification preferences", "failed_ids": ["ACT-01 c3", "ACT-03 c1", "ACT-06 c1"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0456-worker-activities-tasks-notifications.md", "no_pm": null}, {"name": "duckling", "role": "merger", "phase": "mergers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 11.8, "model_calls": 30, "input_tokens": 41100, "output_tokens": 11735, "cache_read_tokens": 1365719, "cache_creation_tokens": 50743, "total_tokens": 1469297, "peak_context": 78995, "scope": "Merge t2 (#2) into feat/ma-crm", "created_at": "2026-10-10T02:32:54.770582Z", "postmortem": null, "no_pm": "none written (early merger, before mergers were told to run retro-auto)"}, {"name": "mizaru", "role": "implementation", "phase": "tickets", "ticket": 18, "model": "claude-opus-5-5", "duration_min": 27.0, "model_calls": 77, "input_tokens": 111170, "output_tokens": 120553, "cache_read_tokens": 8993580, "cache_creation_tokens": 149635, "total_tokens": 9374938, "peak_context": 177887, "scope": null, "created_at": "2026-10-10T02:32:54.822743Z", "quality": {"total": 6, "failed": 1, "pct": 16.7, "title": "Public API with personal tokens and OAuth client credentials", "failed_ids": ["NFR-05 c3"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0459-worker-public-api.md", "no_pm": null}, {"name": "kikazaru", "role": "merger", "phase": "mergers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 25.5, "model_calls": 62, "input_tokens": 60799, "output_tokens": 37303, "cache_read_tokens": 4290584, "cache_creation_tokens": 81987, "total_tokens": 4470673, "peak_context": 110239, "scope": "Merge t3, t4, t7, t18", "created_at": "2026-10-10T06:02:52.167191Z", "postmortem": "../../postmortem/2026-10-10-0828-worker-merge-t3-t4-t7-t18.md", "no_pm": null}, {"name": "iwazaru", "role": "implementation", "phase": "tickets", "ticket": 19, "model": "claude-opus-5-5", "duration_min": 53.3, "model_calls": 137, "input_tokens": 165093, "output_tokens": 243905, "cache_read_tokens": 25082915, "cache_creation_tokens": 266454, "total_tokens": 25758367, "peak_context": 294706, "scope": "#19 plus the #4 pages and #2 admin screens", "created_at": "2026-10-10T06:28:30.580544Z", "quality": {"total": 12, "failed": 3, "pct": 25.0, "title": "Offboarding with ownership hand-over, GDPR rights and export controls", "failed_ids": ["GDPR-02 c1", "GDPR-02 c2", "REP-06 c2 (ambiguous)"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0921-worker-t19-offboarding-gdpr-exports.md", "no_pm": null}, {"name": "retriever", "role": "implementation", "phase": "tickets", "ticket": 8, "model": "claude-opus-5-5", "duration_min": 36.8, "model_calls": 79, "input_tokens": 147432, "output_tokens": 145660, "cache_read_tokens": 13282651, "cache_creation_tokens": 222319, "total_tokens": 13798062, "peak_context": 250571, "scope": null, "created_at": "2026-10-10T06:28:30.672095Z", "quality": {"total": 13, "failed": 1, "pct": 7.7, "title": "Pipeline board, configurable stage gates, milestones and closing", "failed_ids": ["AUTHZ-02 c8 (ambiguous)"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0905-worker-ticket-8-pipeline.md", "no_pm": null}, {"name": "pawprint", "role": "implementation", "phase": "tickets", "ticket": 16, "model": "claude-opus-5-5", "duration_min": 47.3, "model_calls": 106, "input_tokens": 168448, "output_tokens": 207209, "cache_read_tokens": 17804787, "cache_creation_tokens": 256095, "total_tokens": 18436539, "peak_context": 284347, "scope": null, "created_at": "2026-10-10T06:28:30.706551Z", "quality": {"total": 11, "failed": 2, "pct": 18.2, "title": "Global search, relationship holders, merge duplicates and Excel import", "failed_ids": ["CON-03 c2", "CON-04 c3"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0915-worker-ma-crm-t16-search-merge-import.md", "no_pm": null}, {"name": "sabertooth", "role": "implementation", "phase": "tickets", "ticket": 15, "model": "claude-opus-5-5", "duration_min": 31.5, "model_calls": 86, "input_tokens": 149916, "output_tokens": 148903, "cache_read_tokens": 11265737, "cache_creation_tokens": 205806, "total_tokens": 11770362, "peak_context": 234058, "scope": null, "created_at": "2026-10-10T07:05:23.223886Z", "quality": {"total": 10, "failed": 1, "pct": 10.0, "title": "Email logging by BCC/forward and private calendar feed", "failed_ids": ["ACT-04 c2"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-0936-worker-ma-crm-t15-email-calendar.md", "no_pm": null}, {"name": "microbe", "role": "implementation", "phase": "tickets", "ticket": 9, "model": "claude-opus-5-5", "duration_min": 58.0, "model_calls": 97, "input_tokens": 173113, "output_tokens": 303715, "cache_read_tokens": 16547298, "cache_creation_tokens": 243812, "total_tokens": 17267938, "peak_context": 272064, "scope": null, "created_at": "2026-10-10T07:05:23.358827Z", "quality": {"total": 12, "failed": 4, "pct": 33.3, "title": "Conflict check on new mandates and KYC / engagement letter gate", "failed_ids": ["AUTHZ-05 c1", "AUTHZ-05 c3", "AUTHZ-05 c6", "DEAL-01 c4"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-1002-worker-t9-conflict-kyc.md", "no_pm": null}, {"name": "mushroom", "role": "implementation", "phase": "tickets", "ticket": 10, "model": "claude-opus-5-5", "duration_min": 83.2, "model_calls": 137, "input_tokens": 186239, "output_tokens": 385623, "cache_read_tokens": 24672956, "cache_creation_tokens": 271387, "total_tokens": 25516205, "peak_context": 299639, "scope": null, "created_at": "2026-10-10T07:05:23.416029Z", "quality": {"total": 12, "failed": 1, "pct": 8.3, "title": "Fees, field-level restrictions and invoices", "failed_ids": ["AUTHZ-06 c1"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-1028-worker-ticket-10-fees-invoices.md", "no_pm": null}, {"name": "tulip", "role": "merger", "phase": "mergers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 43.2, "model_calls": 77, "input_tokens": 87049, "output_tokens": 37413, "cache_read_tokens": 7033660, "cache_creation_tokens": 115776, "total_tokens": 7273898, "peak_context": 144028, "scope": "Merge t16, t19, t15, t10", "created_at": "2026-10-10T08:23:41.510205Z", "postmortem": "../../postmortem/2026-10-10-1106-worker-merge-t16-t19-t15-t10.md", "no_pm": null}, {"name": "rose", "role": "implementation", "phase": "tickets", "ticket": 11, "model": "claude-opus-5-5", "duration_min": 72.8, "model_calls": 104, "input_tokens": 148032, "output_tokens": 253548, "cache_read_tokens": 16948589, "cache_creation_tokens": 221129, "total_tokens": 17571298, "peak_context": 249381, "scope": null, "created_at": "2026-10-10T08:23:52.428713Z", "quality": {"total": 16, "failed": 2, "pct": 12.5, "title": "Wall-crossing requests, delegation, break-glass and quarterly access review", "failed_ids": ["AUTH-02 c5", "AUTHZ-08 c3 (ambiguous)"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-1136-worker-ticket-11-wall-crossing.md", "no_pm": null}, {"name": "maple", "role": "implementation", "phase": "tickets", "ticket": 13, "model": "claude-opus-5-5", "duration_min": 55.7, "model_calls": 94, "input_tokens": 180039, "output_tokens": 145187, "cache_read_tokens": 17771266, "cache_creation_tokens": 260549, "total_tokens": 18357041, "peak_context": 288801, "scope": null, "created_at": "2026-10-10T08:23:52.507396Z", "quality": {"total": 20, "failed": 5, "pct": 25.0, "title": "Investor profiles, buyer long list, buyer status grid and NDA tracking", "failed_ids": ["BUY-03 c1 (ambiguous)", "BUY-03 c5", "CO-04 c1", "CO-04 c2", "CON-01 c5"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-1118-worker-ticket-13-buyers.md", "no_pm": null}, {"name": "seedling", "role": "implementation", "phase": "tickets", "ticket": 12, "model": "claude-opus-5-5", "duration_min": 89.1, "model_calls": 131, "input_tokens": 194721, "output_tokens": 142957, "cache_read_tokens": 25973541, "cache_creation_tokens": 280443, "total_tokens": 26591662, "peak_context": 308900, "scope": "Built #12, died mid-merge of f76f446 (no postmortem)", "created_at": "2026-10-10T08:28:30.408666Z", "quality": {"total": 10, "failed": 1, "pct": 10.0, "title": "Origination pipeline: opportunities, pitches and win/lose", "failed_ids": ["ORI-04 c1"], "scored": true}, "postmortem": null, "no_pm": "none (died mid-merge; cat wrote the #12 postmortem)"}, {"name": "ant", "role": "merger", "phase": "mergers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 32.0, "model_calls": 31, "input_tokens": 29843, "output_tokens": 10484, "cache_read_tokens": 1579931, "cache_creation_tokens": 38787, "total_tokens": 1659045, "peak_context": 67039, "scope": "Merge t13, then t11", "created_at": "2026-10-10T09:19:39.072489Z", "postmortem": "../../postmortem/2026-10-10-1151-worker-merge-13-11-into-ma-crm.md", "no_pm": null}, {"name": "bird", "role": "implementation", "phase": "tickets", "ticket": 14, "model": "claude-opus-5-5", "duration_min": 3.4, "model_calls": 18, "input_tokens": 60626, "output_tokens": 19015, "cache_read_tokens": 1087242, "cache_creation_tokens": 62711, "total_tokens": 1229594, "peak_context": 92902, "scope": "Crashed before writing code (no postmortem)", "created_at": "2026-10-10T09:51:12.001416Z", "postmortem": null, "no_pm": "none (crashed)"}, {"name": "bug", "role": "implementation", "phase": "tickets", "ticket": 14, "model": "claude-opus-5-5", "duration_min": 43.8, "model_calls": 126, "input_tokens": 201458, "output_tokens": 162877, "cache_read_tokens": 23650366, "cache_creation_tokens": 290062, "total_tokens": 24304763, "peak_context": 318314, "scope": "Respawn of bird: built all of #14", "created_at": "2026-10-10T11:37:32.949148Z", "quality": {"total": 15, "failed": 2, "pct": 13.3, "title": "Offers and bid comparison, templates, process letters, funnel and client report", "failed_ids": ["CON-01 c3 (ambiguous)", "GDPR-01 c2"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-1421-worker-ticket-14-process.md", "no_pm": null}, {"name": "cat", "role": "implementation", "phase": "tickets", "ticket": 12, "model": "claude-opus-5-5", "duration_min": 10.2, "model_calls": 19, "input_tokens": 27832, "output_tokens": 5837, "cache_read_tokens": 894352, "cache_creation_tokens": 32362, "total_tokens": 960383, "peak_context": 60614, "scope": "Resume of seedling: finished the #12 merge, checked ACs", "created_at": "2026-10-10T11:37:33.015742Z", "postmortem": "../../postmortem/2026-10-10-1347-worker-ticket-12-merge-resume.md", "no_pm": null}, {"name": "chicken", "role": "merger", "phase": "mergers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 11.0, "model_calls": 19, "input_tokens": 26750, "output_tokens": 6642, "cache_read_tokens": 910063, "cache_creation_tokens": 32076, "total_tokens": 975531, "peak_context": 60328, "scope": "Merge t12", "created_at": "2026-10-10T11:47:45.410717Z", "postmortem": "../../postmortem/2026-10-10-1358-worker-merge-12-into-ma-crm.md", "no_pm": null}, {"name": "chipmunk", "role": "implementation", "phase": "tickets", "ticket": 17, "model": "claude-opus-5-5", "duration_min": 68.1, "model_calls": 127, "input_tokens": 161472, "output_tokens": 205416, "cache_read_tokens": 20579451, "cache_creation_tokens": 234566, "total_tokens": 21180905, "peak_context": 262818, "scope": null, "created_at": "2026-10-10T11:58:51.515301Z", "quality": {"total": 9, "failed": 3, "pct": 33.3, "title": "Home page, firm pipeline dashboard, fee forecast and win/loss report", "failed_ids": ["REP-02 c1 (ambiguous)", "REP-04 c1", "ROLE-01 c3 (ambiguous)"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-1506-worker-ticket-17-reporting.md", "no_pm": null}, {"name": "cricket", "role": "merger", "phase": "mergers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 13.8, "model_calls": 16, "input_tokens": 31108, "output_tokens": 6672, "cache_read_tokens": 800205, "cache_creation_tokens": 36835, "total_tokens": 874820, "peak_context": 65087, "scope": "Merge t14", "created_at": "2026-10-10T12:21:13.901768Z", "postmortem": "../../postmortem/2026-10-10-1434-worker-merge-ticket-14.md", "no_pm": null}, {"name": "dog", "role": "implementation", "phase": "tickets", "ticket": 20, "model": "claude-opus-5-5", "duration_min": 138.4, "model_calls": 334, "input_tokens": 325385, "output_tokens": 395499, "cache_read_tokens": 110645831, "cache_creation_tokens": 528083, "total_tokens": 111894798, "peak_context": 556335, "scope": null, "created_at": "2026-10-10T12:35:05.333234Z", "quality": {"total": 18, "failed": 7, "pct": 38.9, "title": "Production readiness: languages, accessibility, security, performance and availability", "failed_ids": ["NFR-02 c1", "NFR-03 c1", "NFR-04 c2", "NFR-04 c3", "NFR-04 c4", "X-2", "X-3"], "scored": true}, "postmortem": "../../postmortem/2026-10-10-1652-worker-ticket-20-production-readiness.md", "no_pm": null}, {"name": "dove", "role": "merger", "phase": "mergers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 10.8, "model_calls": 18, "input_tokens": 21088, "output_tokens": 7921, "cache_read_tokens": 765192, "cache_creation_tokens": 27214, "total_tokens": 821415, "peak_context": 56196, "scope": "Merge t17", "created_at": "2026-10-10T13:06:57.126383Z", "postmortem": "../../postmortem/2026-10-10-1517-worker-merge-ticket-17.md", "no_pm": null}, {"name": "eagle", "role": "reviewer", "phase": "review1", "ticket": null, "model": "claude-opus-5-5", "duration_min": 21.8, "model_calls": 75, "input_tokens": 185963, "output_tokens": 121063, "cache_read_tokens": 11840828, "cache_creation_tokens": 208772, "total_tokens": 12356626, "peak_context": 237024, "scope": "Review 1: /code-review of feat/ma-crm @27f0e11 (review.md)", "created_at": "2026-10-10T13:17:44.854671Z", "postmortem": null, "no_pm": "none (read-only reviewer)"}, {"name": "fish", "role": "fixer", "phase": "review1_fixers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 54.8, "model_calls": 176, "input_tokens": 169632, "output_tokens": 107999, "cache_read_tokens": 29873333, "cache_creation_tokens": 249947, "total_tokens": 30400911, "peak_context": 278199, "scope": "Review 1: S5, S9-S14, N4, N6, N7 + decision-49 fields (fix-sec)", "created_at": "2026-10-10T13:39:47.324976Z", "postmortem": "../../postmortem/2026-10-10-1633-worker-review-security-nfr-fixes.md", "no_pm": null}, {"name": "fox", "role": "fixer", "phase": "review1_fixers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 74.4, "model_calls": 146, "input_tokens": 149794, "output_tokens": 103685, "cache_read_tokens": 22323564, "cache_creation_tokens": 217494, "total_tokens": 22794537, "peak_context": 245746, "scope": "Review 1: B1-B3, S1-S4, S6-S8, S15, N1-N3 (fix-wall)", "created_at": "2026-10-10T13:39:47.414267Z", "postmortem": "../../postmortem/2026-10-10-1653-worker-review-fixes-wall.md", "no_pm": null}, {"name": "giraffe", "role": "merger", "phase": "mergers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 51.1, "model_calls": 128, "input_tokens": 181865, "output_tokens": 71305, "cache_read_tokens": 20923152, "cache_creation_tokens": 222729, "total_tokens": 21399051, "peak_context": 250981, "scope": "Merge t20, fix-sec and fix-wall (review-1 fixes)", "created_at": "2026-10-10T14:53:31.676308Z", "postmortem": "../../postmortem/2026-10-10-1743-worker-merge-t20-fix-sec-fix-wall.md", "no_pm": null}, {"name": "ladybug", "role": "reviewer", "phase": "review2", "ticket": null, "model": "claude-opus-5-5", "duration_min": 25.7, "model_calls": 47, "input_tokens": 172254, "output_tokens": 143988, "cache_read_tokens": 7629190, "cache_creation_tokens": 182282, "total_tokens": 8127714, "peak_context": 211135, "scope": "Review 2: spec compliance, whole spec. Failed before writing review-spec.md; split into mosquito/pig/ox", "created_at": "2026-10-10T15:44:42.810959Z", "postmortem": null, "no_pm": "none (failed reviewer)"}, {"name": "lobster", "role": "reviewer", "phase": "review2", "ticket": null, "model": "claude-opus-5-5", "duration_min": 9.4, "model_calls": 76, "input_tokens": 92877, "output_tokens": 50682, "cache_read_tokens": 7009908, "cache_creation_tokens": 121486, "total_tokens": 7274953, "peak_context": 149738, "scope": "Review 2: standards axis (review-standards.md)", "created_at": "2026-10-10T15:44:42.879033Z", "postmortem": null, "no_pm": "none (read-only reviewer)"}, {"name": "mosquito", "role": "reviewer", "phase": "review2", "ticket": null, "model": "claude-opus-5-5", "duration_min": 17.2, "model_calls": 42, "input_tokens": 137081, "output_tokens": 100966, "cache_read_tokens": 5204455, "cache_creation_tokens": 156113, "total_tokens": 5598615, "peak_context": 184365, "scope": "Review 2: spec traceability A, Epics 0-3 (review-spec-a.md)", "created_at": "2026-10-10T16:43:30.522032Z", "postmortem": null, "no_pm": "none (read-only reviewer)"}, {"name": "owl", "role": "fixer", "phase": "review2_fixers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 19.7, "model_calls": 63, "input_tokens": 59548, "output_tokens": 34997, "cache_read_tokens": 4655585, "cache_creation_tokens": 80999, "total_tokens": 4831129, "peak_context": 109251, "scope": "Review 2 standards: frontend S6, S7, N2, N5, N9, S8 (std-fe)", "created_at": "2026-10-10T16:43:30.578426Z", "postmortem": "../../postmortem/2026-10-10-1903-worker-std-fe-fixes.md", "no_pm": null}, {"name": "ox", "role": "reviewer", "phase": "review2", "ticket": null, "model": "claude-opus-5-5", "duration_min": 39.4, "model_calls": 65, "input_tokens": 146044, "output_tokens": 133092, "cache_read_tokens": 8788965, "cache_creation_tokens": 168525, "total_tokens": 9236626, "peak_context": 196777, "scope": "Review 2: spec traceability C, Epics 8-10 + cross-cutting (review-spec-c.md)", "created_at": "2026-10-10T16:43:30.654526Z", "postmortem": null, "no_pm": "none (read-only reviewer)"}, {"name": "pig", "role": "reviewer", "phase": "review2", "ticket": null, "model": "claude-opus-5-5", "duration_min": 12.0, "model_calls": 40, "input_tokens": 146140, "output_tokens": 72775, "cache_read_tokens": 5043879, "cache_creation_tokens": 162626, "total_tokens": 5425420, "peak_context": 190878, "scope": "Review 2: spec traceability B, Epics 4-7 (review-spec-b.md)", "created_at": "2026-10-10T16:43:30.687581Z", "postmortem": null, "no_pm": "none (read-only reviewer)"}, {"name": "rat", "role": "fixer", "phase": "review2_fixers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 42.5, "model_calls": 94, "input_tokens": 99572, "output_tokens": 55281, "cache_read_tokens": 10516030, "cache_creation_tokens": 138878, "total_tokens": 10809761, "peak_context": 167130, "scope": "Review 2 standards: backend S1-S5, S8, S9 + nits (std-be)", "created_at": "2026-10-10T16:43:30.723570Z", "postmortem": "../../postmortem/2026-10-10-1925-worker-review2-backend-fixes.md", "no_pm": null}, {"name": "ram", "role": "fixer", "phase": "review2_fixers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 127.3, "model_calls": 153, "input_tokens": 166905, "output_tokens": 145264, "cache_read_tokens": 26407171, "cache_creation_tokens": 488876, "total_tokens": 27208216, "peak_context": 275272, "scope": "Review 2 spec B: F1-F10, D36 (spec-b)", "created_at": "2026-10-10T16:55:36.481820Z", "postmortem": "../../postmortem/2026-10-10-2001-worker-spec-b-fixes.md", "no_pm": null}, {"name": "rooster", "role": "fixer", "phase": "review2_fixers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 195.7, "model_calls": 176, "input_tokens": 177273, "output_tokens": 85579, "cache_read_tokens": 30311176, "cache_creation_tokens": 470768, "total_tokens": 31044796, "peak_context": 272157, "scope": "Review 2 spec A: 8 non-OK rows + 4 decision rows (spec-a)", "created_at": "2026-10-10T17:00:52.058750Z", "postmortem": "../../postmortem/2026-10-10-2030-worker-spec-review-a-fixes.md", "no_pm": null}, {"name": "shrimp", "role": "fixer", "phase": "review2_fixers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 20.1, "model_calls": 51, "input_tokens": 88984, "output_tokens": 43816, "cache_read_tokens": 5335226, "cache_creation_tokens": 123883, "total_tokens": 5591909, "peak_context": 152135, "scope": "Review 2 spec C: F1 UI screens (spec-c-ui)", "created_at": "2026-10-10T17:29:21.725011Z", "postmortem": "../../postmortem/2026-10-10-1949-worker-spec-c-f1-ui-screens.md", "no_pm": null}, {"name": "sauropod", "role": "fixer", "phase": "review2_fixers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 47.0, "model_calls": 82, "input_tokens": 101756, "output_tokens": 49559, "cache_read_tokens": 8656096, "cache_creation_tokens": 139779, "total_tokens": 8947190, "peak_context": 168128, "scope": "Review 2 spec C: all but F1 (spec-c-be). Killed by a server restart; work only in its journal", "created_at": "2026-10-10T17:29:21.856713Z", "postmortem": null, "no_pm": "none (killed; tiger wrote the postmortem)"}, {"name": "tiger", "role": "fixer", "phase": "review2_fixers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 125.2, "model_calls": 80, "input_tokens": 96292, "output_tokens": 34013, "cache_read_tokens": 8323943, "cache_creation_tokens": 123621, "total_tokens": 8577869, "peak_context": 151873, "scope": "Resume of sauropod: AUD-01 c1, NFR-04 c4, NFR-02 c1, NFR-04 c2/c3, X-3, decision rows", "created_at": "2026-10-10T18:30:25.535085Z", "postmortem": "../../postmortem/2026-10-10-2205-worker-spec-c-review-fixes.md", "no_pm": null}, {"name": "turkey", "role": "merger", "phase": "mergers", "ticket": null, "model": "claude-opus-5-5", "duration_min": 92.3, "model_calls": 98, "input_tokens": 105289, "output_tokens": 38878, "cache_read_tokens": 11183910, "cache_creation_tokens": 136258, "total_tokens": 11464335, "peak_context": 164510, "scope": "Merge review-2 fix branches (std-fe, std-be, spec-a, spec-b, spec-c-ui)", "created_at": "2026-10-10T18:32:00.638490Z", "postmortem": "../../postmortem/2026-10-10-2203-worker-merge-review2-fixes.md", "no_pm": null}, {"name": "rabbit", "role": "verifier", "phase": "verification", "ticket": null, "model": "claude-opus-5-5", "duration_min": 13.6, "model_calls": 64, "input_tokens": 132332, "output_tokens": 85092, "cache_read_tokens": 7725411, "cache_creation_tokens": 170963, "total_tokens": 8113798, "peak_context": 199906, "scope": "Verify every review-2 finding at 55a3ce3 (verify-review-2.md)", "created_at": "2026-10-10T20:36:12.055147Z", "postmortem": null, "no_pm": "none (read-only verifier)"}], "edges": [{"from": "humpback", "to": "wyvern", "kind": "blocks", "label": ""}, {"from": "wyvern", "to": "macaque", "kind": "blocks", "label": ""}, {"from": "wyvern", "to": "tigress", "kind": "blocks", "label": ""}, {"from": "humpback", "to": "hatchling", "kind": "blocks", "label": ""}, {"from": "humpback", "to": "calf", "kind": "blocks", "label": ""}, {"from": "hatchling", "to": "calf", "kind": "blocks", "label": ""}, {"from": "calf", "to": "puppy", "kind": "blocks", "label": ""}, {"from": "calf", "to": "retriever", "kind": "blocks", "label": ""}, {"from": "puppy", "to": "retriever", "kind": "blocks", "label": ""}, {"from": "retriever", "to": "microbe", "kind": "blocks", "label": ""}, {"from": "retriever", "to": "mushroom", "kind": "blocks", "label": ""}, {"from": "puppy", "to": "mushroom", "kind": "blocks", "label": ""}, {"from": "microbe", "to": "rose", "kind": "blocks", "label": ""}, {"from": "puppy", "to": "rose", "kind": "blocks", "label": ""}, {"from": "microbe", "to": "seedling", "kind": "blocks", "label": ""}, {"from": "mushroom", "to": "seedling", "kind": "blocks", "label": ""}, {"from": "retriever", "to": "maple", "kind": "blocks", "label": ""}, {"from": "microbe", "to": "maple", "kind": "blocks", "label": ""}, {"from": "maple", "to": "bug", "kind": "blocks", "label": ""}, {"from": "mushroom", "to": "bug", "kind": "blocks", "label": ""}, {"from": "retriever", "to": "sabertooth", "kind": "blocks", "label": ""}, {"from": "puppy", "to": "sabertooth", "kind": "blocks", "label": ""}, {"from": "puppy", "to": "pawprint", "kind": "blocks", "label": ""}, {"from": "mushroom", "to": "chipmunk", "kind": "blocks", "label": ""}, {"from": "seedling", "to": "chipmunk", "kind": "blocks", "label": ""}, {"from": "calf", "to": "mizaru", "kind": "blocks", "label": ""}, {"from": "tigress", "to": "iwazaru", "kind": "blocks", "label": ""}, {"from": "puppy", "to": "iwazaru", "kind": "blocks", "label": ""}, {"from": "mizaru", "to": "iwazaru", "kind": "blocks", "label": ""}, {"from": "macaque", "to": "dog", "kind": "blocks", "label": ""}, {"from": "rose", "to": "dog", "kind": "blocks", "label": ""}, {"from": "bug", "to": "dog", "kind": "blocks", "label": ""}, {"from": "wyvern", "to": "duckling", "kind": "merged", "label": "merged by"}, {"from": "macaque", "to": "kikazaru", "kind": "merged", "label": "merged by"}, {"from": "tigress", "to": "kikazaru", "kind": "merged", "label": "merged by"}, {"from": "puppy", "to": "kikazaru", "kind": "merged", "label": "merged by"}, {"from": "mizaru", "to": "kikazaru", "kind": "merged", "label": "merged by"}, {"from": "pawprint", "to": "tulip", "kind": "merged", "label": "merged by"}, {"from": "iwazaru", "to": "tulip", "kind": "merged", "label": "merged by"}, {"from": "sabertooth", "to": "tulip", "kind": "merged", "label": "merged by"}, {"from": "mushroom", "to": "tulip", "kind": "merged", "label": "merged by"}, {"from": "maple", "to": "ant", "kind": "merged", "label": "merged by"}, {"from": "rose", "to": "ant", "kind": "merged", "label": "merged by"}, {"from": "cat", "to": "chicken", "kind": "merged", "label": "merged by"}, {"from": "bug", "to": "cricket", "kind": "merged", "label": "merged by"}, {"from": "chipmunk", "to": "dove", "kind": "merged", "label": "merged by"}, {"from": "dog", "to": "giraffe", "kind": "merged", "label": "merged by"}, {"from": "fish", "to": "giraffe", "kind": "merged", "label": "merged by"}, {"from": "fox", "to": "giraffe", "kind": "merged", "label": "merged by"}, {"from": "owl", "to": "turkey", "kind": "merged", "label": "merged by"}, {"from": "rat", "to": "turkey", "kind": "merged", "label": "merged by"}, {"from": "rooster", "to": "turkey", "kind": "merged", "label": "merged by"}, {"from": "ram", "to": "turkey", "kind": "merged", "label": "merged by"}, {"from": "shrimp", "to": "turkey", "kind": "merged", "label": "merged by"}, {"from": "eagle", "to": "fish", "kind": "findings", "label": "findings"}, {"from": "eagle", "to": "fox", "kind": "findings", "label": "findings"}, {"from": "lobster", "to": "owl", "kind": "findings", "label": "findings"}, {"from": "lobster", "to": "rat", "kind": "findings", "label": "findings"}, {"from": "mosquito", "to": "rooster", "kind": "findings", "label": "findings"}, {"from": "pig", "to": "ram", "kind": "findings", "label": "findings"}, {"from": "ox", "to": "shrimp", "kind": "findings", "label": "findings"}, {"from": "ox", "to": "sauropod", "kind": "findings", "label": "findings"}, {"from": "seedling", "to": "cat", "kind": "takeover", "label": "resumed"}, {"from": "bird", "to": "bug", "kind": "takeover", "label": "respawned"}, {"from": "sauropod", "to": "tiger", "kind": "takeover", "label": "resumed"}, {"from": "ladybug", "to": "mosquito", "kind": "takeover", "label": "split into 3"}, {"from": "ladybug", "to": "pig", "kind": "takeover", "label": ""}, {"from": "ladybug", "to": "ox", "kind": "takeover", "label": ""}, {"from": "calf", "to": "hatchling", "kind": "extra", "label": "built #5 pages"}, {"from": "giraffe", "to": "lobster", "kind": "findings", "label": "reviewed 089c0b2"}, {"from": "turkey", "to": "rabbit", "kind": "findings", "label": "verified"}, {"from": "dove", "to": "eagle", "kind": "findings", "label": "reviewed 27f0e11"}, {"from": "giraffe", "to": "ladybug", "kind": "findings", "label": "reviewed 089c0b2"}, {"from": "tiger", "to": "rabbit", "kind": "findings", "label": "verified"}], "layout": {"dragon": {"x": 30, "y": 1314, "col": 0}, "humpback": {"x": 420, "y": 54, "col": 1}, "wyvern": {"x": 420, "y": 174, "col": 1}, "hatchling": {"x": 420, "y": 294, "col": 1}, "macaque": {"x": 420, "y": 414, "col": 1}, "tigress": {"x": 420, "y": 534, "col": 1}, "calf": {"x": 420, "y": 654, "col": 1}, "puppy": {"x": 420, "y": 774, "col": 1}, "mizaru": {"x": 420, "y": 894, "col": 1}, "retriever": {"x": 420, "y": 1014, "col": 1}, "pawprint": {"x": 420, "y": 1134, "col": 1}, "iwazaru": {"x": 420, "y": 1254, "col": 1}, "microbe": {"x": 420, "y": 1374, "col": 1}, "mushroom": {"x": 420, "y": 1494, "col": 1}, "sabertooth": {"x": 420, "y": 1614, "col": 1}, "rose": {"x": 420, "y": 1734, "col": 1}, "seedling": {"x": 420, "y": 1854, "col": 1}, "maple": {"x": 420, "y": 1974, "col": 1}, "bird": {"x": 420, "y": 2094, "col": 1}, "cat": {"x": 420, "y": 2214, "col": 1}, "bug": {"x": 420, "y": 2334, "col": 1}, "chipmunk": {"x": 420, "y": 2454, "col": 1}, "dog": {"x": 420, "y": 2574, "col": 1}, "duckling": {"x": 1070, "y": 834, "col": 2}, "kikazaru": {"x": 1070, "y": 954, "col": 2}, "tulip": {"x": 1070, "y": 1074, "col": 2}, "ant": {"x": 1070, "y": 1194, "col": 2}, "chicken": {"x": 1070, "y": 1314, "col": 2}, "cricket": {"x": 1070, "y": 1434, "col": 2}, "dove": {"x": 1070, "y": 1554, "col": 2}, "giraffe": {"x": 1070, "y": 1674, "col": 2}, "turkey": {"x": 1070, "y": 1794, "col": 2}, "eagle": {"x": 1600, "y": 954, "col": 3}, "ladybug": {"x": 1600, "y": 1074, "col": 3}, "lobster": {"x": 1600, "y": 1194, "col": 3}, "mosquito": {"x": 1600, "y": 1314, "col": 3}, "ox": {"x": 1600, "y": 1434, "col": 3}, "pig": {"x": 1600, "y": 1554, "col": 3}, "rabbit": {"x": 1600, "y": 1674, "col": 3}, "fish": {"x": 2130, "y": 834, "col": 4}, "fox": {"x": 2130, "y": 954, "col": 4}, "owl": {"x": 2130, "y": 1074, "col": 4}, "rat": {"x": 2130, "y": 1194, "col": 4}, "ram": {"x": 2130, "y": 1314, "col": 4}, "rooster": {"x": 2130, "y": 1434, "col": 4}, "shrimp": {"x": 2130, "y": 1554, "col": 4}, "sauropod": {"x": 2130, "y": 1674, "col": 4}, "tiger": {"x": 2130, "y": 1794, "col": 4}}, "size": {"w": 2480, "h": 2712, "card_w": 230, "card_h": 98, "row_gap": 22, "col_x": [30, 420, 1070, 1600, 2130], "gaps": [160, 420, 300, 300], "mid": 1363.0, "head": 34, "top": 20}, "lanes": [], "columns": [{"title": "Coordinator", "x": 30}, {"title": "Tickets", "x": 420}, {"title": "Mergers", "x": 1070}, {"title": "Reviews & verification", "x": 1600}, {"title": "Fixers", "x": 2130}]};
+const N = Object.fromEntries(G.nodes.map(n => [n.name, n]));
+const L = G.layout, Z = G.size;
+const KIND = {
+  blocks:   {c:"#64748b", dash:false, t:"blocks (ticket dependency)"},
+  merged:   {c:"#2563eb", dash:true,  t:"merged by"},
+  findings: {c:"#dc2626", dash:false, t:"findings / reviewed / verified"},
+  takeover: {c:"#7c3aed", dash:true,  t:"resumed / respawned / split"},
+  extra:    {c:"#ca8a04", dash:true,  t:"did another ticket's work"},
+  spawn:    {c:"#0f172a", dash:false, t:"spawned by the coordinator"},
+};
+const shown = Object.fromEntries(Object.keys(KIND).map(k => [k, true]));
+const LEGEND_KINDS = Object.keys(KIND).filter(k => k !== "spawn");
+const DEAD = new Set(["bird","ladybug","sauropod"]);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tok = v => v >= 1e6 ? (v/1e6).toFixed(1)+"M" : Math.round(v/1e3)+"K";
+
+const stage = document.getElementById("stage"), svg = document.getElementById("wires");
+stage.style.width = Z.w + "px"; stage.style.height = Z.h + "px";
+svg.setAttribute("width", Z.w); svg.setAttribute("height", Z.h);
+
+G.lanes.forEach(l => {});
+(G.columns || []).forEach(c => {
+  const h = document.createElement("div"); h.className = "colhead";
+  h.style.left = c.x + "px"; h.style.top = Z.top + "px"; h.style.width = Z.card_w + "px";
+  h.textContent = c.title; stage.appendChild(h);
+});
+const axis = document.createElement("div"); axis.className = "axis"; axis.style.top = Z.mid + "px"; stage.appendChild(axis);
+
+function cls(n){
+  if (n.phase === "coordinator") return "coord";
+  if (DEAD.has(n.name)) return "dead";
+  if (n.quality) return n.quality.pct >= 30 ? "bad" : n.quality.pct >= 15 ? "mid" : "good";
+  return "other";
+}
+G.nodes.forEach(n => {
+  const p = L[n.name], d = document.createElement("div");
+  d.className = `card ${cls(n)}${n.peak_context > 200000 ? " hot" : ""}`;
+  d.id = "c-"+n.name;
+  Object.assign(d.style, {left:p.x+"px", top:p.y+"px", width:Z.card_w+"px", height:Z.card_h+"px"});
+  const head = n.name + (n.ticket ? ` · #${n.ticket}` : "");
+  const q = n.quality ? `<div class="fl">failed ${n.quality.pct}% (${n.quality.failed}/${n.quality.total})${n.quality.scored ? "" : " · not scored"}</div>` : "";
+  const pm = n.postmortem ? `<a class="pm" href="${esc(n.postmortem)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📄 postmortem</a>`
+                          : `<div class="nopm">no postmortem</div>`;
+  d.innerHTML = `<div class="nm">${esc(head)}</div><div class="rl">${esc(n.role)}${n.scope ? " · " + esc(n.scope) : ""}</div>
+                 <div class="mt">${tok(n.total_tokens)} tok · peak ${tok(n.peak_context)}</div>${q}${pm}`;
+  d.title = n.scope || "";
+  d.onclick = () => openPanel(n.name);
+  d.onmouseenter = () => focus(n.name); d.onmouseleave = () => focus(null);
+  stage.appendChild(d);
+});
+
+const legend = document.getElementById("legend");
+legend.innerHTML = LEGEND_KINDS.map(k => [k, KIND[k]]).map(([k,v]) =>
+  `<label><input type="checkbox" data-k="${k}" checked><span class="key${v.dash?" dash":""}" style="border-color:${v.c}"></span>${v.t}</label>`).join("")
+  + `<span><span class="sw" style="background:var(--good);border-color:var(--goodb)"></span>&lt;15% failed</span>
+     <span><span class="sw" style="background:var(--mid);border-color:var(--midb)"></span>15–29%</span>
+     <span><span class="sw" style="background:var(--bad);border-color:var(--badb)"></span>≥30%</span>
+     <span><span class="sw" style="background:#fff;border-color:var(--hot);border-width:2.5px"></span>peak &gt;200K</span>
+     <span><span class="sw" style="background:#f1f5f9;border-style:dashed;border-color:#94a3b8"></span>crashed / killed</span>
+     <span class="zoom"><button onclick="zoomBy(1/1.2)">−</button><span id="zl">100%</span><button onclick="zoomBy(1.2)">+</button><button onclick="fit()">fit</button></span>`;
+legend.querySelectorAll("input").forEach(i => i.onchange = () => { shown[i.dataset.k] = i.checked; draw(); });
+
+// Orthogonal routing between columns.
+// - Each card has ports spread down its right side (outgoing) and left side (incoming).
+// - An edge to a column on the right runs: out of the source, along a private vertical track in the gap
+//   just left of the target column, then into the target. Tracks are assigned per gap so parallel wires
+//   never overlap, and sorted so wires cross as little as possible.
+// - An edge inside one column (ticket dependency, takeover) loops out through the gap on that column's
+//   right, on its own track.
+// - An edge to a column on the left (fixer back to a merger) runs out right, then along a track in the
+//   gap right of the target column, into the target's right side.
+const colIndex = x => Z.col_x.indexOf(x);
+const gapX = g => [Z.col_x[g] + Z.card_w, g + 1 < Z.col_x.length ? Z.col_x[g + 1] : Z.col_x[g] + Z.card_w + 110];
+function route(){
+  const live = G.edges.filter(e => shown[e.kind]);
+  const outs = {}, ins = {};
+  const side = e => { const d = colIndex(L[e.to].x) - colIndex(L[e.from].x); return d > 0 ? "fwd" : d < 0 ? "back" : "same"; };
+  live.forEach(e => {
+    const s = side(e);
+    (outs[e.from] ||= []).push(e);
+    (ins[e.to + (s === "fwd" ? ":L" : ":R")] ||= []).push(e);
+  });
+  // Outgoing edges of "same" also enter on the right side of their target.
+  const yOf = n => L[n].y + Z.card_h / 2;
+  Object.values(outs).forEach(l => l.sort((a,b) => yOf(a.to) - yOf(b.to)));
+  Object.values(ins).forEach(l => l.sort((a,b) => yOf(a.from) - yOf(b.from)));
+  const port = (list, e, n) => L[n].y + Z.card_h * (list.indexOf(e) + 1) / (list.length + 1);
+  // Group edges by the gap their vertical segment uses: gap g lies right of column g.
+  const gaps = {};
+  live.forEach(e => {
+    const s = side(e), cf = colIndex(L[e.from].x), ct = colIndex(L[e.to].x);
+    const g = s === "fwd" ? ct - 1 : s === "same" ? cf : ct;
+    (gaps[g] ||= []).push(e);
+  });
+  const track = new Map();
+  Object.entries(gaps).forEach(([g, list]) => {
+    const [ga, gb] = gapX(+g); const x0 = ga + 24, x1 = gb - 24;
+    list.sort((a,b) => {
+      const sa = side(a), sb = side(b);
+      const ka = sa === "same" ? 0 : sa === "back" ? 1 : 2, kb = sb === "same" ? 0 : sb === "back" ? 1 : 2;
+      if (ka !== kb) return ka - kb;
+      return (yOf(a.from) + yOf(a.to)) - (yOf(b.from) + yOf(b.to));
+    });
+    list.forEach((e, i) => track.set(e, x0 + (x1 - x0) * (i + 0.5) / list.length));
+  });
+  const spawn = [];
+  if (shown.blocks || true) {
+    // The coordinator started every ticket agent: one trunk into the tickets column.
+    const tk = G.nodes.filter(n => n.phase === "tickets").map(n => L[n.name]);
+    const [ga, gb] = gapX(0), tx = (ga + gb) / 2, top = Math.min(...tk.map(p => p.y)) + Z.card_h/2, bot = Math.max(...tk.map(p => p.y)) + Z.card_h/2;
+    spawn.push({e:{from:"dragon", to:"(tickets)", kind:"spawn", label:"spawned"}, pts:[[L.dragon.x + Z.card_w, Z.mid], [tx, Z.mid]], trunk:[tx, top, bot]});
+  }
+  return spawn.concat(live.map(e => {
+    const s = side(e), a = L[e.from], b = L[e.to], tx = track.get(e);
+    const y1 = port(outs[e.from], e, e.from);
+    const y2 = port(ins[e.to + (s === "fwd" ? ":L" : ":R")], e, e.to);
+    const x1 = a.x + Z.card_w;
+    let pts;
+    if (s === "fwd") {
+      pts = [[x1, y1], [tx, y1], [tx, y2], [b.x, y2]];
+      if (colIndex(b.x) - colIndex(a.x) > 1) {
+        // Skip over a column: leave in this gap, run along the mid-line corridor, rise in the target gap.
+        const lx = gapX(colIndex(a.x))[0] + 14;
+        const cy = Z.top + Z.head - 14;
+        pts = [[x1, y1], [lx, y1], [lx, cy], [tx, cy], [tx, y2], [b.x, y2]];
+      }
+    } else {
+      pts = [[x1, y1], [tx, y1], [tx, y2], [b.x + Z.card_w, y2]];
+    }
+    return {e, pts};
+  }));
+}
+function pathD(pts){
+  const r = 6; let d = `M${pts[0][0]} ${pts[0][1]}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const [px,py] = pts[i-1], [cx,cy] = pts[i], [nx,ny] = pts[i+1];
+    const d1 = Math.hypot(cx-px, cy-py), d2 = Math.hypot(nx-cx, ny-cy);
+    if (d1 < 1 || d2 < 1) continue;
+    const rr = Math.min(r, d1/2, d2/2);
+    d += ` L${cx - (cx-px)/d1*rr} ${cy - (cy-py)/d1*rr} Q${cx} ${cy} ${cx + (nx-cx)/d2*rr} ${cy + (ny-cy)/d2*rr}`;
+  }
+  const [lx,ly] = pts[pts.length-1]; return d + ` L${lx} ${ly}`;
+}
+let hover = null;
+function draw(){
+  const parts = [];
+  route().forEach(({e, pts, trunk}) => {
+    if (e.kind === "spawn") {
+      const [tx, top, bot] = trunk;
+      parts.push(`<path d="M${pts[0][0]} ${pts[0][1]} H${tx} M${tx} ${top} V${bot}" stroke="#0f172a" stroke-width="2" fill="none" opacity="${hover ? 0.15 : 0.55}"/>`);
+      G.nodes.filter(n => n.phase === "tickets").forEach(n => {
+        const p = L[n.name], y = p.y + Z.card_h/2;
+        parts.push(`<path d="M${tx} ${y} H${p.x}" stroke="#0f172a" stroke-width="1.4" fill="none" opacity="${hover ? 0.15 : 0.45}" marker-end="url(#m-spawn)"/>`);
+      });
+      return;
+    }
+    const k = KIND[e.kind], live = !hover || e.from === hover || e.to === hover;
+    parts.push(`<path d="${pathD(pts)}" stroke="${k.c}" stroke-width="${hover && live ? 2.6 : 1.7}" ${k.dash ? 'stroke-dasharray="6 4"' : ""}
+                 fill="none" opacity="${live ? 0.9 : 0.07}" marker-end="url(#m-${e.kind})"/>`);
+    if (hover && live && e.label) {
+      const [x, y] = pts[1];
+      parts.push(`<text x="${x + 4}" y="${y - 5}" font-size="10.5" font-weight="700" fill="${k.c}" paint-order="stroke" stroke="#f8fafc" stroke-width="3">${esc(e.label)}</text>`);
+    }
+  });
+  svg.innerHTML = `<defs>${Object.entries(KIND).map(([k,v]) => `<marker id="m-${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="${v.c}"/></marker>`).join("")}</defs>` + parts.join("");
+}
+function focus(name){
+  hover = name; draw();
+  stage.classList.toggle("dim", !!name);
+  document.querySelectorAll(".card.on").forEach(c => c.classList.remove("on"));
+  if (name) {
+    const on = new Set([name]);
+    G.edges.forEach(e => { if (shown[e.kind] && (e.from === name || e.to === name)) { on.add(e.from); on.add(e.to); } });
+    on.forEach(n => document.getElementById("c-"+n).classList.add("on"));
+  }
+}
+function openPanel(name){
+  const n = N[name], q = n.quality;
+  const rel = G.edges.filter(e => e.from === name || e.to === name)
+    .map(e => `<li><span style="color:${KIND[e.kind].c}">●</span> ${e.from === name ? "→ " + esc(e.to) : "← " + esc(e.from)} <span style="color:#64748b">(${esc(e.label || KIND[e.kind].t)})</span></li>`).join("");
+  document.getElementById("pbody").innerHTML = `
+    <h3>${esc(n.name)}${n.ticket ? " · #" + n.ticket : ""}</h3>
+    <div style="color:#64748b">${esc(n.role)}${q && q.title ? " · " + esc(q.title) : ""}</div>
+    ${n.scope ? `<p>${esc(n.scope)}</p>` : ""}
+    <table>
+      <tr><td>Model</td><td>${esc(n.model)}</td></tr>
+      <tr><td>Duration</td><td>${Math.round(n.duration_min)} min · ${n.model_calls} model calls</td></tr>
+      <tr><td>Peak context</td><td><b>${n.peak_context.toLocaleString()}</b> tokens</td></tr>
+      <tr><td>Total tokens</td><td>${n.total_tokens.toLocaleString()}</td></tr>
+      <tr><td>Input (uncached)</td><td>${n.input_tokens.toLocaleString()}</td></tr>
+      <tr><td>Output</td><td>${n.output_tokens.toLocaleString()}</td></tr>
+      <tr><td>Cache read / write</td><td>${n.cache_read_tokens.toLocaleString()} / ${n.cache_creation_tokens.toLocaleString()}</td></tr>
+      ${q ? `<tr><td>Failed first time</td><td><b>${q.pct}%</b> (${q.failed} of ${q.total})${q.scored ? "" : " · not in correlation"}</td></tr>` : ""}
+      <tr><td>Postmortem</td><td>${n.postmortem ? `<a href="${esc(n.postmortem)}" target="_blank" rel="noopener">${esc(n.postmortem.split("/").pop())}</a>` : "none" + (n.no_pm ? " (" + esc(n.no_pm) + ")" : "")}</td></tr>
+    </table>
+    ${q && q.failed_ids.length ? `<b>Failed criteria</b><ul>${q.failed_ids.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}
+    ${rel ? `<b style="display:block;margin-top:8px">Links</b><ul>${rel}</ul>` : ""}`;
+  document.getElementById("panel").style.display = "block";
+}
+function closePanel(){ document.getElementById("panel").style.display = "none"; }
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePanel(); });
+
+const wrap = document.getElementById("wrap");
+let scale = 1;
+function setZoom(s){ scale = Math.max(0.2, Math.min(2, s)); stage.style.transform = `scale(${scale})`;
+  stage.parentElement.style.width = ""; document.getElementById("zl").textContent = Math.round(scale*100) + "%";
+  wrap.firstElementChild.style.width = Z.w * scale + "px"; wrap.firstElementChild.style.height = Z.h * scale + "px"; }
+function zoomBy(f){ setZoom(scale * f); }
+function fit(){ setZoom(Math.min(wrap.clientWidth / Z.w, wrap.clientHeight / Z.h)); wrap.scrollTo(0, 0); }
+let drag = null;
+wrap.addEventListener("mousedown", e => { if (e.target.closest(".card")) return; drag = {x:e.clientX, y:e.clientY, l:wrap.scrollLeft, t:wrap.scrollTop}; wrap.classList.add("drag"); });
+addEventListener("mousemove", e => { if (!drag) return; wrap.scrollLeft = drag.l - (e.clientX - drag.x); wrap.scrollTop = drag.t - (e.clientY - drag.y); });
+addEventListener("mouseup", () => { drag = null; wrap.classList.remove("drag"); });
+
+const scored = G.nodes.filter(n => n.quality && n.quality.scored);
+const tot = scored.reduce((a,n) => a + n.quality.total, 0), fail = scored.reduce((a,n) => a + n.quality.failed, 0);
+document.getElementById("foot").textContent =
+  `${G.nodes.length} sessions · ${G.edges.length} links · ${G.nodes.filter(n => n.postmortem).length} postmortems · ` +
+  `${scored.length} scored implementation agents: ${fail} of ${tot} criteria (${(100*fail/tot).toFixed(1)}%) failed the first time.`;
+draw(); setZoom(1);
+</script>
+</body>
+</html>

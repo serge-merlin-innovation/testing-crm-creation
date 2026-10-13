@@ -218,7 +218,7 @@ if ! command -v gh >/dev/null 2>&1 || ! gh auth status >/dev/null 2>&1; then
   exit 1
 fi
 REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-say "The three secrets go to $REPO."
+say "The four secrets go to $REPO."
 note "They only bootstrap Key Vault: the first Infra run copies them into the vault."
 confirm "Set them on $REPO?" || exit 1
 
@@ -250,5 +250,14 @@ until ask_secret BACKEND_SECRET_KEY "Paste the key:" && secret_key_ok "$BACKEND_
   warn "The backend would reject that key as weak. Generate another and try again."
 done
 set_secret BACKEND_SECRET_KEY "$BACKEND_SECRET_KEY"
+
+stage "TOTP encryption key"
+say "Encrypts each user's authenticator secret in the database."
+step "Use a different 32+ character value. Changing it later forces every user to re-enrol 2FA."
+note "One way, in another terminal: openssl rand -hex 32"
+until ask_secret TOTP_ENCRYPTION_KEY "Paste the key:" && secret_key_ok "$TOTP_ENCRYPTION_KEY"; do
+  warn "That key is too weak. Generate another and try again."
+done
+set_secret TOTP_ENCRYPTION_KEY "$TOTP_ENCRYPTION_KEY"
 
 finish

@@ -6,16 +6,11 @@ name: CI
 # Delivery is intentionally split: the manual Infra workflow provisions selected Azure services,
 # while CD deploys the immutable release produced by a successful main run.
 #
-# The gates run here, on the push to `main` that a merge creates — deliberately not on the pull
-# request. Branch verification is local: `.husky/pre-commit` and `.husky/pre-push` run the same
-# tiers before anything leaves the machine. The consequence is accepted and stated in
-# `CONSTITUTION.md` § 4 — `main` can go red, and `version` needs every gate, so nothing that failed
-# is ever published or tagged. Markdown carries no check at all, so a prose-only commit is skipped
-# rather than verified.
+# Runs only when started by hand (Actions tab or `gh workflow run ci.yml --ref main`); a push
+# never triggers it. Branch verification is local: `.husky/pre-commit` and `.husky/pre-push` run
+# the same tiers before anything leaves the machine. `version` needs every gate, so nothing that
+# failed is ever published or tagged.
 on:
-  push:
-    branches: [main]
-    paths-ignore: ['**.md']
   workflow_dispatch:
 
 # A release version is selected before the images are built and committed as a Git tag only
@@ -126,6 +121,58 @@ jobs:
             apps/frontend/test-results/
           retention-days: 7
 
+  # NFR-02 c1: defined in load-test.yml, which also runs on pull requests touching apps/backend/src.
+  load-test:
+    uses: ./.github/workflows/load-test.yml
+
+  # NFR-01 c3: OWASP Top 10 baseline. ZAP scans the production build of both apps; any High
+  # (or Critical) alert fails the job, and so a release, because `version` needs it.
+  owasp-zap:
+    name: OWASP ZAP baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: crm
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/crm
+      SECRET_KEY: ci-zap-secret
+      ENVIRONMENT: staging
+      SESSION_SECURE_COOKIES: "false"
+      SCHEDULED_JOBS_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python: "true"
+      - working-directory: apps/backend
+        run: |
+          uv run alembic upgrade head
+          uv run python -m scripts.setup_initial_data
+          uv run fastapi run src/interfaces/main.py --port 8000 > api.log 2>&1 &
+      - run: |
+          pnpm --filter @merlin/frontend run build
+          PORT=3000 BACKEND_URL=http://localhost:8000 pnpm --filter @merlin/frontend start > web.log 2>&1 &
+          for attempt in $(seq 1 90); do curl -sf http://localhost:3000/login >/dev/null && break; sleep 1; done
+      - uses: zaproxy/action-baseline@v0.14.0
+        with:
+          target: http://localhost:3000
+          rules_file_name: .zap/rules.tsv
+          cmd_options: -a -I
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: zap-baseline
+      - name: Fail on High or Critical findings
+        run: |
+          high=$(jq '[.site[].alerts[] | select((.riskcode | tonumber) >= 3)] | length' report_json.json)
+          echo "High or Critical ZAP alerts: $high"
+          test "$high" -eq 0
+
   secret-scan:
     name: secret scan
     runs-on: ubuntu-latest
@@ -143,7 +190,7 @@ jobs:
   # The repository tag is created only after every image publishes successfully below.
   version:
     name: select release version
-    needs: [frontend, backend, backend-integration, frontend-e2e, secret-scan]
+    needs: [frontend, backend, backend-integration, frontend-e2e, secret-scan, owasp-zap, load-test]
     # A dispatch can be started on any ref: without this guard one off main would burn the next
     # version, publish it and the `main` alias from unmerged code, and tag a release there.
     if: github.ref == 'refs/heads/main'

@@ -1,11 +1,14 @@
+import logging
 from unittest.mock import Mock
 
 import pytest
 
 from src.infrastructure.config.settings import EnvironmentOption, Settings
+from src.infrastructure.geoip import StaticGeoIp, UnknownGeoIp
 from src.infrastructure.security.production_validator import (
     ProductionSecurityError,
     ProductionSecurityValidator,
+    validate_geoip,
     validate_production_security,
 )
 
@@ -15,6 +18,9 @@ class TestProductionSecurityValidator:
         defaults = {
             "ENVIRONMENT": EnvironmentOption.PRODUCTION,
             "SECRET_KEY": "xF9mWqP3nL7vBfKsRt8HjZ2CyE5QaM6NuV4DgX1SpY7LwB9KzT3RhI0UoJ5PcA2MvS8",
+            "TOTP_ENCRYPTION_KEY": "Qz7vR2nK9pW4sL8mX3cB6tY1hF5jD0gA",
+            "TEST_HOOKS_ENABLED": False,
+            "BREACH_CHECK_ENABLED": True,
             "POSTGRES_PASSWORD": "secure_db_password",
             "CORS_ENABLED": True,
             "CORS_ORIGINS": "https://example.com",
@@ -23,14 +29,10 @@ class TestProductionSecurityValidator:
             "SESSION_SECURE_COOKIES": True,
             "SESSION_TIMEOUT_MINUTES": 30,
             "CSRF_ENABLED": True,
-            "FIRST_SUPERUSER_USERNAME": "secure_admin_user",
-            "FIRST_SUPERUSER_PASSWORD": "very_secure_admin_password_123",
+            "FIRST_ADMIN_EMAIL": "admin@firm.be",
+            "FIRST_ADMIN_PASSWORD": "very_secure_admin_password_123",
             "PRODUCTION_SECURITY_VALIDATION_ENABLED": True,
             "PRODUCTION_SECURITY_STRICT_MODE": False,
-            # OAuth settings - no Microsoft client configured by default, so the
-            # tenant-scope check stays quiet unless a test opts in.
-            "OAUTH_MICROSOFT_CLIENT_ID": "",
-            "OAUTH_MICROSOFT_TENANT": "common",
         }
         defaults.update(overrides)
 
@@ -47,6 +49,17 @@ class TestProductionSecurityValidator:
         settings.CORS_ORIGINS_LIST = get_cors_origins_list()
 
         return settings
+
+    def test_staging_refuses_a_missing_totp_key(self):
+        settings = self.create_mock_settings(ENVIRONMENT=EnvironmentOption.STAGING, TOTP_ENCRYPTION_KEY="")
+
+        with pytest.raises(ProductionSecurityError, match="TOTP_ENCRYPTION_KEY"):
+            ProductionSecurityValidator(settings).validate_production_security()
+
+    def test_development_allows_a_missing_totp_key(self):
+        settings = self.create_mock_settings(ENVIRONMENT=EnvironmentOption.DEVELOPMENT, TOTP_ENCRYPTION_KEY="")
+
+        ProductionSecurityValidator(settings).validate_production_security()
 
     def test_non_production_environment_skips_validation(self):
         settings = self.create_mock_settings(ENVIRONMENT=EnvironmentOption.DEVELOPMENT)
@@ -143,42 +156,6 @@ class TestProductionSecurityValidator:
         docs_warnings = [log for log in warning_logs if "API documentation" in log.message]
         assert len(docs_warnings) > 0
 
-    def test_multi_tenant_microsoft_oauth_logs_warning(self, caplog):
-        settings = self.create_mock_settings(
-            OAUTH_MICROSOFT_CLIENT_ID="a-client-id",
-            OAUTH_MICROSOFT_TENANT="common",
-        )
-        validator = ProductionSecurityValidator(settings)
-
-        validator.validate_production_security()
-
-        warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
-        tenant_warnings = [log for log in warning_logs if "OAUTH_MICROSOFT_TENANT" in log.message]
-        assert len(tenant_warnings) > 0
-
-    def test_single_tenant_microsoft_oauth_logs_no_warning(self, caplog):
-        settings = self.create_mock_settings(
-            OAUTH_MICROSOFT_CLIENT_ID="a-client-id",
-            OAUTH_MICROSOFT_TENANT="11111111-2222-3333-4444-555555555555",
-        )
-        validator = ProductionSecurityValidator(settings)
-
-        validator.validate_production_security()
-
-        warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
-        tenant_warnings = [log for log in warning_logs if "OAUTH_MICROSOFT_TENANT" in log.message]
-        assert len(tenant_warnings) == 0
-
-    def test_unconfigured_microsoft_oauth_logs_no_warning(self, caplog):
-        settings = self.create_mock_settings(OAUTH_MICROSOFT_CLIENT_ID="", OAUTH_MICROSOFT_TENANT="common")
-        validator = ProductionSecurityValidator(settings)
-
-        validator.validate_production_security()
-
-        warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
-        tenant_warnings = [log for log in warning_logs if "OAUTH_MICROSOFT_TENANT" in log.message]
-        assert len(tenant_warnings) == 0
-
     def test_insecure_session_config_logs_warning(self, caplog):
         settings = self.create_mock_settings(
             SESSION_SECURE_COOKIES=False,
@@ -199,20 +176,15 @@ class TestProductionSecurityValidator:
         assert len(timeout_warnings) > 0
         assert len(csrf_warnings) > 0
 
-    def test_weak_first_superuser_credentials_logs_warning(self, caplog):
-        settings = self.create_mock_settings(FIRST_SUPERUSER_USERNAME="admin", FIRST_SUPERUSER_PASSWORD="123456")
+    def test_weak_first_admin_password_logs_warning(self, caplog):
+        settings = self.create_mock_settings(FIRST_ADMIN_EMAIL="admin@firm.be", FIRST_ADMIN_PASSWORD="123456")
         validator = ProductionSecurityValidator(settings)
 
         validator.validate_production_security()
 
         warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
+        password_warnings = [log for log in warning_logs if "First admin password" in log.message]
 
-        username_warnings = [
-            log for log in warning_logs if "First superuser username" in log.message and "predictable" in log.message
-        ]
-        password_warnings = [log for log in warning_logs if "First superuser password" in log.message]
-
-        assert len(username_warnings) > 0
         assert len(password_warnings) > 0
 
     def test_convenience_function(self):
@@ -221,12 +193,41 @@ class TestProductionSecurityValidator:
         with pytest.raises(ProductionSecurityError):
             validate_production_security(settings)
 
-    def test_no_first_superuser_credentials_skips_credential_checks(self, caplog):
-        settings = self.create_mock_settings(FIRST_SUPERUSER_USERNAME="", FIRST_SUPERUSER_PASSWORD="")
+    def test_no_first_admin_credentials_skips_credential_checks(self, caplog):
+        settings = self.create_mock_settings(FIRST_ADMIN_EMAIL="", FIRST_ADMIN_PASSWORD="")
         validator = ProductionSecurityValidator(settings)
 
         validator.validate_production_security()
 
         warning_logs = [record for record in caplog.records if record.levelname == "WARNING"]
-        credential_warnings = [log for log in warning_logs if "First superuser" in log.message]
+        credential_warnings = [log for log in warning_logs if "First admin" in log.message]
         assert len(credential_warnings) == 0
+
+    def test_missing_totp_encryption_key_is_critical(self):
+        settings = self.create_mock_settings(TOTP_ENCRYPTION_KEY="")
+        with pytest.raises(ProductionSecurityError) as exc_info:
+            ProductionSecurityValidator(settings).validate_production_security()
+        assert "TOTP_ENCRYPTION_KEY" in str(exc_info.value)
+
+
+# AUTH-06 c1: new-country alerts need a geo-IP adapter.
+class TestGeoIpReadiness:
+    def settings(self, provider: str, environment=EnvironmentOption.PRODUCTION):
+        return Mock(spec=Settings, GEOIP_PROVIDER=provider, ENVIRONMENT=environment)
+
+    def test_a_configured_provider_without_its_adapter_fails_startup(self):
+        with pytest.raises(ProductionSecurityError, match="GEOIP_PROVIDER"):
+            validate_geoip(self.settings("maxmind"), UnknownGeoIp())
+
+    def test_a_configured_provider_with_an_adapter_passes(self):
+        validate_geoip(self.settings("maxmind"), StaticGeoIp({}))
+
+    def test_no_provider_warns_that_new_country_alerts_are_off(self, caplog):
+        with caplog.at_level(logging.WARNING):
+            validate_geoip(self.settings(""), UnknownGeoIp())
+        assert "new-country login alerts are OFF" in caplog.text
+
+    def test_outside_production_nothing_is_said(self, caplog):
+        with caplog.at_level(logging.WARNING):
+            validate_geoip(self.settings("", EnvironmentOption.DEVELOPMENT), UnknownGeoIp())
+        assert "new-country" not in caplog.text

@@ -44,7 +44,7 @@ runs:
       run: |
         set -euo pipefail
 
-        for required_flag in REQUIRE_POSTGRES_SECRET REQUIRE_GHCR_SECRET REQUIRE_BACKEND_SECRET_KEY; do
+        for required_flag in REQUIRE_POSTGRES_SECRET REQUIRE_GHCR_SECRET REQUIRE_BACKEND_SECRET_KEY REQUIRE_TOTP_ENCRYPTION_KEY; do
           if [[ "${!required_flag:-}" != "true" && "${!required_flag:-}" != "false" ]]; then
             echo "$required_flag must be either true or false." >&2
             exit 1
@@ -63,6 +63,7 @@ runs:
         backend_postgres_secret_name="$(jq -er '.parameters.secretEnvironmentVariableValue1.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
         backend_secret_key_vault_resource_id="$(jq -er '.parameters.secretEnvironmentVariableValue2.reference.keyVault.id | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
         backend_secret_key_name="$(jq -er '.parameters.secretEnvironmentVariableValue2.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
+        backend_totp_key_name="$(jq -er '.parameters.secretEnvironmentVariableValue3.reference.secretName | strings | select(length > 0)' "$COMPILED_BACKEND_PARAMETERS_FILE")"
         subscription_id="$(az account show --query id --output tsv --only-show-errors)"
         expected_key_vault_resource_id="/subscriptions/$subscription_id/resourceGroups/$resource_group_name/providers/Microsoft.KeyVault/vaults/$key_vault_name"
 
@@ -180,3 +181,7 @@ runs:
           "$backend_secret_key_name" \
           "${BOOTSTRAP_BACKEND_SECRET_KEY:-}" \
           "$REQUIRE_BACKEND_SECRET_KEY"
+        sync_secret \
+          "$backend_totp_key_name" \
+          "${BOOTSTRAP_TOTP_ENCRYPTION_KEY:-}" \
+          "$REQUIRE_TOTP_ENCRYPTION_KEY"

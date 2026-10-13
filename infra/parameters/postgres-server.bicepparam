@@ -20,8 +20,8 @@ param skuName = 'Standard_B1ms'
 param skuTier = 'Burstable'
 param storageSizeGB = 32
 param storageAutoGrow = 'Enabled'
-param backupRetentionDays = 7
-param geoRedundantBackup = 'Disabled'
+param backupRetentionDays = 35
+param geoRedundantBackup = 'Enabled'
 param highAvailabilityMode = 'Disabled'
 param availabilityZone = ''
 param standbyAvailabilityZone = ''
@@ -39,8 +39,14 @@ param publicNetworkAccess = 'Enabled'
 param delegatedSubnetResourceId = ''
 param privateDnsZoneResourceId = ''
 param firewallRules = []
-param customMaintenanceWindow = 'Disabled'
+param customMaintenanceWindow = 'Enabled'
 param maintenanceDayOfWeek = 0
-param maintenanceStartHour = 0
+param maintenanceStartHour = 2
 param maintenanceStartMinute = 0
-param serverConfigurations = []
+// The conflict check (AUTHZ-05) runs fuzzy name matching; the backend migration creates both extensions.
+// NFR-01: TLS 1.2 or newer on every connection.
+param serverConfigurations = [
+  { name: 'azure.extensions', value: 'PG_TRGM,UNACCENT' }
+  { name: 'require_secure_transport', value: 'ON' }
+  { name: 'ssl_min_protocol_version', value: 'TLSv1.2' }
+]

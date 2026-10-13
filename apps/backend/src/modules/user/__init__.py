@@ -1,8 +1,5 @@
-from .enums import OAuthProvider
 from .models import User as UserModel
-from .schemas import (
-    User as UserSchema,
-)
+from .schemas import User as UserSchema
 from .schemas import (
     UserBase,
     UserCreate,
@@ -15,7 +12,6 @@ from .schemas import (
 )
 
 __all__ = [
-    "OAuthProvider",
     "UserModel",
     "UserSchema",
     "UserBase",

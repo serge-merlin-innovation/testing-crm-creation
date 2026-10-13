@@ -1,0 +1,11 @@
+{
+  "auth.invalid_credentials": "Adresse e-mail ou mot de passe invalide",
+  "auth.no_role": "Votre compte n'a pas de rôle. Demandez l'accès à un administrateur.",
+  "errors.forbidden": "Vous n'avez pas l'autorisation d'effectuer cette action.",
+  "errors.last_admin": "Le dernier administrateur ne peut pas être retiré.",
+  "errors.one_role_per_user": "Un utilisateur ne peut avoir qu'un seul rôle.",
+  "maintenance.scheduled.body": "Le CRM sera indisponible du {start} au {end}. Motif : {reason}",
+  "maintenance.scheduled.title": "Maintenance planifiée le {start}",
+  "security.finding_overdue.body": "« {title} » devait être corrigée avant le {due}.",
+  "security.finding_overdue.title": "Une vulnérabilité {severity} dépasse son délai de correction de 30 jours"
+}

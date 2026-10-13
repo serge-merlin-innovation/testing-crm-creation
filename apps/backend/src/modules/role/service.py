@@ -1,69 +1,103 @@
+import csv
+import io
 from typing import Any
 
-from fastcrud.types import GetMultiResponseDict
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..common.exceptions import PermissionDeniedError, ResourceExistsError, RoleNotFoundError
-from .crud import crud_roles
-from .schemas import (
-    RoleCreate,
-    RoleCreateInternal,
-    RoleRead,
-    RoleUpdate,
-)
+from ..audit.service import AuditContext, AuditService, audit_export
+from ..common.exceptions import PermissionDeniedError, RoleNotFoundError
+from ..common.spreadsheet import safe_row
+from ..user.models import User
+from .models import Role
+from .permissions import DEFAULT_ROLES, Permission, RoleName
+from .schemas import MatrixColumn, MatrixRow, PermissionMatrix, RolePermissionsUpdate, RoleRead
+
+# Without these the Admin role could lock every admin out of fixing permissions again.
+ADMIN_LOCKED_PERMISSIONS = frozenset({Permission.ROLES_MANAGE.value, Permission.USERS_MANAGE.value})
+
+ROLE_ORDER = [name.value for name in RoleName]
+
+
+async def users_with_permission(db: AsyncSession, permission: Permission) -> list[User]:
+    users = (await db.execute(select(User).where(User.is_deleted.is_(False), User.role_id.is_not(None)))).scalars()
+    return [user for user in users if permission.value in (user.permissions or [])]
+
+
+def _ordered(roles: list[Role]) -> list[Role]:
+    def key(role: Role) -> tuple[int, str]:
+        return (ROLE_ORDER.index(role.name) if role.name in ROLE_ORDER else len(ROLE_ORDER), role.name)
+
+    return sorted(roles, key=key)
+
+
+async def seed_default_roles(db: AsyncSession) -> list[str]:
+    """Create any missing role from the role table. Existing roles, and admin edits to them, are left alone."""
+    existing = set((await db.execute(select(Role.name))).scalars())
+    created = []
+    for name, (description, permissions) in DEFAULT_ROLES.items():
+        if name.value in existing:
+            continue
+        db.add(Role(name=name.value, description=description, permissions=sorted(p.value for p in permissions)))
+        created.append(name.value)
+    await db.commit()
+    return created
 
 
 class RoleService:
-    async def create(self, role: RoleCreate, db: AsyncSession) -> dict[str, Any]:
-        role_dict = role.model_dump()
-        if await crud_roles.exists(db=db, name=role_dict["name"]):
-            raise ResourceExistsError(f"Role with name '{role_dict['name']}' already exists")
+    def __init__(self, audit: AuditService | None = None) -> None:
+        self.audit = audit or AuditService()
 
-        role_internal = RoleCreateInternal(**role_dict)
-        created_role = await crud_roles.create(db=db, object=role_internal, schema_to_select=RoleRead)
-        if not created_role:
-            raise ResourceExistsError("Failed to create role")
-        return created_role
+    async def list_roles(self, db: AsyncSession) -> list[dict[str, Any]]:
+        roles = (await db.execute(select(Role).where(Role.is_deleted.is_(False)))).scalars().all()
+        return [RoleRead.model_validate(role, from_attributes=True).model_dump() for role in _ordered(list(roles))]
 
-    async def get_all(self, db: AsyncSession, skip: int = 0, limit: int = 100) -> GetMultiResponseDict:
-        return await crud_roles.get_multi(db=db, offset=skip, limit=limit, schema_to_select=RoleRead, is_deleted=False)
-
-    async def get_by_id(self, role_id: int, db: AsyncSession) -> dict[str, Any]:
-        role = await crud_roles.get(db=db, id=role_id, schema_to_select=RoleRead, is_deleted=False)
-        if not role:
+    async def _get(self, role_id: int, db: AsyncSession) -> Role:
+        role = (await db.execute(select(Role).where(Role.id == role_id, Role.is_deleted.is_(False)))).scalar_one_or_none()
+        if role is None:
             raise RoleNotFoundError(f"Role with ID {role_id} not found")
         return role
 
-    async def get_by_name(self, name: str, db: AsyncSession) -> dict[str, Any]:
-        role = await crud_roles.get(db=db, name=name, schema_to_select=RoleRead, is_deleted=False)
-        if not role:
-            raise RoleNotFoundError(f"Role with name '{name}' not found")
-        return role
+    async def set_permissions(
+        self, role_id: int, values: RolePermissionsUpdate, db: AsyncSession, context: AuditContext
+    ) -> dict[str, Any]:
+        role = await self._get(role_id, db)
+        if role.name == RoleName.ADMIN.value and not ADMIN_LOCKED_PERMISSIONS <= set(values.permissions):
+            raise PermissionDeniedError("The Admin role must keep roles.manage and users.manage")
 
-    async def update(self, name: str, role_update: RoleUpdate, db: AsyncSession) -> None:
-        existing_role = await crud_roles.get(db=db, name=name, schema_to_select=RoleRead)
-        if not existing_role:
-            raise RoleNotFoundError(f"Role with name '{name}' not found")
+        old = sorted(role.permissions)
+        if old != values.permissions:
+            role.permissions = list(values.permissions)
+            self.audit.record(
+                db,
+                context,
+                "role.permissions_changed",
+                record_type="role",
+                record_id=role.id,
+                old_values={"permissions": old},
+                new_values={"permissions": values.permissions},
+            )
+            await db.commit()
+            await db.refresh(role)
+        return RoleRead.model_validate(role, from_attributes=True).model_dump()
 
-        update_data = role_update.model_dump(exclude_unset=True)
-        if "name" in update_data and update_data["name"] != name:
-            if await crud_roles.exists(db=db, name=update_data["name"]):
-                raise ResourceExistsError(f"Role with name '{update_data['name']}' already exists")
+    async def matrix(self, db: AsyncSession) -> PermissionMatrix:
+        roles = _ordered(list((await db.execute(select(Role).where(Role.is_deleted.is_(False)))).scalars().all()))
+        return PermissionMatrix(
+            columns=[MatrixColumn(id=role.id, name=role.name) for role in roles],
+            rows=[
+                MatrixRow(permission=permission.value, granted=[permission.value in role.permissions for role in roles])
+                for permission in Permission
+            ],
+        )
 
-        await crud_roles.update(db=db, object=role_update, name=name)
-
-    async def delete(self, name: str, db: AsyncSession) -> None:
-        existing_role = await crud_roles.get(db=db, name=name, schema_to_select=RoleRead, is_deleted=False)
-        if not existing_role:
-            raise RoleNotFoundError(f"Role with name '{name}' not found")
-        await crud_roles.delete(db=db, name=name)
-
-    async def permanent_delete(self, name: str, db: AsyncSession) -> None:
-        existing_role = await crud_roles.get(db=db, name=name, schema_to_select=RoleRead)
-        if not existing_role:
-            raise RoleNotFoundError(f"Role with name '{name}' not found")
-        await crud_roles.db_delete(db=db, name=name)
-
-    async def verify_superuser(self, user: dict[str, Any], action: str = "manage roles") -> None:
-        if not user.get("is_superuser", False):
-            raise PermissionDeniedError(f"Only superusers can {action}")
+    async def export_matrix_csv(self, db: AsyncSession, context: AuditContext) -> str:
+        matrix = await self.matrix(db)
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow(safe_row(["Permission", *[column.name for column in matrix.columns]]))
+        for row in matrix.rows:
+            writer.writerow(safe_row([row.permission, *["x" if granted else "" for granted in row.granted]]))
+        audit_export(db, context, "permission_matrix", record_type="permission_matrix", rows=len(matrix.rows))
+        await db.commit()
+        return buffer.getvalue()

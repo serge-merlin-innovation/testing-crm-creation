@@ -10,6 +10,7 @@ var postgresAdministratorLogin = '${replace(resourceNameStem, '-', '')}admin'
 var postgresDatabaseName = 'db-${resourceNameStem}'
 var postgresAdministratorPasswordSecretName = 'postgres-administrator-password'
 var backendSecretKeySecretName = 'backend-secret-key'
+var backendTotpEncryptionKeySecretName = 'backend-totp-encryption-key'
 var containerRegistryPasswordSecretName = 'ghcr-token'
 
 param name = 'ca-${resourceNameStem}-backend'
@@ -78,7 +79,8 @@ param environmentVariables = [
     value: readEnvironmentVariable('BACKEND_FRONTEND_BASE_URL', '')
   }
   {
-    name: 'OAUTH_REDIRECT_BASE_URL'
+    // Links in emails and the calendar feed, and the only Origin a login POST may come from (AUTH-01 c5).
+    name: 'APP_URL'
     value: readEnvironmentVariable('BACKEND_FRONTEND_BASE_URL', '')
   }
 ]
@@ -90,6 +92,10 @@ param secretEnvironmentVariables = [
   {
     name: 'SECRET_KEY'
     secretName: 'secret-key'
+  }
+  {
+    name: 'TOTP_ENCRYPTION_KEY'
+    secretName: 'totp-encryption-key'
   }
 ]
 param secretEnvironmentVariableValue1 = az.getSecret(
@@ -103,6 +109,12 @@ param secretEnvironmentVariableValue2 = az.getSecret(
   resourceGroupName,
   keyVaultName,
   backendSecretKeySecretName
+)
+param secretEnvironmentVariableValue3 = az.getSecret(
+  subscriptionId,
+  resourceGroupName,
+  keyVaultName,
+  backendTotpEncryptionKeySecretName
 )
 param registryServer = 'ghcr.io'
 param registryUsername = toLower(readEnvironmentVariable('GITHUB_REPOSITORY_OWNER'))

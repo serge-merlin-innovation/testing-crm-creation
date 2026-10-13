@@ -107,6 +107,9 @@ class APIDocSettings(BaseSettings):
 
 class AuthSettings(BaseSettings):
     SECRET_KEY: str = config("SECRET_KEY", default="insecure-secret-key-change-this")
+    # Encrypts TOTP secrets at rest. Changing it makes every enrolled authenticator unreadable, so
+    # all users must re-enrol. Empty = derived from SECRET_KEY (refused in production).
+    TOTP_ENCRYPTION_KEY: str = config("TOTP_ENCRYPTION_KEY", default="")
 
     SESSION_TIMEOUT_MINUTES: int = config("SESSION_TIMEOUT_MINUTES", default=30, cast=int)
     SESSION_CLEANUP_INTERVAL_MINUTES: int = config("SESSION_CLEANUP_INTERVAL_MINUTES", default=15, cast=int)
@@ -120,19 +123,20 @@ class AuthSettings(BaseSettings):
     # peer (no proxy). Set to 1 behind a single nginx/Caddy, 2 if Cloudflare is also in front.
     TRUSTED_PROXY_HOPS: int = config("TRUSTED_PROXY_HOPS", default=0, cast=int)
 
-    OAUTH_MICROSOFT_CLIENT_ID: str = config("OAUTH_MICROSOFT_CLIENT_ID", default="")
-    OAUTH_MICROSOFT_CLIENT_SECRET: str = config("OAUTH_MICROSOFT_CLIENT_SECRET", default="")
-    # Entra directory the Microsoft provider authenticates against. "common" is
-    # Microsoft's own default and admits ANY account, including personal Outlook
-    # ones - set the tenant GUID per deployment. The production validator warns
-    # when a configured Microsoft client is left on a multi-tenant authority.
-    OAUTH_MICROSOFT_TENANT: str = config("OAUTH_MICROSOFT_TENANT", default="common")
-    OAUTH_REDIRECT_BASE_URL: str = config("OAUTH_REDIRECT_BASE_URL", default="http://localhost:8000")
+    # Scheduled-job runner (reminders, expiries, digests, retention). Off in tests, which use the
+    # test-only "run jobs now" hook instead.
+    # Mounts /api/v1/test-hooks (clock, job runner, captured emails) without authentication.
+    # Only for local runs, pytest and Playwright; refused on staging and production.
+    TEST_HOOKS_ENABLED: bool = config("TEST_HOOKS_ENABLED", default=False, cast=bool)
+    # The Have I Been Pwned lookup on every new password. Off only for Playwright, whose runs must not
+    # depend on an outside service; refused off on staging and production.
+    BREACH_CHECK_ENABLED: bool = config("BREACH_CHECK_ENABLED", default=True, cast=bool)
+    # The geo-IP service behind new-country login alerts (AUTH-06 c1). Empty: no provider
+    # chosen, alerts fire on new devices only and startup warns. Set: its adapter must be wired.
+    GEOIP_PROVIDER: str = config("GEOIP_PROVIDER", default="")
 
-    # Where an OAuth callback sends the browser once the session exists. The callback
-    # runs on the backend origin, so a relative redirect would land on FastAPI rather
-    # than the Next.js app.
-    FRONTEND_BASE_URL: str = config("FRONTEND_BASE_URL", default="http://localhost:3000")
+    SCHEDULED_JOBS_ENABLED: bool = config("SCHEDULED_JOBS_ENABLED", default=True, cast=bool)
+    SCHEDULED_JOBS_TICK_SECONDS: int = config("SCHEDULED_JOBS_TICK_SECONDS", default=60, cast=int)
 
 
 class APISettings(BaseSettings):
@@ -147,14 +151,17 @@ class AppSettings(BaseSettings):
     CONTACT_NAME: str = config("CONTACT_NAME", default="Support")
     CONTACT_EMAIL: str = config("CONTACT_EMAIL", default="support@example.com")
     LICENSE_NAME: str = config("LICENSE_NAME", default="All rights reserved.")
+    APP_URL: str = config("APP_URL", default="http://localhost:3000")
+    # Users BCC or forward mail to <token>@INBOUND_EMAIL_DOMAIN; the provider's inbound-parse webhook
+    # must send INBOUND_EMAIL_SECRET. Empty secret = every inbound call is refused.
+    INBOUND_EMAIL_DOMAIN: str = config("INBOUND_EMAIL_DOMAIN", default="log.crm.localhost")
+    INBOUND_EMAIL_SECRET: str = config("INBOUND_EMAIL_SECRET", default="")
 
 
-class FirstSuperuserSettings(BaseSettings):
-    FIRST_SUPERUSER_NAME: str = config("FIRST_SUPERUSER_NAME", default="")
-    FIRST_SUPERUSER_EMAIL: str = config("FIRST_SUPERUSER_EMAIL", default="")
-    FIRST_SUPERUSER_USERNAME: str = config("FIRST_SUPERUSER_USERNAME", default="")
-    FIRST_SUPERUSER_PASSWORD: str = config("FIRST_SUPERUSER_PASSWORD", default="")
-    DEFAULT_ROLE_NAME: str = config("DEFAULT_ROLE_NAME", default="user")
+class FirstAdminSettings(BaseSettings):
+    FIRST_ADMIN_NAME: str = config("FIRST_ADMIN_NAME", default="")
+    FIRST_ADMIN_EMAIL: str = config("FIRST_ADMIN_EMAIL", default="")
+    FIRST_ADMIN_PASSWORD: str = config("FIRST_ADMIN_PASSWORD", default="")
 
 
 class SecuritySettings(BaseSettings):
@@ -204,7 +211,7 @@ class Settings(
     AuthSettings,
     APISettings,
     AppSettings,
-    FirstSuperuserSettings,
+    FirstAdminSettings,
     SecuritySettings,
     LoggingSettings,
 ):

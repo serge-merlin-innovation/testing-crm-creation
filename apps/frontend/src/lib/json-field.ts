@@ -12,8 +12,8 @@ export function readString(payload: unknown, key: string): string | null {
   return typeof value === "string" ? value : null;
 }
 
-export function readBoolean(payload: unknown, key: string): boolean | null {
+export function readStringArray(payload: unknown, key: string): string[] | null {
   const value = fieldOf(payload, key);
 
-  return typeof value === "boolean" ? value : null;
+  return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : null;
 }

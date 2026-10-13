@@ -1,0 +1,427 @@
+import json
+import re
+from datetime import datetime, timedelta
+from typing import Any
+
+from sqlalchemy import String, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..activity.models import Activity, ActivityLink, Note
+from ..audit.models import AuditEntry
+from ..audit.service import AuditContext, AuditService, audit_export
+from ..buyer.models import DealBuyer
+from ..common.exceptions import ContactNotFoundError, PermissionDeniedError, ResourceNotFoundError
+from ..contact.models import Contact, Employment, RelationshipHolder
+from ..email_logging.models import LoggedEmail, UnmatchedEmail
+from ..mandate.models import Mandate
+from ..notification.schemas import EventKind
+from ..notification.service import Message, NotificationService
+from ..process.models import GeneratedDocument
+from ..role.authorization import has_permission
+from ..role.permissions import Permission
+from ..user.models import User
+from .models import LegalHold, RetentionPolicy, RetentionReview
+from .schemas import ErasureResult, LegalHoldCreate, RetentionPolicyValues, ReviewDecision
+
+ERASED = "[erased]"
+DAYS_PER_YEAR = 365
+
+
+class LegalHoldError(Exception):
+    """Erasure refused; the message is the hold's reason, shown to compliance as is."""
+
+
+def _jsonable(value: Any) -> Any:
+    return value.isoformat() if isinstance(value, datetime) else value
+
+
+def _row(model: Any) -> dict[str, Any]:
+    return {column.key: _jsonable(getattr(model, column.key)) for column in model.__table__.columns}
+
+
+def _link_row(link: ActivityLink, code_names: dict[int, str]) -> dict[str, Any]:
+    if link.record_type == "mandate":
+        return {"record_type": "mandate", "code_name": code_names.get(link.record_id)}
+    return _row(link)
+
+
+def _note_row(note: Note, code_names: dict[int, str]) -> dict[str, Any]:
+    row = _row(note)
+    mandate_id = row.pop("mandate_id", None)
+    row["mandate"] = None if mandate_id is None else code_names.get(mandate_id)
+    return row
+
+
+def _redact(text: str, identifiers: list[str]) -> str:
+    for identifier in sorted(identifiers, key=len, reverse=True):
+        text = re.sub(re.escape(identifier), ERASED, text, flags=re.IGNORECASE)
+    return text
+
+
+class PrivacyService:
+    def __init__(self, notifications: NotificationService, audit: AuditService | None = None) -> None:
+        self.notifications = notifications
+        self.audit = audit or AuditService()
+
+    async def _contact(self, db: AsyncSession, contact_id: int) -> Contact:
+        contact = await db.get(Contact, contact_id)
+        if contact is None:
+            raise ContactNotFoundError(f"Contact {contact_id} not found")
+        return contact
+
+    async def _activities(self, db: AsyncSession, contact_id: int) -> list[Activity]:
+        query = (
+            select(Activity)
+            .join(ActivityLink, ActivityLink.activity_id == Activity.id)
+            .where(ActivityLink.record_type == "contact", ActivityLink.record_id == contact_id)
+            .order_by(Activity.occurred_at, Activity.id)
+        )
+        return list((await db.execute(query)).scalars().unique())
+
+    async def _notes(self, db: AsyncSession, contact_id: int) -> list[Note]:
+        query = select(Note).where(Note.record_type == "contact", Note.record_id == contact_id).order_by(Note.id)
+        return list((await db.execute(query)).scalars())
+
+    async def export_person(self, db: AsyncSession, contact_id: int, context: AuditContext) -> tuple[str, str]:
+        """Everything the CRM holds about one person, as a JSON file (GDPR access request).
+
+        Other users' private notes stay out (ACT-02 c1), and a deal appears by code name only (AUTHZ-06 c2)."""
+        contact = await self._contact(db, contact_id)
+        employments = (
+            (await db.execute(select(Employment).where(Employment.contact_id == contact_id).order_by(Employment.id)))
+            .scalars()
+            .all()
+        )
+        activities = await self._activities(db, contact_id)
+        links = (
+            (await db.execute(select(ActivityLink).where(ActivityLink.activity_id.in_([a.id for a in activities]))))
+            .scalars()
+            .all()
+        )
+        notes = [
+            note
+            for note in await self._notes(db, contact_id)
+            if note.visibility != "private" or note.author_id == context.user_id
+        ]
+        letters = (
+            (
+                await db.execute(
+                    select(GeneratedDocument).where(GeneratedDocument.contact_id == contact_id).order_by(GeneratedDocument.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        buyer_links = (
+            (await db.execute(select(DealBuyer).where(DealBuyer.contact_id == contact_id).order_by(DealBuyer.id)))
+            .scalars()
+            .all()
+        )
+        holders = (
+            await db.execute(
+                select(RelationshipHolder.strength, User.name, User.first_name, User.last_name)
+                .join(User, User.id == RelationshipHolder.user_id)
+                .where(RelationshipHolder.contact_id == contact_id)
+                .order_by(RelationshipHolder.id)
+            )
+        ).all()
+        mandate_ids = {link.record_id for link in links if link.record_type == "mandate"}
+        mandate_ids |= {note.mandate_id for note in notes if note.mandate_id is not None}
+        mandate_ids |= {letter.mandate_id for letter in letters} | {buyer.mandate_id for buyer in buyer_links}
+        code_names: dict[int, str] = dict(
+            (await db.execute(select(Mandate.id, Mandate.code_name).where(Mandate.id.in_(mandate_ids)))).tuples().all()
+        )
+        holds = (await db.execute(select(LegalHold).where(LegalHold.contact_id == contact_id))).scalars().all()
+        changes = (
+            (
+                await db.execute(
+                    select(AuditEntry)
+                    .where(AuditEntry.record_type == "contact", AuditEntry.record_id == str(contact_id))
+                    .order_by(AuditEntry.created_at, AuditEntry.id)
+                )
+            )
+            .scalars()
+            .all()
+        )
+        document = {
+            "exported_at": context.clock.now().isoformat(),
+            "contact": _row(contact),
+            "employments": [_row(e) for e in employments],
+            "activities": [
+                {**_row(a), "links": [_link_row(link, code_names) for link in links if link.activity_id == a.id]}
+                for a in activities
+            ],
+            "notes": [_note_row(n, code_names) for n in notes],
+            "generated_documents": [
+                {
+                    "mandate": code_names.get(letter.mandate_id),
+                    "kind": letter.kind,
+                    "language": letter.language,
+                    "subject": letter.subject,
+                    "body": letter.body,
+                    "created_at": _jsonable(letter.created_at),
+                }
+                for letter in letters
+            ],
+            "buyer_links": [
+                {"mandate": code_names.get(buyer.mandate_id), "added_at": _jsonable(buyer.added_at)} for buyer in buyer_links
+            ],
+            "relationship_holders": [
+                {"user": " ".join(p for p in (first, last) if p) or name, "strength": strength}
+                for strength, name, first, last in holders
+            ],
+            "legal_holds": [_row(h) for h in holds],
+            "history": [
+                {"action": e.action, "at": _jsonable(e.created_at), "old": e.old_values, "new": e.new_values} for e in changes
+            ],
+        }
+        audit_export(
+            db,
+            context,
+            "person",
+            record_type="contact",
+            record_id=contact_id,
+            filters={"contact_id": contact_id},
+            rows=1 + len(activities) + len(notes) + len(letters) + len(buyer_links) + len(holders),
+        )
+        await db.commit()
+        return json.dumps(document, indent=2, default=str), f"person-{contact_id}.json"
+
+    async def active_holds(self, db: AsyncSession, contact_id: int, now: datetime) -> list[LegalHold]:
+        query = select(LegalHold).where(
+            LegalHold.contact_id == contact_id,
+            LegalHold.released_at.is_(None),
+            or_(LegalHold.until.is_(None), LegalHold.until > now),
+        )
+        return list((await db.execute(query.order_by(LegalHold.id))).scalars())
+
+    async def add_hold(self, db: AsyncSession, contact_id: int, values: LegalHoldCreate, context: AuditContext) -> LegalHold:
+        await self._contact(db, contact_id)
+        hold = LegalHold(
+            contact_id=contact_id,
+            reason=values.reason.strip(),
+            created_by=context.user_id,
+            created_at=context.clock.now(),
+            until=values.until,
+        )
+        db.add(hold)
+        await db.flush()
+        self.audit.record(
+            db, context, "legal_hold.added", record_type="contact", record_id=contact_id, new_values={"reason": hold.reason}
+        )
+        await db.commit()
+        return hold
+
+    async def holds(self, db: AsyncSession, contact_id: int) -> list[LegalHold]:
+        await self._contact(db, contact_id)
+        return list(
+            (await db.execute(select(LegalHold).where(LegalHold.contact_id == contact_id).order_by(LegalHold.id))).scalars()
+        )
+
+    async def release_hold(self, db: AsyncSession, hold_id: int, context: AuditContext) -> None:
+        hold = await db.get(LegalHold, hold_id)
+        if hold is None:
+            raise ResourceNotFoundError("Legal hold not found")
+        if hold.released_at is None:
+            hold.released_at = context.clock.now()
+            self.audit.record(
+                db,
+                context,
+                "legal_hold.released",
+                record_type="contact",
+                record_id=hold.contact_id,
+                old_values={"reason": hold.reason},
+            )
+            await db.commit()
+
+    async def erase(self, db: AsyncSession, contact_id: int, context: AuditContext) -> ErasureResult:
+        contact = await self._contact(db, contact_id)
+        now = context.clock.now()
+        holds = await self.active_holds(db, contact_id, now)
+        if holds:
+            raise LegalHoldError("Erasure is blocked by a legal hold: " + "; ".join(hold.reason for hold in holds))
+
+        full_name = f"{contact.first_name} {contact.last_name}"
+        identifiers = [i for i in (full_name, contact.email, contact.phone, contact.first_name, contact.last_name) if i]
+        identifiers = [i for i in identifiers if len(i) >= 2]
+
+        activities = await self._activities(db, contact_id)
+        for activity in activities:
+            activity.note = _redact(activity.note, identifiers)
+            activity.participants = [_redact(p, identifiers) for p in activity.participants]
+        notes = await self._notes(db, contact_id)
+        for note in notes:
+            note.body = ERASED
+        for letter in (await db.execute(select(GeneratedDocument).where(GeneratedDocument.contact_id == contact_id))).scalars():
+            letter.subject = _redact(letter.subject, identifiers)
+            letter.body = _redact(letter.body, identifiers)
+        activity_ids = [activity.id for activity in activities]
+        for logged in (await db.execute(select(LoggedEmail).where(LoggedEmail.activity_id.in_(activity_ids)))).scalars():
+            logged.sender = _redact(logged.sender, identifiers)
+            logged.subject = _redact(logged.subject, identifiers)
+        if contact.email:
+            mentioned = func.lower(func.cast(UnmatchedEmail.correspondents, String)).contains(contact.email.lower())
+            for unmatched in (await db.execute(select(UnmatchedEmail).where(mentioned))).scalars():
+                unmatched.sender = _redact(unmatched.sender, identifiers)
+                unmatched.subject = _redact(unmatched.subject, identifiers)
+                unmatched.body = _redact(unmatched.body, identifiers)
+                unmatched.correspondents = [_redact(c, identifiers) for c in unmatched.correspondents]
+
+        contact.first_name = "Erased"
+        contact.last_name = f"contact {contact.id}"
+        contact.email = None
+        contact.phone = None
+        contact.salutation = None
+        contact.source = ERASED
+        contact.do_not_contact = True
+        for employment in (await db.execute(select(Employment).where(Employment.contact_id == contact_id))).scalars():
+            employment.function = None
+        self.audit.record(
+            db,
+            context,
+            "contact.erased",
+            record_type="contact",
+            record_id=contact_id,
+            new_values={"activities_cleaned": len(activities), "notes_cleaned": len(notes)},
+        )
+        await db.commit()
+        return ErasureResult(contact_id=contact_id, activities_cleaned=len(activities), notes_cleaned=len(notes))
+
+    async def policy(self, db: AsyncSession) -> RetentionPolicy:
+        policy = await db.get(RetentionPolicy, 1)
+        if policy is None:
+            policy = RetentionPolicy(id=1)
+            db.add(policy)
+            await db.flush()
+        return policy
+
+    async def set_policy(self, db: AsyncSession, values: RetentionPolicyValues, context: AuditContext) -> RetentionPolicy:
+        policy = await self.policy(db)
+        old = policy.inactive_years
+        policy.inactive_years = values.inactive_years
+        self.audit.record(
+            db,
+            context,
+            "retention.policy_changed",
+            record_type="retention_policy",
+            record_id=1,
+            old_values={"inactive_years": old},
+            new_values={"inactive_years": values.inactive_years},
+        )
+        await db.commit()
+        return policy
+
+    async def ask_owners(self, db: AsyncSession, now: datetime) -> int:
+        """The monthly job: each inactive contact's owner is asked once to keep or anonymise it."""
+        years = (await self.policy(db)).inactive_years
+        cutoff = now - timedelta(days=DAYS_PER_YEAR * years)
+        last_activity = (
+            select(ActivityLink.record_id.label("contact_id"), func.max(Activity.occurred_at).label("last_at"))
+            .join(Activity, Activity.id == ActivityLink.activity_id)
+            .where(ActivityLink.record_type == "contact", Activity.deleted_at.is_(None))
+            .group_by(ActivityLink.record_id)
+            .subquery()
+        )
+        last_interaction = func.coalesce(last_activity.c.last_at, Contact.created_at)
+        pending_or_kept = select(RetentionReview.id).where(
+            RetentionReview.contact_id == Contact.id,
+            or_(RetentionReview.decision.is_(None), RetentionReview.decided_at > cutoff),
+        )
+        rows = (
+            await db.execute(
+                select(Contact, last_interaction)
+                .outerjoin(last_activity, last_activity.c.contact_id == Contact.id)
+                .where(last_interaction < cutoff, Contact.first_name != "Erased", ~pending_or_kept.exists())
+                .order_by(Contact.id)
+            )
+        ).all()
+        for contact, last_at in rows:
+            db.add(RetentionReview(contact_id=contact.id, owner_id=contact.owner_id, asked_at=now, last_interaction_at=last_at))
+            owner = await db.get(User, contact.owner_id) if contact.owner_id else None
+            if owner is not None and not owner.is_deleted:
+                await self.notifications.add(
+                    db,
+                    Message(
+                        user_id=owner.id,
+                        email=owner.email,
+                        kind=EventKind.RETENTION_REVIEW.value,
+                        title="Keep or anonymise an inactive contact",
+                        body=f"{contact.first_name} {contact.last_name} has had no interaction for {years} years. "
+                        "Decide whether to keep or anonymise the contact.",
+                        link="/privacy",
+                    ),
+                    now,
+                )
+        await db.commit()
+        await self.notifications.flush_emails()
+        return len(rows)
+
+    async def reviews(self, db: AsyncSession, user: dict[str, Any], everyone: bool) -> list[dict[str, Any]]:
+        query = (
+            select(RetentionReview, Contact.first_name, Contact.last_name)
+            .join(Contact, Contact.id == RetentionReview.contact_id)
+            .where(RetentionReview.decision.is_(None))
+            .order_by(RetentionReview.asked_at, RetentionReview.id)
+        )
+        if not everyone:
+            query = query.where(RetentionReview.owner_id == user["id"])
+        return [
+            {
+                "id": review.id,
+                "contact_id": review.contact_id,
+                "contact_name": f"{first} {last}",
+                "owner_id": review.owner_id,
+                "asked_at": review.asked_at,
+                "last_interaction_at": review.last_interaction_at,
+                "decision": review.decision,
+                "decided_at": review.decided_at,
+            }
+            for review, first, last in (await db.execute(query)).tuples()
+        ]
+
+    async def decide(
+        self, db: AsyncSession, user: dict[str, Any], review_id: int, decision: ReviewDecision, context: AuditContext
+    ) -> None:
+        review = await db.get(RetentionReview, review_id)
+        if review is None:
+            raise ResourceNotFoundError("Review not found")
+        if review.owner_id != user["id"] and not has_permission(user, Permission.PRIVACY_MANAGE):
+            raise PermissionDeniedError("Only the owner or compliance decides")
+        if decision == ReviewDecision.ANONYMISE:
+            await self.erase(db, review.contact_id, context)
+        review.decision = decision.value
+        review.decided_at = context.clock.now()
+        review.decided_by = user["id"]
+        self.audit.record(
+            db,
+            context,
+            "retention.decided",
+            record_type="contact",
+            record_id=review.contact_id,
+            new_values={"decision": decision.value},
+        )
+        await db.commit()
+
+
+AML_RETENTION_YEARS = 10
+
+
+async def hold_client_people(db: AsyncSession, mandate: Mandate, context: AuditContext) -> None:
+    """GDPR-02 c2: a KYC'd client's current people fall under AML retention, so erasure is blocked."""
+    now = context.clock.now()
+    reason = f"AML {AML_RETENTION_YEARS}-year retention: KYC of {mandate.code_name}"
+    people = select(Employment.contact_id).where(Employment.company_id == mandate.client_id, Employment.end_date.is_(None))
+    held = select(LegalHold.contact_id).where(LegalHold.reason == reason, LegalHold.released_at.is_(None))
+    for contact_id in (await db.execute(people.where(Employment.contact_id.not_in(held)).distinct())).scalars():
+        db.add(
+            LegalHold(
+                contact_id=contact_id,
+                reason=reason,
+                created_by=context.user_id,
+                created_at=now,
+                until=now.replace(year=now.year + AML_RETENTION_YEARS),
+            )
+        )
+        AuditService().record(
+            db, context, "legal_hold.added", record_type="contact", record_id=contact_id, new_values={"reason": reason}
+        )

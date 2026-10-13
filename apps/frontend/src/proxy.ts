@@ -6,6 +6,7 @@ import {
   sanitizeReturnTo,
   SESSION_COOKIE,
 } from "./lib/auth-routing";
+import { LANGUAGE_COOKIE, resolveLanguage } from "./lib/i18n/messages";
 import {
   audienceFor,
   normalizePagePath,
@@ -32,7 +33,24 @@ function allow(request: NextRequest, identity: SessionIdentity | null) {
 
   applyForwardedIdentity(headers, identity);
 
-  return NextResponse.next({ request: { headers } });
+  // A browser without a language cookie (a new device, a cleared browser) takes the account's
+  // saved language, so the choice follows the user. Changing it on Profile rewrites the cookie
+  // itself, which is why an existing cookie is not overwritten from the minute-long identity cache.
+  const saved = identity?.language ? resolveLanguage(identity.language) : null;
+  const stale = saved !== null && !request.cookies.has(LANGUAGE_COOKIE);
+
+  if (stale) {
+    request.cookies.set(LANGUAGE_COOKIE, saved);
+    headers.set("cookie", request.cookies.toString());
+  }
+
+  const response = NextResponse.next({ request: { headers } });
+
+  if (stale) {
+    response.cookies.set(LANGUAGE_COOKIE, saved, { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 365 });
+  }
+
+  return response;
 }
 
 function sendToLogin(request: NextRequest) {
@@ -57,6 +75,12 @@ function refuse(request: NextRequest) {
   return NextResponse.redirect(new URL(DEFAULT_AUTHENTICATED_PATH, request.url));
 }
 
+/** A signed-in page must not live in the browser cache, or Back after Log out would show it again. */
+function uncached(response: NextResponse) {
+  response.headers.set("Cache-Control", "private, no-store");
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
   const audience = audienceFor(request.nextUrl.pathname);
 
@@ -64,6 +88,11 @@ export async function proxy(request: NextRequest) {
   if (audience.kind === "public") {
     return allow(request, null);
   }
+
+  return uncached(await gate(request, audience));
+}
+
+async function gate(request: NextRequest, audience: ReturnType<typeof audienceFor>) {
 
   // Tier 2. Presence only — an expired cookie looks exactly like a live one from here.
   const sessionId = request.cookies.get(SESSION_COOKIE)?.value;
@@ -79,8 +108,8 @@ export async function proxy(request: NextRequest) {
     return sendToLogin(request);
   }
 
-  // The backend could not answer, so the session stands and only the pages that needed a role or
-  // superuser flag are refused. Treating this as a rejection would sign everyone out on a hiccup.
+  // The backend could not answer, so the session stands and only the pages that needed a
+  // permission are refused. Treating this as a rejection would sign everyone out on a hiccup.
   if (resolved.status === "unavailable") {
     return audience.kind === "authenticated" ? allow(request, null) : refuse(request);
   }
@@ -100,6 +129,6 @@ export async function proxy(request: NextRequest) {
  */
 export const config = {
   matcher: [
-    "/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.[^/]+$).*)",
+    "/((?!api(?:/|$)|health/ready$|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.[^/]+$).*)",
   ],
 };

@@ -1,0 +1,11 @@
+{
+  "auth.invalid_credentials": "Invalid email or password",
+  "auth.no_role": "Your account has no role. Ask an administrator for access.",
+  "errors.forbidden": "You don't have permission for this action.",
+  "errors.last_admin": "The last Admin cannot be removed.",
+  "errors.one_role_per_user": "A user can hold only one role.",
+  "maintenance.scheduled.body": "The CRM will be unavailable from {start} to {end}. Reason: {reason}",
+  "maintenance.scheduled.title": "Planned maintenance on {start}",
+  "security.finding_overdue.body": "\"{title}\" was due to be fixed by {due}.",
+  "security.finding_overdue.title": "A {severity} security finding is past its 30-day fix date"
+}
