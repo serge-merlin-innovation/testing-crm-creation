@@ -2,6 +2,7 @@
 
 How the GitHub issues for the M&A CRM spec ([`docs/specs/ma-crm.md`](specs/ma-crm.md)) depend on each other. An arrow `A --> B` means A blocks B: B can start only once A is closed. GitHub holds the authoritative edges as native "blocked by" links on each issue.
 
+```mermaid
 flowchart TD
     classDef green fill:#dcfce7,stroke:#15803d,color:#14532d
     classDef blue fill:#dbeafe,stroke:#1d4ed8,color:#1e3a8a
@@ -89,6 +90,7 @@ flowchart TD
     class T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T15,T16,T18,T19 green
     class T11,T12,T13 blue
     class T14,T17,T20 gray
+```
 
 ## Critical path
 
